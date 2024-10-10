@@ -1,0 +1,25 @@
+WeaponData
+{
+	printname	"Tau"
+	bucket		"3"
+	bucket_position	"1"
+	item_flags	"0"
+	playermodel	"models/weapons/w_gauss.mdl"
+	primary_ammo	"energy"
+	viewmodel	"models/weapons/v_gauss.mdl"
+	weight		"8"
+	default_clip	"30"
+	anim_prefix	"tau"
+	
+	SoundData
+	{
+		empty		"weapon_tau.Empty"
+		single_shot	"weapon_tau.Single"
+		double_shot	"weapon_tau.UnderCharge"
+		burst		"weapon_tau.UnderCharge"
+		special1	"weapon_tau.SpinUp"
+		special2	"weapon_tau.Charged"
+		special3	"weapon_tau.OverCharged"
+		reload		"weapon_tau.OverCharging"
+	}
+}

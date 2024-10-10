@@ -1,0 +1,17 @@
+WeaponData
+{
+	printname	"Headcrab"
+	bucket		"0"
+	bucket_position	"0"
+	item_flags	"128"
+	playermodel	"models/xenians/headcrab.mdl"
+	viewmodel	"models/weapons/v_headcrabbed.mdl"
+	weight		"10"
+	anim_prefix	"headcrab"
+
+	SoundData
+	{
+		special1	"weapon_headcrab.Special1"
+		special2	"weapon_headcrab.Special2"
+	}
+}

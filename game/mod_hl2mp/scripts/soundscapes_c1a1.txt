@@ -1,0 +1,986 @@
+// Unforeseen Consequences: This is what happens when you 'force' a computer to divide by zero.
+
+"c1a1.util_indoorboom1"
+{
+	"playrandom"
+	{
+		"volume"	"1.0"
+		"pitch"		"90,110"
+		"time"		"6.0, 11.0"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_140dB"
+		"rndwave"
+		{
+			"wave"	"BMS_ambience\soundscape\soundscape_indoorboom1.wav"
+			"wave"	"BMS_ambience\soundscape\soundscape_indoorboom2.wav"
+			"wave"	"BMS_ambience\soundscape\soundscape_indoorboom3.wav"
+			"wave"	"BMS_ambience\soundscape\soundscape_indoorboom4.wav"
+			"wave"	"BMS_ambience\soundscape\soundscape_indoorboom6.wav"
+		}
+	}
+}
+
+"c1a1.util_metalcreak1"
+{
+	"playrandom"
+	{
+		"volume"	"1.0"
+		"pitch"		"90,110"
+		"time"		"9, 15"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_140dB"
+		"rndwave"
+		{
+			"wave"	"BMS_ambience\soundscape\soundscape_metalcreak1.wav"
+			"wave"	"BMS_ambience\soundscape\soundscape_metalcreak2.wav"
+			"wave"	"BMS_ambience\soundscape\soundscape_metalcreak3.wav"
+			"wave"	"BMS_ambience\soundscape\soundscape_metalcreak4.wav"
+		}
+	}
+}
+
+"c1a1.util_bighit1"
+{
+	"playrandom"
+	{
+		"volume"	"1.0"
+		"pitch"		"90,110"
+		"time"		"17, 22"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_140dB"
+		"rndwave"
+		{
+			"wave"	"BMS_ambience\soundscape\bighit_far3.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far4.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far7.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far18.wav"
+		}
+	}
+}
+
+"c1a1.util_indamb"
+{
+	"playrandom"
+	{
+		"volume"	"1.0"
+		"pitch"		"90,110"
+		"time"		"11.0, 20.0"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_140dB"
+		"rndwave"
+		{
+			"wave"	"BMS_ambience\soundscape\ind_amb1.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb2.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb3.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb4.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb5.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb6.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb7.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb8.wav"
+
+		}
+	}
+}
+
+
+
+//////////////////// Level Soundscapes ////////////////////
+
+// c1a1a
+"c1a1a.testchamber"
+{
+	"dsp"	"10"
+
+	"playlooping"
+	{
+		"volume"	"1.0"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_foreboding1.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_debris1.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_fire1.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indoorboom1"
+		"volume"	"1.0"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_metalcreak1"
+		"volume"	"1.0"
+	}
+}
+
+"c1a1a.airlock"
+{
+	"dsp"	"0"
+
+	"playlooping"
+	{
+		"volume"	"0.9"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_rumble2.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"1.0"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_foreboding2.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indoorboom1"
+		"volume"	"0.9"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_metalcreak1"
+		"volume"	"0.9"
+	}
+}
+
+"c1a1a.hallway1"
+{
+	"dsp"	"3"
+
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_foreboding2.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_rumble2.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indoorboom1"
+		"volume"	"1.0"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_metalcreak1"
+		"volume"	"1.0"
+	}
+}
+
+"c1a1a.tuberoom"
+{
+	"dsp"	"3"
+
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_rumble5.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_foreboding1.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indoorboom1"
+		"volume"	"0.9"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_metalcreak1"
+		"volume"	"0.9"
+	}
+}
+
+"c1a1a.controlroom"
+{
+	"dsp"	"0"
+
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_rumble7.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_fire1.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+}
+
+"c1a1a.ionroom"
+{
+	"dsp"	"3"
+
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_rumble1.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.7"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_foreboding1.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indoorboom1"
+		"volume"	"0.8"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_metalcreak1"
+		"volume"	"0.8"
+	}
+
+}
+
+"c1a1a.hallway2"
+{
+	"dsp"	"3"
+
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_rumble2.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indoorboom1"
+		"volume"	"0.7"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_metalcreak1"
+		"volume"	"0.7"
+	}
+
+}
+
+"c1a1a.hallway3"
+{
+	"dsp"	"3"
+
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_rumble4.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+}
+
+"c1a1a.shaft"
+{
+	"dsp"	"1"
+
+	"playlooping"
+	{
+		"volume"	"0.7"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_foreboding1.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indoorboom1"
+		"volume"	"0.6"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_metalcreak1"
+		"volume"	"0.9"
+	}
+
+}
+
+//c1a1b
+"c1a1b.plaza"
+{
+	"dsp"	"2"
+
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_rumble6.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indoorboom1"
+		"volume"	"0.6"
+	}
+}
+
+"c1a1b.hallway"
+{
+	"dsp"	"3"
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_rumble1.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indoorboom1"
+		"volume"	"0.6"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_metalcreak1"
+		"volume"	"0.4"
+	}
+}
+
+"c1a1b.lab"
+{
+	"dsp"	"2"
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_rumble4.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indoorboom1"
+		"volume"	"0.4"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_metalcreak1"
+		"volume"	"0.4"
+	}
+
+}
+
+"c1a1b.lockerroom"
+{
+	"dsp"	"2"
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_rumble5.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.1"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_med3.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indoorboom1"
+		"volume"	"0.3"
+	}
+}
+
+"c1a1b.lobby"
+{
+	"dsp"	"3"
+
+	"playlooping"
+	{
+		"volume"	"0.7"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_rumble2.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indoorboom1"
+		"volume"	"0.7"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_metalcreak1"
+		"volume"	"0.7"
+	}
+
+}
+
+"c1a1b.tram_stop"
+{
+	"dsp"	"1"
+
+	"playlooping"
+	{
+		"volume"	"1.0"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_rumble2.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"1.0"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_foreboding1.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indoorboom1"
+		"volume"	"1.0"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_metalcreak1"
+		"volume"	"1.0"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_bighit1"
+		"volume"	"0.8"
+	}
+}
+
+"c1a1b.vent"
+{
+	"dsp"	"2"
+
+	"playlooping"
+	{
+		"volume"	"0.7"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_foreboding2.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indoorboom1"
+		"volume"	"0.5"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_metalcreak1"
+		"volume"	"0.5"
+	}
+}
+
+"c1a1b.disasterlab"
+{
+	"dsp"	"0"
+
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_rumble4.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indoorboom1"
+		"volume"	"0.4"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_metalcreak1"
+		"volume"	"0.4"
+	}
+}
+
+"c1a1b.frozenlab"
+{
+	"dsp"	"0"
+
+	"playlooping"
+	{
+		"volume"	"0.7"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_med6.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_rumble6.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indoorboom1"
+		"volume"	"0.3"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_metalcreak1"
+		"volume"	"0.3"
+	}
+}
+
+"c1a1b.maintenance"
+{
+	"dsp"	"17"
+
+	"playlooping"
+	{
+		"volume"	"0.2"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_disaster_rumble6.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_med8.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indoorboom1"
+		"volume"	"0.2"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_metalcreak1"
+		"volume"	"0.2"
+	}
+}
+
+"c1a1b.shaft"
+{
+	"dsp"	"1"
+
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_eleshaft1.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indoorboom1"
+		"volume"	"0.1"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_metalcreak1"
+		"volume"	"0.7"
+	}
+}
+
+
+//c1a1c
+"c1a1c.warehouse"
+{
+	"dsp"	"0"
+
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_med8.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indoorboom1"
+		"volume"	"0.1"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_metalcreak1"
+		"volume"	"0.1"
+	}
+
+}
+
+"c1a1c.hallway"
+{
+	"dsp"	"2"
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_large2.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_med9.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+}
+
+"c1a1c.frozenlab"
+{
+	"dsp"	"0"
+
+	"playlooping"
+	{
+		"volume"	"0.7"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_med14.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.2"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_large2.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+}
+
+"c1a1c.sewers"
+{
+	"dsp"	"1"
+
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_water3.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_water_room_ST.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+}
+
+"c1a1c.shaft"
+{
+	"dsp"	"4"
+
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_large4.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.2"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_pipes1.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+}
+
+"c1a1c.storage"
+{
+	"dsp"	"3"
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_large4.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.2"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_large2.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+}
+
+//c1a1d
+"c1a1d.hallway"
+{
+	"dsp"	"4"
+
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_large7.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+}
+
+"c1a1d.canal1"
+{
+	"dsp"	"25"
+
+	"playlooping"
+	{
+		"volume"	"0.9"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_large6.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.2"
+	}
+}
+
+"c1a1d.vent"
+{
+	"dsp"	"2"
+
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_vent1.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+}
+
+"c1a1d.corridor"
+{
+	"dsp"	"17"
+
+	"playlooping"
+	{
+		"volume"	"0.1"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_pipes1.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"1.0"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_med4.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+}
+
+"c1a1d.canal2"
+{
+	"dsp"	"4"
+
+	"playlooping"
+	{
+		"volume"	"0.9"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_large6.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_med10.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.4"
+	}
+}
+
+"c1a1d.canal3"
+{
+	"dsp"	"4"
+
+	"playlooping"
+	{
+		"volume"	"1.0"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_large9.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_industrial1.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.4"
+	}
+}
+
+"c1a1d.control"
+{
+	"dsp"	"0"
+
+	"playlooping"
+	{
+		"volume"	"0.7"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_med6.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_large9.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.1"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_industrial1.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+}
+
+
+"c1a1d.storage"
+{
+	"dsp"	"4"
+
+	"playlooping"
+	{
+		"volume"	"0.9"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_large7.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.2"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_med14.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+}
+
+"soundscapes_c1a1.ArmClose"
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"VOL_NORM"
+	"soundlevel"		"SNDLVL_NORM"
+	"pitch"			"PITCH_NORM"
+	"rndwave"
+	{
+		"wave"		"BMS_scripted/test_chamber/arm_close.wav"
+	}
+}
+
+"soundscapes_c1a1.ArmOpen"
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"VOL_NORM"
+	"soundlevel"		"SNDLVL_NORM"
+	"pitch"			"PITCH_NORM"
+	"rndwave"
+	{
+		"wave"		"BMS_scripted/test_chamber/arm_open.wav"
+	}
+}

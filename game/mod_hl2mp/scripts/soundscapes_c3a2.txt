@@ -1,0 +1,602 @@
+// Lambda Core: And in the end, it was all just a crazy, radiation induced, nightmare!
+
+// c3a2a
+
+"c1a1.util_miscamb"
+{
+	"playrandom"
+	{
+		"volume"	"1.0"
+		"pitch"		"90,110"
+		"time"		"11.0, 20.0"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_140dB"
+		"rndwave"
+		{
+			"wave"	"BMS_ambience\soundscape\misc_amb1.wav"
+			"wave"	"BMS_ambience\soundscape\misc_amb2.wav"
+			"wave"	"BMS_ambience\soundscape\misc_amb3.wav"
+			"wave"	"BMS_ambience\soundscape\misc_amb4.wav"
+			"wave"	"BMS_ambience\soundscape\misc_amb5.wav"
+			"wave"	"BMS_ambience\soundscape\misc_amb6.wav"
+			"wave"	"BMS_ambience\soundscape\misc_amb7.wav"
+			"wave"	"BMS_ambience\soundscape\misc_amb8.wav"
+		}
+	}
+}
+
+
+
+"c3a2a.lift_bays"
+{
+	"dsp"	"25"
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large4.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_miscamb"
+		"volume"	"0.2"
+	}
+}
+
+
+"c3a2a.lift_control"
+{
+	"dsp"	"17"
+	"playlooping"
+	{
+		"volume"		"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med8.wav"
+	}
+}
+
+
+"c3a2a.small_corridor"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_small2.wav"
+	}
+}
+
+
+"c3a2a.warehouse"
+{
+	"dsp"	"25"
+	"playlooping"
+	{
+		"volume"	"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large8.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_miscamb"
+		"volume"	"0.4"
+	}
+}
+
+
+"c3a2a.med_corridor"
+{
+	"dsp"	"18"
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med6.wav"
+	}
+}
+
+
+"c3a2a.shippingcrate"
+{
+	"dsp"	"1"
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large6.wav"
+	}
+}
+
+
+"c3a2a.large_corridor"
+{
+	"dsp"	"7"
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med11.wav"
+	}
+}
+
+
+"c3a2a.lc_entrance"
+{
+	"dsp"	"19"
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large7.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_miscamb"
+		"volume"	"0.2"
+	}
+}
+
+
+"c3a2a.lc_corridor"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med4.wav"
+	}
+}
+
+
+"c3a2a.lc_liftroom"
+{
+	"dsp"	"3"
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med4.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med6.wav"
+	}
+}
+
+
+"c3a2a.elevator"
+{
+	"dsp"	"1"
+	"playlooping"
+	{
+		"volume"		"0.3"
+		"pitch"		"110"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med5.wav"
+	}
+}
+
+
+
+
+
+// c3a2b
+
+"c3a2b.centralroom"
+{
+	"dsp"	"3"
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med11.wav"
+	}
+}
+
+
+"c3a2b.hallway"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+}
+
+
+"c3a2b.liftroom"
+{
+	"dsp"	"3"
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med4.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med6.wav"
+	}
+}
+
+
+"c3a2b.maintroom"
+{
+	"dsp"	"0"
+	"playlooping"
+	{
+		"volume"		"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large3.wav"
+	}
+}
+
+
+"c3a2b.ctank1"
+{
+	"dsp"	"24"
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large4.wav"
+	}
+}
+
+
+"c3a2b.controlroom"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med6.wav"
+	}
+}
+
+
+"c3a2b.pump1"
+{
+	"dsp"	"25"
+	"playlooping"
+	{
+		"volume"		"0.75"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large6.wav"
+	}
+}
+
+
+"c3a2b.ctank2"
+{
+	"dsp"	"24"
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large4.wav"
+	}
+}
+
+
+"c3a2b.pump2"
+{
+	"dsp"	"25"
+	"playlooping"
+	{
+		"volume"		"0.75"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large6.wav"
+	}
+}
+
+
+"c3a2b.auxroom"
+{
+	"dsp"	"25"
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med12.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large9.wav"
+	}
+}
+
+
+"c3a2b.underwater_tunnel"
+{
+	"dsp"	"15"
+	"playlooping"
+	{
+		"volume"		"0.75"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large1.wav"
+	}
+}
+
+
+
+
+
+//c3a2c
+
+"c3a2c.fanroom"
+{
+	"dsp"	"8"
+	"playlooping"
+	{
+		"volume"		"0.75"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large1.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large11.wav"
+	}
+}
+
+
+"c3a2c.reactor_core"
+{
+	"dsp"	"7"
+	"playlooping"
+	{
+		"volume"		"0.75"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_disaster_foreboding1.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.65"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_lowrumble.wav"
+	}
+}
+
+
+"c3a2c.side_hallway"
+{
+	"dsp"	"0"
+	"playlooping"
+	{
+		"volume"		"0.35"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large10.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med8.wav"
+	}
+}
+
+
+"c3a2c.hallway"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+}
+
+
+
+
+
+//c3a2d
+
+"c3a2d.elevator"
+{
+	"dsp"	"1"
+	"playlooping"
+	{
+		"volume"		"0.3"
+		"pitch"		"110"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med5.wav"
+	}
+}
+
+
+"c3a2d.hallway"
+{
+	"dsp"	"3"
+	"playlooping"
+	{
+		"volume"		"0.35"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+}
+
+
+"c3a2d.tallshaft"
+{
+	"dsp"	"6"
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large7.wav"
+	}
+}
+
+
+"c3a2d.controlroom"
+{
+	"dsp"	"3"
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med6.wav"
+	}
+}
+
+
+"c3a2d.portal_test"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med9.wav"
+	}
+}
+
+
+"c3a2d.portalchamber_control"
+{
+	"dsp"	"3"
+	"playlooping"
+	{
+		"volume"		"0.25"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large10.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med6.wav"
+	}
+}
+
+
+"c3a2d.portalchamber_top"
+{
+	"dsp"	"7"
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large1.wav"
+	}
+}
+
+
+"c3a2d.pipe_room"
+{
+	"dsp"	"18"
+	"playlooping"
+	{
+		"volume"		"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_pipes1.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med14.wav"
+	}
+}
+
+
+"c3a2d.giant_pipe_room"
+{
+	"dsp"	"4"
+	"playlooping"
+	{
+		"volume"		"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_pipes1.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large3.wav"
+	}
+}
+
+
+"c3a2d.tallshaft_top"
+{
+	"dsp"	"6"
+	"playlooping"
+	{
+		"volume"		"0.25"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large7.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med4.wav"
+	}
+}
+
+
+"c3a2d.small_hallway"
+{
+	"dsp"	"17"
+	"playlooping"
+	{
+		"volume"		"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_small2.wav"
+	}
+}
+
+
+"c3a2d.portalchamber_bottom"
+{
+	"dsp"	"24"
+	"playlooping"
+	{
+		"volume"		"0.65"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large1.wav"
+	}
+}
+
+
+
+
+
+//c3a2e
+"c3a2e.teleporter"
+{
+	"dsp"	"25"
+	"playlooping"
+	{
+		"volume"		"0.50"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large2.wav"
+	}
+}

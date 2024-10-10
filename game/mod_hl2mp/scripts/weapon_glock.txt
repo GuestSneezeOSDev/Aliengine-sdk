@@ -1,0 +1,22 @@
+WeaponData
+{
+	printname	"Glock"
+	bucket		"1"
+	bucket_position	"0"
+	clip_size	"17"
+	item_flags	"0"
+	playermodel	"models/weapons/w_glock.mdl"
+	primary_ammo	"9mm"
+	viewmodel	"models/weapons/v_glock.mdl"
+	weight		"2"
+	anim_prefix	"glock"
+
+	SoundData
+	{
+		reload_npc	"weapon_glock.Reload_NPC"
+		empty		"weapon_glock.Empty"
+		single_shot	"weapon_glock.Single"
+		single_shot_npc	"weapon_glock.Single_NPC"
+		special1	"weapon_glock.Single_Silent"
+	}
+}

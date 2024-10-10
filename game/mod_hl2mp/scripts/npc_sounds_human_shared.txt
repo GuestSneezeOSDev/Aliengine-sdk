@@ -1,0 +1,232 @@
+"NPC_Citizen.FootstepLeft"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"0.8"
+	"pitch"			"95, 105"
+
+	"soundlevel"	"SNDLVL_NORM"
+
+	"rndwave"
+	{
+		"wave"	"player/footsteps/concrete1.wav"
+		"wave"	"player/footsteps/concrete2.wav"
+	}
+}
+"NPC_Citizen.FootstepRight"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"0.8"
+	"pitch"			"95, 105"
+
+	"soundlevel"	"SNDLVL_NORM"
+
+	"rndwave"
+	{
+		"wave"	"player/footsteps/concrete3.wav"
+		"wave"	"player/footsteps/concrete4.wav"
+	}
+}
+"NPC_Citizen.RunFootstepLeft"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"0.6"
+	"pitch"			"95, 105"
+
+	"soundlevel"	"SNDLVL_NORM"
+
+	"rndwave"
+	{
+		"wave"	"npc/footsteps/hardboot_generic1.wav"
+		"wave"	"npc/footsteps/hardboot_generic3.wav"
+		"wave"	"npc/footsteps/hardboot_generic5.wav"
+	}
+}
+"NPC_Citizen.RunFootstepRight"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"0.6"
+	"pitch"			"95, 105"
+
+	"soundlevel"	"SNDLVL_NORM"
+
+	"rndwave"
+	{
+		"wave"	"npc/footsteps/hardboot_generic2.wav"
+		"wave"	"npc/footsteps/hardboot_generic4.wav"
+		"wave"	"npc/footsteps/hardboot_generic6.wav"
+	}
+}
+
+"NPC_Scientist.Death"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"95, 105"
+	"soundlevel"	"SNDLVL_NORM"
+
+	"rndwave"
+	{
+		"wave"	"vo/npc/scientist_male01/pain01.wav"
+		"wave"	"vo/npc/scientist_male01/pain02.wav"
+		"wave"	"vo/npc/scientist_male01/pain03.wav"
+		"wave"	"vo/npc/scientist_male01/pain04.wav"
+		"wave"	"vo/npc/scientist_male01/pain05.wav"
+		"wave"	"vo/npc/scientist_male01/pain06.wav"
+		"wave"	"vo/npc/scientist_male01/pain07.wav"
+		"wave"	"vo/npc/scientist_male01/pain08.wav"
+		"wave"	"vo/npc/scientist_male01/pain09.wav"
+		"wave"	"vo/npc/scientist_male01/pain10.wav"
+		"wave"	"vo/npc/scientist_male01/pain01.wav"
+	}
+}
+
+"NPC_Scientist_Female.Death"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"95, 105"
+	"soundlevel"	"SNDLVL_NORM"
+
+	"rndwave"
+	{
+		"wave"	"vo/npc/scientist_female01/ow03.wav"
+		"wave"	"vo/npc/scientist_female01/ow01.wav"
+		"wave"	"vo/npc/scientist_female01/ow04.wav"
+
+
+	}
+}
+
+"NPC_Security.Death"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"95, 105"
+	"soundlevel"	"SNDLVL_NORM"
+
+	"rndwave"
+	{
+		"wave"	"vo/npc/barneys/grd_death01.wav"
+		"wave"	"vo/npc/barneys/grd_death02.wav"
+		"wave"	"vo/npc/barneys/grd_death03.wav"
+		"wave"	"vo/npc/barneys/grd_death04.wav"
+		"wave"	"vo/npc/barneys/grd_death05.wav"
+		"wave"	"vo/npc/barneys/grd_death06.wav"
+		"wave"	"vo/npc/barneys/grd_death07.wav"
+		"wave"	"vo/npc/barneys/grd_death08.wav"
+		"wave"	"vo/npc/barneys/grd_death09.wav"
+		"wave"	"vo/npc/barneys/grd_death10.wav"
+		"wave"	"vo/npc/barneys/grd_death11.wav"
+		"wave"	"vo/npc/barneys/grd_death12.wav"
+		"wave"	"vo/npc/barneys/grd_death13.wav"
+		"wave"	"vo/npc/barneys/grd_death14.wav"
+	}
+}
+
+"NPC_Grunt.Death"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"95, 105"
+	"soundlevel"	"SNDLVL_NORM"
+
+	"rndwave"
+	{
+		"wave"	"vo/npc/hgrunt_young/hg_medic01.wav"
+		"wave"	"vo/npc/hgrunt_young/hg_medic02.wav"
+		"wave"	"vo/npc/hgrunt_young/hg_medic02a.wav"
+		"wave"	"vo/npc/hgrunt_young/hg_medic03.wav"
+		"wave"	"vo/npc/hgrunt_young/hg_medic04.wav"
+		"wave"	"vo/npc/hgrunt_young/hg_medic05.wav"
+		"wave"	"vo/npc/hgrunt_young/hg_medic06.wav"
+		"wave"	"vo/npc/hgrunt_young/hg_medic07.wav"
+		"wave"	"vo/npc/hgrunt_young/hg_medic08.wav"
+	}
+}
+
+"NPC_Grunt.WeaponBash"
+{
+	"channel"       "CHAN_WEAPON"
+	 "volume"       "0.800"
+	"pitch"         "PITCH_NORM"
+	"soundlevel"    "SNDLVL_NORM"
+	"wave"          "physics/body/body_medium_impact_hard6.wav"
+} 
+
+"NPC_Assassin.Die"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"1"
+	"pitch"			"100, 105"
+	"soundlevel"	"SNDLVL_NORM"
+
+	"rndwave"
+	{
+		"wave"	"npc/assassin/pain05.wav"
+		"wave"	"npc/assassin/pain06.wav"
+		"wave"	"npc/assassin/death01.wav"
+		"wave"	"npc/assassin/death02.wav"
+		"wave"	"npc/assassin/death03.wav"
+		"wave"	"npc/assassin/death04.wav"
+		"wave"	"npc/assassin/death05.wav"
+		"wave"	"npc/assassin/death06.wav"
+	}
+}
+
+"NPC_Assassin.Pain"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"1"
+	"pitch"			"100, 105"
+	"soundlevel"	"SNDLVL_NORM"
+
+	"rndwave"
+	{
+		"wave"	"npc/assassin/pain01.wav"
+		"wave"	"npc/assassin/pain02.wav"
+		"wave"	"npc/assassin/pain03.wav"
+		"wave"	"npc/assassin/pain04.wav"
+		"wave"	"npc/assassin/pain05.wav"
+		"wave"	"npc/assassin/pain06.wav"
+		"wave"	"npc/assassin/pain07.wav"
+		"wave"	"npc/assassin/pain08.wav"
+		"wave"	"npc/assassin/pain09.wav"
+		"wave"	"npc/assassin/pain10.wav"
+		"wave"	"npc/assassin/pain11.wav"
+		"wave"	"npc/assassin/pain12.wav"
+		"wave"	"npc/assassin/pain13.wav"
+		"wave"	"npc/assassin/pain14.wav"
+		"wave"	"npc/assassin/pain15.wav"
+		"wave"	"npc/assassin/pain16.wav"
+
+	}
+}
+
+"NPC_Assassin.FootstepLeft"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"1"
+	"pitch"			"95, 105"
+
+	"soundlevel"	"SNDLVL_NORM"
+
+	"rndwave"
+	{
+		"wave"	"npc/assassin/step1.wav"
+		"wave"	"npc/assassin/step2.wav"
+	}
+}
+"NPC_Assassin.FootstepRight"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"1"
+	"pitch"			"95, 105"
+
+	"soundlevel"	"SNDLVL_NORM"
+
+	"rndwave"
+	{
+		"wave"	"npc/assassin/step1.wav"
+		"wave"	"npc/assassin/step2.wav"
+	}
+}

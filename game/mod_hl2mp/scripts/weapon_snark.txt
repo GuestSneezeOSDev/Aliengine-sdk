@@ -1,0 +1,19 @@
+WeaponData
+{
+	printname	"Snarks"
+	bucket		"4"
+	bucket_position	"3"
+	clip_size	"-1"
+	default_clip	"5"
+	item_flags	"0"
+	playermodel	"models/xenians/snarknest.mdl"
+	primary_ammo	"snark"
+	viewmodel	"models/weapons/v_squeak.mdl"
+	weight		"0"
+	anim_prefix	"snark"
+
+	SoundData
+	{
+		single_shot	"weapon_snark.Single"
+	}
+}

@@ -1,0 +1,316 @@
+// We've Got Hostiles: Hey guys, thanks for the rescue. Oh, what? A bullet with my name on it? Cool!!
+
+"util.metalhits"	
+{	
+	"playrandom"
+	{
+		"volume"	"0.7,1.0"
+		"pitch"		"90,110"
+		"time"		"4,8"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_140dB"
+		"rndwave"
+		{
+			"wave"	"BMS_ambience\soundscape\metalhit_far1.wav"
+			"wave"	"BMS_ambience\soundscape\metalhit_far2.wav"
+			"wave"	"BMS_ambience\soundscape\metalhit_far3.wav"
+			"wave"	"BMS_ambience\soundscape\metalhit_far4.wav"
+			"wave"	"BMS_ambience\soundscape\metalhit_far5.wav"
+			"wave"	"BMS_ambience\soundscape\metalhit_far6.wav"
+			"wave"	"BMS_ambience\soundscape\metalhit_far7.wav"
+			"wave"	"BMS_ambience\soundscape\metalhit_far8.wav"
+			"wave"	"BMS_ambience\soundscape\metalhit_far9.wav"
+			"wave"	"BMS_ambience\soundscape\metalhit_far10.wav"
+			"wave"	"BMS_ambience\soundscape\metalhit_far11.wav"
+			"wave"	"BMS_ambience\soundscape\metalhit_far12.wav"
+		}
+	}
+}
+
+
+
+// c1a3a
+
+"wgh.c1a3a_hallway"
+{
+	"dsp"	"17"
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med9.wav"
+	}	
+}
+
+"wgh.c1a3a_storage_medium"
+{
+	"dsp"	"18"
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}	
+}
+
+"wgh.c1a3a_storage_big"
+{
+	"dsp"	"19"
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med11.wav"
+	}	
+}
+
+"wgh.c1a3a_cafeteria"
+{
+	"dsp"	"18"
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large7.wav"
+	}	
+}
+
+"wgh.c1a3a_vent"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_vent1.wav"
+	}	
+}
+
+"wgh.c1a3a_bptunnel"
+{
+	"dsp"	"1"
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large7.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"85"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_small3.wav"
+	}
+}
+
+"wgh.c1a3a.bp_hallway"
+{
+	"dsp"	"1"
+
+	"playlooping"
+	{
+		"volume"	"0.7"
+		"pitch"		"85"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_small3.wav"
+	}
+}
+
+
+// c1a3b
+
+"wgh.c1a3b_small_room"
+{
+	"dsp"	"17"
+	"playlooping"
+	{
+		"volume"	"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_small1.wav"
+	}	
+
+	"playlooping"
+	{
+		"volume"	"0.2"
+		"pitch"		"90"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med8.wav"
+	}	
+}
+
+"wgh.c1a3b_warehouse_big"
+{
+	"dsp"	"1"
+	"playlooping"
+	{
+		"volume"	"0.85"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large8.wav"
+	}
+	
+	"playlooping"
+	{
+		"volume"	"0.25"
+		"pitch"		"80"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med5.wav"
+	}	
+
+	"playsoundscape"
+	{
+		"volume"	"0.6"
+		"name"		"util.metalhits"		
+	}
+}
+
+"wgh.c1a3b_warehouse_medium"
+{
+	"dsp"	"1"
+	"playlooping"
+	{
+		"volume"	"0.75"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med9.wav"
+	}	
+	
+	"playsoundscape"
+	{
+		"volume"	"0.3"
+		"name"		"util.metalhits"		
+	}
+}
+
+"wgh.c1a3b_central_shaft"
+{
+	"dsp"	"1"
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large6.wav"
+	}	
+}
+
+"wgh.c1a3b_hallway"
+{
+	"dsp"	"0"
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med9.wav"
+	}	
+}
+
+"wgh.c1a3b_elev_shaft"
+{
+	"dsp"	"1"
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large4.wav"
+	}	
+
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large8.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.2"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_ob_mortars.wav"
+	}
+}
+
+
+
+
+// c1a3c
+
+"wgh.c1a3c_warehouse"
+{
+	"dsp"	"1"
+	
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large3.wav"
+	}		
+	
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_ob_mortars.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_ob_fargunfire.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.2"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_wind3.wav"
+	}	
+}
+
+"wgh.c1a3c_outside"
+{
+	"dsp"	"0"
+	
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_desertday1.wav"
+	}	
+
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_wind2.wav"
+	}		
+	
+	"playlooping"
+	{
+		"volume"	"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_ob_mortars.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_ob_fargunfire.wav"
+	}
+}
+
+"wgh.c1a3c_bunker"
+{
+	"dsp"	"1"
+	
+	"playlooping"
+	{
+		"volume"	"0.2"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_elev_shaft2.wav"
+	}		
+	
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_ob_farboom.wav"
+	}
+}

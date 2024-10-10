@@ -1,0 +1,704 @@
+//Residue Processing: Tryouts for the Black Mesa swim team every Tuesday and Thursday.
+
+"c1a1.util_indamb"
+{
+	"playrandom"
+	{
+		"volume"	"1.0"
+		"pitch"		"90,110"
+		"time"		"11.0, 20.0"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_140dB"
+		"rndwave"
+		{
+			"wave"	"BMS_ambience\soundscape\ind_amb1.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb4.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb5.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb7.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb8.wav"
+
+		}
+	}
+}
+
+
+"c2a4a.pipe"
+{
+	"dsp"	"1"
+	"playlooping"
+	{
+		"volume"		"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_wind1.wav"
+	}
+}
+
+
+"c2a4a.outside"
+{
+	"dsp"	"0"
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_desertday1.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_wind3.wav"
+	}
+}
+
+
+"c2a4a.silo"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_vent1.wav"
+	}
+}
+
+
+"c2a4a.silopipe"
+{
+	"dsp"	"1"
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_wind1.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial5.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial8.wav"
+	}
+}
+
+
+"c2a4a.inside_large"
+{
+	"dsp"	"4"
+	"playlooping"
+	{
+		"volume"		"0.9"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial8.wav"
+	}
+}
+
+
+"c2a4a.inside_hall"
+{
+	"dsp"	"3"
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial6.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial8.wav"
+	}
+}
+
+
+"c2a4a.inside_hall_pipes"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial3.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial4.wav"
+	}
+}
+
+
+"c2a4a.vent"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_vent1.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large8.wav"
+	}
+}
+
+
+"c2a4a.inside_large_vatroom"
+{
+	"dsp"	"4"
+	"playlooping"
+	{
+		"volume"		"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial4.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.3"
+	}
+}
+
+
+
+
+//c2a4b - the poo grindaz
+
+"c2a4b.entrance_hallway"
+{
+	"dsp"	"17"
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med3.wav"
+	}
+}
+
+"c2a4b.trash_collection"
+{
+	"dsp"	"3"
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+}
+
+"c2a4b.conveyor_shaft"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med9.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.25"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med11.wav"
+	}
+}
+
+"c2a4b.river_entrance"
+{
+	"dsp"	"9"
+	"playlooping"
+	{
+		"volume"		"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med11.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.5"
+	}
+}
+
+"c2a4b.river_room2a"
+{
+	"dsp"	"3"
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med11.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial9.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.5"
+	}
+}
+
+"c2a4b.river_room2b"
+{
+	"dsp"	"3"
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med11.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large7.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.5"
+	}
+}
+
+"c2a4b.dual_spinnaz"
+{
+	"dsp"	"9"
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med11.wav"
+	}
+}
+
+"c2a4b.flamerz"
+{
+	"dsp"	"9"
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large7.wav"
+	}
+}
+
+"c2a4b.underwater_shafts"
+{
+	"dsp"	"9"
+	"playlooping"
+	{
+		"volume"		"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large7.wav"
+	}
+}
+
+"c2a4b.water_filtration"
+{
+	"dsp"	"4"
+	"playlooping"
+	{
+		"volume"		"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med5.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large7.wav"
+	}
+}
+
+"c2a4b.hallway_small"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med9.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.25"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med3.wav"
+	}
+}
+
+"c2a4b.water_to_conveyors"
+{
+	"dsp"	"10"
+	"playlooping"
+	{
+		"volume"		"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial9.wav"
+	}
+}
+
+"c2a4b.staircase_and_viewer"
+{
+	"dsp"	"3"
+	"playlooping"
+	{
+		"volume"		"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial27.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.25"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med3.wav"
+	}
+}
+
+"c2a4b.grinder_bin"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial27.wav"
+	}
+}
+
+"c2a4b.exit"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med11.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.25"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial27.wav"
+	}
+}
+
+
+
+
+//c2a4c - conveyors and suchness
+
+
+"c2a4c.conveyor_entrance"
+{
+	"dsp"	"18"
+	"playlooping"
+	{
+		"volume"		"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med12.wav"
+	}
+}
+
+"c2a4c.conveyor_shaft_crusher"
+{
+	"dsp"	"17"
+	"playlooping"
+	{
+		"volume"		"0.25"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial34.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial11.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial25.wav"
+	}
+}
+
+"c2a4c.incinerator_room" //first big room
+{
+	"dsp"	"25"
+	"playlooping"
+	{
+		"volume"		"0.25"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large8.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial34.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.9"
+	}
+}
+
+"c2a4c.conveyor_shafts"
+{
+	"dsp"	"17"
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med11.wav"
+	}
+}
+
+"c2a4c.crane_room"
+{
+	"dsp"	"25"
+	"playlooping"
+	{
+		"volume"		"0.65"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.9"
+	}
+}
+
+"c2a4c.hallways"
+{
+	"dsp"	"18"
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med9.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.25"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med3.wav"
+	}
+}
+
+"c2a4c.hallway_big" //roundish big hallway with staircase back to top
+{
+	"dsp"	"18"
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+}
+
+"c2a4c.incinerator_conveyor"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large8.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.35"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial34.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.9"
+	}
+}
+
+"c2a4c.material_recovery"
+{
+	"dsp"	"24"
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large7.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial4.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.7"
+	}
+}
+
+"c2a4c.metal_recovery"
+{
+	"dsp"	"24"
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large7.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial3.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.6"
+	}
+}
+
+"c2a4c.disposal_bin"
+{
+	"dsp"	"1"
+	"playlooping"
+	{
+		"volume"		"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large4.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.5"
+	}
+}
+
+"c2a4c.below_grinders"
+{
+	"dsp"	"17"
+	"playlooping"
+	{
+		"volume"		"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large4.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.1"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med3.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.4"
+	}
+}
+
+"c2a4c.radioactive_bin"
+{
+	"dsp"	"1"
+	"playlooping"
+	{
+		"volume"		"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large2.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.2"
+	}
+}
+

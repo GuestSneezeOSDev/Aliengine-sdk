@@ -1,0 +1,21 @@
+WeaponData
+{
+	printname	"Satchels"
+	bucket		"4"
+	bucket_position	"1"
+	clip_size	"-1"
+	default_clip	"1"
+	item_flags	"0"
+	playermodel	"models/weapons/w_satchel.mdl"
+	primary_ammo	"grenade_satchel"
+	viewmodel	"models/weapons/v_satchel.mdl"
+	weight		"0"
+	anim_prefix	"satchel"
+
+	SoundData
+	{
+		double_shot	"weapon_satchel.Double"
+		single_shot	"weapon_satchel.Single"
+		single_shot_npc	"weapon_satchel.Single_NPC"
+	}
+}

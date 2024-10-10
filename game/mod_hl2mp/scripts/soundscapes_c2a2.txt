@@ -1,0 +1,348 @@
+//On A Rail: Good thing Gordon was around, or the scientists would have been forced to unleash droves of monkeys to press the rocket launch button.
+
+"oar.distantnoise1"
+{
+	"playrandom"
+	{
+		"volume"	"1.0"
+		"pitch"		"90,110"
+		"time"		"15, 20"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_150dB"
+		"rndwave"
+		{
+			"wave"	"BMS_ambience\soundscape\bighit_far1.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far2.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far3.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far4.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far5.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far6.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far7.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far8.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far9.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far10.wav"
+		}
+	}
+}
+
+"oar.distantnoise2"
+{
+	"playrandom"
+	{
+		"volume"	"1.0"
+		"pitch"		"90,110"
+		"time"		"15, 21"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_150dB"
+		"rndwave"
+		{
+			"wave"	"BMS_ambience\soundscape\bighit_far11.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far12.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far13.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far14.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far15.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far16.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far17.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far18.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far19.wav"
+		}
+	}
+}
+
+"c1a1.util_miscamb"
+{
+	"playrandom"
+	{
+		"volume"	"1.0"
+		"pitch"		"90,110"
+		"time"		"11.0, 20.0"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_140dB"
+		"rndwave"
+		{
+			"wave"	"BMS_ambience\soundscape\misc_amb1.wav"
+			"wave"	"BMS_ambience\soundscape\misc_amb2.wav"
+			"wave"	"BMS_ambience\soundscape\misc_amb3.wav"
+			"wave"	"BMS_ambience\soundscape\misc_amb4.wav"
+			"wave"	"BMS_ambience\soundscape\misc_amb5.wav"
+			"wave"	"BMS_ambience\soundscape\misc_amb6.wav"
+			"wave"	"BMS_ambience\soundscape\misc_amb7.wav"
+			"wave"	"BMS_ambience\soundscape\misc_amb8.wav"
+		}
+	}
+}
+		
+
+
+
+
+////////////////////////// Soundscapes for use in levels /////////////////////////////
+// c2a2a
+
+"c2a2a.main_tunnel"
+{
+	"dsp"	"7"
+	"playlooping"
+	{
+		"volume"	"0.7"
+		"pitch"		"110"
+		"wave"		"bms_ambience\room_ambience\r_ambience_large7.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"oar.distantnoise1"
+		"volume"	"0.5"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_miscamb"
+		"volume"	"0.4"
+	}
+}
+
+"c2a2a.small_room"
+{
+	"dsp"	"0"
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"pitch"		"120"
+		"wave"		"bms_ambience\room_ambience\r_ambience_med8.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.1"
+		"pitch"		"110"
+		"wave"		"bms_ambience\room_ambience\r_ambience_large7.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_miscamb"
+		"volume"	"0.1"
+	}
+}
+
+"c2a2a.big_tunnel"
+{
+	"dsp"	"7"
+	"playlooping"
+	{
+		"volume"	"0.65"
+		"pitch"		"100"
+		"wave"		"bms_ambience\room_ambience\r_ambience_large4.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"oar.distantnoise2"
+		"volume"	"0.8"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_miscamb"
+		"volume"	"0.5"
+	}
+}
+
+
+
+// c2a2b
+"c2a2b.main_tunnel2"
+{
+	"dsp"	"7"
+	"playlooping"
+	{
+		"volume"	"0.7"
+		"pitch"		"110"
+		"wave"		"bms_ambience\room_ambience\r_ambience_large7.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"pitch"		"110"
+		"wave"		"bms_ambience\room_ambience\r_ambience_large9.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"oar.distantnoise1"
+		"volume"	"0.25"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_miscamb"
+		"volume"	"0.3"
+	}
+}
+
+"c2a2b.small_hallway"
+{
+	"dsp"	"18"
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"pitch"		"100"
+		"wave"		"bms_ambience\room_ambience\r_ambience_med3.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.2"
+		"pitch"		"110"
+		"wave"		"bms_ambience\room_ambience\r_ambience_large7.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_miscamb"
+		"volume"	"0.1"
+	}
+}
+
+"c2a2b.office_hallway"
+{
+	"dsp"	"17"
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"pitch"		"100"
+		"wave"		"bms_ambience\room_ambience\r_ambience_med8.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"100"
+		"wave"		"bms_ambience\room_ambience\r_ambience_large7.wav"
+	}
+}
+
+"c2a2b.office_room"
+{
+	"dsp"	"0"
+	"playlooping"
+	{
+		"volume"	"0.2"
+		"pitch"		"100"
+		"wave"		"bms_ambience\room_ambience\r_ambience_med8.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"110"
+		"wave"		"bms_ambience\room_ambience\r_ambience_med7.wav"
+	}
+}
+
+"c2a2b.mat_trans"
+{
+	"dsp"	"25"
+	"playlooping"
+	{
+		"volume"	"0.25"
+		"pitch"		"100"
+		"wave"		"bms_ambience\room_ambience\r_ambience_large5.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"100"
+		"wave"		"bms_ambience\room_ambience\r_ambience_med11.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_miscamb"
+		"volume"	"0.4"
+	}
+}
+
+"c2a2b.silo"
+{
+	"dsp"	"10"
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"110"
+		"wave"		"bms_ambience\room_ambience\r_ambience_large4.wav"
+	}
+}
+
+// c2a2c
+"c2a2c.main_tunnel3"
+{
+	"dsp"	"7"
+	"playlooping"
+	{
+		"volume"	"0.9"
+		"pitch"		"110"
+		"wave"		"bms_ambience\room_ambience\r_ambience_large7.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"pitch"		"110"
+		"wave"		"bms_ambience\room_ambience\r_ambience_large9.wav"
+	}
+}
+
+"c2a2c.outside"
+{
+	"dsp"	"0"
+	"playlooping"
+	{
+		"volume"	"0.9"
+		"pitch"		"100"
+		"wave"		"bms_ambience\room_ambience\r_ambience_night_battle1.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"pitch"		"100"
+		"wave"		"bms_ambience\room_ambience\r_ambience_wind3.wav"
+	}
+}
+
+"c2a2c.hatch"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"pitch"		"100"
+		"wave"		"bms_ambience\room_ambience\r_ambience_med14.wav"
+	}
+}
+
+"c2a2c.launchroom"
+{
+	"dsp"	"0"
+	"playlooping"
+	{
+		"volume"	"0.9"
+		"pitch"		"100"
+		"wave"		"bms_ambience\room_ambience\r_ambience_small3.wav"
+	}
+}
+
+"c2a2c.trainroom"
+{
+	"dsp"	"25"
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"100"
+		"wave"		"bms_ambience\room_ambience\r_ambience_large8.wav"
+	}
+}

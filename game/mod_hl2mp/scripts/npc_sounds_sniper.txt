@@ -1,0 +1,153 @@
+//*****************************************************
+// Combine Sniper sounds
+
+
+"NPC_Sniper.Idle"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"VOL_NORM"
+	"pitch"		"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_80dB"
+
+	"rndwave"
+	{
+		"wave" "npc/sniper/sn_radialscannovisual.wav"
+		"wave" "npc/sniper/sn_negativevisualonradial.wav"
+		"wave" "npc/sniper/sn_motionnegativeonradial.wav"
+	}
+}
+
+"NPC_Sniper.Alert"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"VOL_NORM"
+	"pitch"		"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_80dB"
+
+	"rndwave"
+	{
+		"wave"	"vo/npc/hgrunt/hg_alert02.wav"
+		"wave"	"vo/npc/hgrunt/hg_alert03.wav"
+		"wave"	"vo/npc/hgrunt/hg_alert10.wav"
+	}
+}
+
+"NPC_Sniper.Die"
+{
+	"channel"	"CHAN_VOICE"
+	"volume"	"VOL_NORM"
+	"pitch"		"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_80dB"
+
+	"rndwave"
+	{
+		"wave"	"vo/npc/hgrunt/hg_medic01.wav"
+		"wave"	"vo/npc/hgrunt/hg_medic18.wav"
+	}
+}
+
+"NPC_Sniper.TargetHidden"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"VOL_NORM"
+	"pitch"		"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_80dB"
+
+	"rndwave"
+	{
+		"wave"	"vo/npc/hgrunt/hg_taunt08.wav"
+
+	}
+}
+"NPC_Sniper.CoverDestroyed"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"VOL_NORM"
+	"pitch"		"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_80dB"
+
+	"rndwave"
+	{
+		"wave"	"npc/sniper/sn_coverremoved.wav"
+		"wave"	"npc/sniper/sn_targetdisplacing.wav"
+		"wave"	"npc/sniper/sn_blockeliminated.wav"
+		"wave"	"npc/sniper/sn_blockdown.wav"
+	}
+}
+"NPC_Sniper.TargetDestroyed"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"VOL_NORM"
+	"pitch"		"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_80dB"
+
+	"rndwave"
+	{
+		"wave"	"npc/sniper/sn_blockdown.wav"
+	}
+}
+
+"NPC_Sniper.HearDanger"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"VOL_NORM"
+	"pitch"		"PITCH_NORM"
+
+	"soundlevel"	"SNDLVL_80dB"
+
+	"rndwave"
+	{
+		"wave"	"vo/npc/hgrunt/hg_alert00.wav"
+		"wave"	"vo/npc/hgrunt/hg_cover01.wav"
+		"wave"	"vo/npc/hgrunt/hg_medic00.wav"
+	}
+}
+
+"NPC_Sniper.FireBullet"
+{
+	"channel"		"CHAN_STATIC"
+	"volume"		"1.0"
+	"pitch"		"97,104"
+
+	"soundlevel"	"SNDLVL_NONE"
+
+	"rndwave"
+	{
+		"wave"	"^npc/sniper/sniper1_nearfar.wav"
+	}
+}
+
+"NPC_Sniper.Reload"
+{
+	"channel"		"CHAN_WEAPON"
+	"volume"		"0.8"
+	"pitch"		"100"
+
+	"soundlevel"	"SNDLVL_90dB"
+
+	"rndwave"
+	{
+		"wave"	"npc/sniper/reload1.wav"
+	}
+}
+
+
+"NPC_Sniper.SonicBoom"
+{
+	"channel"	"CHAN_WEAPON"
+	"volume"	"0.65"
+	"pitch"		"95,106"
+
+	"soundlevel"	"SNDLVL_120dB"
+
+	"rndwave"
+	{
+		"wave"	"npc/sniper/sniper1_close.wav"
+	}
+}

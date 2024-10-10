@@ -1,0 +1,337 @@
+// Power Up: The tunnel system smelled like fried chicken for months afterward.
+
+
+"c1a1.util_gargfar1"
+{
+	"playrandom"
+	{
+		"volume"	"1.0"
+		"pitch"		"95,105"
+		"time"		"3.0, 6.0"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_140dB"
+		"rndwave"
+		{
+			"wave"	"npc\garg\garg_farstep1.wav"
+			"wave"	"npc\garg\garg_farstep2.wav"
+			"wave"	"npc\garg\garg_farstep3.wav"
+		}
+	}
+}
+
+"c1a1.util_gargroarfar1"
+{
+	"playrandom"
+	{
+		"volume"	"1.0"
+		"pitch"		"95,105"
+		"time"		"10, 15"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_140dB"
+		"rndwave"
+		{
+			"wave"	"npc\garg\Garggrowl_far1.wav"
+		}
+	}
+}
+
+"c1a1.util_gargroarfar2"
+{
+	"playrandom"
+	{
+		"volume"	"1.0"
+		"pitch"		"95,105"
+		"time"		"10, 15"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_140dB"
+		"rndwave"
+		{
+			"wave"	"npc\garg\Garggrowl2.wav"
+		}
+	}
+}
+
+
+//////////////////// Level Soundscapes ////////////////////
+
+
+"c2a1a.entrance_room"
+{
+	"dsp"	"0"
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med11.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_gargfar1"
+		"volume"	"0.7"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_gargroarfar1"
+		"volume"	"0.8"
+	}
+}
+
+"c2a1a.entrance_corridor"
+{
+	"dsp"	"0"
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_gargfar1"
+		"volume"	"1.0"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_gargroarfar2"
+		"volume"	"1.0"
+	}
+}
+
+"c2a1a.turntable_room"
+{
+	"dsp"	"1"
+
+	"playlooping"
+	{
+		"volume"	"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large6.wav"
+	}
+	
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med13.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med14.wav"
+	}
+}
+
+"c2a1a.train_tunnel"
+{
+	"dsp"	"7"
+
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large7.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med12.wav"
+	}
+}
+
+"c2a1a.generic_corridor"
+{
+	"dsp"	"0"
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+}
+
+"c2a1a.collapse_room"
+{
+	"dsp"	"0"
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med12.wav"
+	}
+}
+
+"c2a1a.control_room"
+{
+	"dsp"	"0"
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med8.wav"
+	}
+}
+
+"c2a1a.barrel_room"
+{
+	"dsp"	"18"
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+}
+
+"c2a1a.slime_shaft"
+{
+	"dsp"	"1"
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large4.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial34.wav"
+	}
+}
+
+// c2a1b
+"c2a1b.upper_room"
+{
+	"dsp"	"18"
+	"playlooping"
+	{
+		"volume"	"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med4.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med11.wav"
+	}
+}
+
+"c2a1b.middle_room"
+{
+	"dsp"	"18"
+	"playlooping"
+	{
+		"volume"	"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med4.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med11.wav"
+	}
+}
+
+"c2a1b.lower_room"
+{
+	"dsp"	"18"
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_water2.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_water3.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med4.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.2"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large5.wav"
+	}
+}
+
+"c2a1b.flooded_corridor"
+{
+	"dsp"	"18"
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_water2.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_water3.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med4.wav"
+	}
+}
+
+"c2a1b.flooded_stairwell"
+{
+	"dsp"	"17"
+	"playlooping"
+	{
+		"volume"	"0.1"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_water2.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med4.wav"
+	}
+}

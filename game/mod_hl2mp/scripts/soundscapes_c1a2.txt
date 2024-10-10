@@ -1,0 +1,265 @@
+// Office Complex: Unbeknownst to the staff, the cafeteria had been serving bullsquid for years.
+// c1a2a
+
+"c1a2a.office_corridor"
+{
+	"dsp"	"0"
+	"playlooping"
+	{
+		"volume"		"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_small2.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_small3.wav"
+	}
+}
+
+"c1a2a.office_largeroom"
+{
+	"dsp"	"0"
+	"playlooping"
+	{
+		"volume"		"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med4.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.2"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_small1.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.2"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med6.wav"
+	}
+}
+
+"c1a2a.office_smallroom"
+{
+	"dsp"	"0"
+	"playlooping"
+	{
+		"volume"		"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_small3.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.1"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med8.wav"
+	}
+}
+
+"c1a2a.office_floodedroom"
+{
+	"dsp"	"0"
+	"playlooping"
+	{
+		"volume"		"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_small2.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_water5.wav"
+	}
+}
+
+"c1a2a.ventilation_duct"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.9"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_vent1.wav"
+	}
+}
+
+"c1a2a.ventilation_shaft"
+{
+	"dsp"	"3"
+	"playlooping"
+	{
+		"volume"		"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large3.wav"
+	}
+}
+
+"c1a2a.utility_largeroom"
+{
+	"dsp"	"19"
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large7.wav"
+	}
+}
+
+"c1a2a.utility_smallroom"
+{
+	"dsp"	"17"
+	"playlooping"
+	{
+		"volume"		"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_small2.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large7.wav"
+	}
+}
+
+"c1a2a.utility_stairwell"
+{
+	"dsp"	"18"
+	"playlooping"
+	{
+		"volume"		"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large7.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.2"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med4.wav"
+	}
+}
+
+"c1a2a.elevator_shaft"
+{
+	"dsp"	"1"
+	"playlooping"
+	{
+		"volume"		"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large7.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_eleshaft1.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med12.wav"
+	}
+}
+
+"c1a2a.utility_exit"
+{
+	"dsp"	"3"
+
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med9.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.2"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_pipes1.wav"
+	}
+}
+
+
+
+// c1a2b
+"c1a2a.utility_entrance"
+{
+	"dsp"	"3"
+
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.1"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_pipes1.wav"
+	}
+}
+
+"c1a2b.office_cafeteria"
+{
+	"dsp"	"19"
+	"playlooping"
+	{
+		"volume"		"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large7.wav"
+	}
+
+
+}
+
+"c1a2b.freezer_coldroom"
+{
+	"dsp"	"4"
+	"playlooping"
+	{
+		"volume"		"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large5.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large4.wav"
+	}
+}
+
+"c1a2b.freezer_duct"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_vent1.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.1"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large4.wav"
+	}
+}

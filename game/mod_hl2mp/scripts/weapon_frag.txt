@@ -1,0 +1,21 @@
+WeaponData
+{
+	printname	"Grenades"
+	bucket		"4"
+	bucket_position	"0"
+	clip_size	"-1"
+	default_clip	"1"
+	item_flags	"0"
+	playermodel	"models/weapons/w_grenade.mdl"
+	primary_ammo	"grenade_frag"
+	viewmodel	"models/weapons/v_grenade.mdl"
+	weight		"0"
+	anim_prefix	"frag"
+
+	SoundData
+	{
+		single_shot	"weapon_frag.Single"
+		single_shot_npc	"weapon_frag.Single_NPC"
+		special1	"weapon_frag.Special1"
+	}
+}

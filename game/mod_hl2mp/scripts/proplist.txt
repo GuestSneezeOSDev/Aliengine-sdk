@@ -1,0 +1,87 @@
+"proplist.txt"
+{
+	"canteen"
+	{
+		gibs	"crate_canteen"
+	}
+
+	"joke"
+	{
+		gibs	"crate_joke"
+	}
+
+	"junk"
+	{
+		gibs	"crate_junk"
+	}
+
+	"lab"
+	{
+		gibs	"crate_lab"
+	}
+
+	"lab2"
+	{
+		gibs	"crate_lab2"
+	}
+
+	"military"
+	{
+		gibs	"crate_military"
+	}
+
+	"military_big"
+	{
+		gibs	"crate_military_big"
+	}
+
+	"office"
+	{
+		gibs	"crate_office"
+	}
+
+	"tech"
+	{
+		gibs	"crate_tech"
+	}
+
+	"tech2"
+	{
+		gibs	"crate_tech2"
+	}
+
+	"cleaning_products"
+	{
+		gibs	"crate_cleaning_products"
+	}
+
+	"paint_supplies"
+	{
+		gibs	"crate_paint_supplies"
+	}
+
+	"books_small"
+	{
+		gibs	"crate_books_small"
+	}
+
+	"books_large"
+	{
+		gibs	"crate_books_large"
+	}
+
+	"snacks"
+	{
+		gibs	"crate_snacks"
+	}
+
+	"computer_supplies"
+	{
+		gibs	"crate_computer_supplies"
+	}
+
+	"tools"
+	{
+		gibs	"crate_tools"
+	}
+}

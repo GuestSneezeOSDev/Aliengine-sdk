@@ -1,0 +1,574 @@
+// Blast Pit: There's an alien tentacle in my soup.
+
+"bp.tentroar_far"
+{
+	"playrandom"
+	{
+		"volume"	"1.0"
+		"pitch"		"90,110"
+		"time"		"6, 9"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_140dB"
+		"rndwave"
+		{
+			"wave"	"npc\tentacle\tent_sing1.wav"
+			"wave"	"npc\tentacle\tent_sing2.wav"
+			"wave"	"npc\tentacle\tent_sing3.wav"
+			"wave"	"npc\tentacle\tent_sing4.wav"
+			"wave"	"npc\tentacle\tent_sing5.wav"
+		}
+	}
+}
+
+"bp.tenthit_far"
+{
+	"playrandom"
+	{
+		"volume"	"1.0"
+		"pitch"		"95,105"
+		"time"		"0.25, 2"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_150dB"
+		"rndwave"
+		{
+			"wave"	"npc\tentacle\tent_strike_far1.wav"
+			"wave"	"npc\tentacle\tent_strike_far2.wav"
+			"wave"	"npc\tentacle\tent_strike_far3.wav"
+		}
+	}
+}
+
+"bp.distantnoise1"
+{
+	"playrandom"
+	{
+		"volume"	"1.0"
+		"pitch"		"90,110"
+		"time"		"15, 20"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_150dB"
+		"rndwave"
+		{
+			"wave"	"BMS_ambience\soundscape\bighit_far1.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far2.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far3.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far4.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far5.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far6.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far7.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far8.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far9.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far10.wav"
+		}
+	}
+}
+
+"bp.distantnoise2"
+{
+	"playrandom"
+	{
+		"volume"	"1.0"
+		"pitch"		"90,110"
+		"time"		"15, 21"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_150dB"
+		"rndwave"
+		{
+			"wave"	"BMS_ambience\soundscape\bighit_far11.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far12.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far13.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far14.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far15.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far16.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far17.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far18.wav"
+			"wave"	"BMS_ambience\soundscape\bighit_far19.wav"
+		}
+	}
+}
+
+"c1a1.util_indamb"
+{
+	"playrandom"
+	{
+		"volume"	"1.0"
+		"pitch"		"90,110"
+		"time"		"11.0, 20.0"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_140dB"
+		"rndwave"
+		{
+			"wave"	"BMS_ambience\soundscape\ind_amb1.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb2.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb3.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb4.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb5.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb6.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb7.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb8.wav"
+
+		}
+	}
+}
+
+
+
+// c1a4a
+
+"c1a4a.generic_hallway"
+{
+	"dsp"	"1"
+
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"85"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_small3.wav"
+	}
+}
+
+"c1a4a.medium_room"
+{
+	"dsp"	"1"
+
+	"playlooping"
+	{
+		"volume"	"0.2"
+		"pitch"		"90"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med9.wav"
+	}
+}
+
+"c1a4a.control_room"
+{
+	"dsp"	"2"
+
+	"playlooping"
+	{
+		"volume"	"0.35"
+		"pitch"		"90"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_small2.wav"
+	}
+}
+
+"c1a4a.elevator_shaft"
+{
+	"dsp"	"1"
+
+	"playlooping"
+	{
+		"volume"	"0.2"
+		"pitch"		"110"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_eleshaft1.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"bp.distantnoise1"
+		"volume"	"0.2"
+	}
+}
+
+"c1a4a.tube_hallway"
+{
+	"dsp"	"7"
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"pitch"		"110"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large2.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"bp.distantnoise1"
+		"volume"	"0.7"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"bp.distantnoise2"
+		"volume"	"0.5"
+	}
+}
+
+"c1a4a.sewer_hallway"
+{
+	"dsp"	"5"
+
+	"playlooping"
+	{
+		"volume"	"0.35"
+		"pitch"		"110"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med9.wav"
+	}
+}
+
+"c1a4a.small_corridor"
+{
+	"dsp"	"2"
+
+	"playlooping"
+	{
+		"volume"	"0.7"
+		"pitch"		"110"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_small3.wav"
+	}
+}
+
+"c1a4a.outer_silo"
+{
+	"dsp"	"25"
+
+	"playlooping"
+	{
+		"volume"	"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large6.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"bp.distantnoise2"
+		"volume"	"0.5"
+	}
+}
+
+
+
+
+
+// c1a4b
+
+"c1a4b.inner_silo"
+{
+	"dsp"	"25"
+
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large8.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"bp.distantnoise1"
+		"volume"	"0.4"
+	}
+}
+
+"c1a4b.tiny_room"
+{
+	"dsp"	"0"
+
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"120"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med3.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"bp.tentroar_far"
+		"volume"	"0.45"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"bp.tenthit_far"
+		"volume"	"0.45"
+	}
+}
+
+"c1a4b.outer_corridor"
+{
+	"dsp"	"3"
+
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"110"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"bp.tentroar_far"
+		"volume"	"1.0"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"bp.tenthit_far"
+		"volume"	"1.0"
+	}
+}
+
+"c1a4b.outer_corridor_notent"
+{
+	"dsp"	"3"
+
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"110"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+}
+
+"c1a4b.control"
+{
+	"dsp"	"2"
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"pitch"		"115"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med6.wav"
+	}
+}
+
+"c1a4b.blast_chamber"
+{
+	"dsp"	"10"
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"pitch"		"115"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med11.wav"
+	}
+}
+
+
+
+
+// c1a4c
+
+"c1a4c.elevator_shaft"
+{
+	"dsp"	"1"
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"pitch"		"115"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large4.wav"
+	}
+}
+
+"c1a4c.sewer_tunnel"
+{
+	"dsp"	"6"
+
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"pitch"		"110"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_water2.wav"
+	}
+}
+
+"c1a4c.large_fanroom"
+{
+	"dsp"	"25"
+
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"pitch"		"105"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large9.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"bp.distantnoise2"
+		"volume"	"0.3"
+	}
+}
+
+"c1a4c.vent_shaft"
+{
+	"dsp"	"2"
+
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"pitch"		"110"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_vent1.wav"
+	}
+}
+
+"c1a4c.gen_room"
+{
+	"dsp"	"3"
+
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"110"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med4.wav"
+	}
+}
+
+"c1a4c.gen_control"
+{
+	"dsp"	"0"
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med8.wav"
+	}
+}
+
+"c1a4c.service_hallway"
+{
+	"dsp"	"17"
+
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"115"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med3.wav"
+	}
+}
+
+
+
+
+// c1a4d
+
+"c1a4d.large_chamber"
+{
+	"dsp"	"10"
+
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"pitch"		"105"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large8.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"bp.distantnoise2"
+		"volume"	"0.25"
+	}
+}
+
+"c1a4d.tunnel"
+{
+	"dsp"	"6"
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"pitch"		"85"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large2.wav"
+	}
+}
+
+"c1a4d.silo_d3"
+{
+	"dsp"	"25"
+
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"pitch"		"105"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large4.wav"
+	}
+}
+
+"c1a4d.silo_control"
+{
+	"dsp"	"0"
+
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"115"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med8.wav"
+	}
+}
+
+
+
+// c1a4e
+
+"c1a4e.blast_pit"
+{
+	"dsp"	"3"
+
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"115"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large1.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.2"
+	}
+}
+
+"c1a4e.sewer_large"
+{
+	"dsp"	"4"
+
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"pitch"		"115"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large6.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.4"
+	}
+}
+
+"c1a4e.water_silo"
+{
+	"dsp"	"25"
+
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"110"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_lowrumble.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.7"
+	}
+}
+
+"c1a4e.big_pipe"
+{
+	"dsp"	"6"
+
+	"playlooping"
+	{
+		"volume"	"0.4"
+		"pitch"		"110"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_wind1.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.2"
+	}
+}

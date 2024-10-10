@@ -1,0 +1,19 @@
+WeaponData
+{
+	printname	"RPG"
+	bucket		"3"
+	bucket_position	"0"
+	item_flags	"0"
+	playermodel	"models/weapons/w_rpg.mdl"
+	primary_ammo	"grenade_rpg"
+	viewmodel	"models/weapons/v_rpg.mdl"
+	weight		"0"
+	default_clip	"1"
+	anim_prefix	"rpg"
+
+	SoundData
+	{
+		single_shot	"weapon_rpg.Single"
+	}
+
+}

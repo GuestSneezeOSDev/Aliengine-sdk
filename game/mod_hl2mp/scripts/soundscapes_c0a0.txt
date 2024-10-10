@@ -1,0 +1,176 @@
+//Inbound: Welcome to Black Mesa! Where hazardous chemical spills are a daily occurance!
+
+
+"ib.station"
+{
+	"dsp"	"10"
+	
+	"playlooping"
+	{
+		"volume"	"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_station1.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_ppl1.wav"
+	}
+
+
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\soundscape\soundscape_station1.wav"
+	}
+		
+
+}
+
+"ib.huge_tunnels"
+{
+	"dsp"	"7"
+	
+	"playlooping"
+	{
+		"volume"	"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large6.wav"
+	}
+
+		
+		
+
+}
+
+"ib.tunnels_small"
+{
+	"dsp"	"5"
+	
+	"playlooping"
+	{
+		"volume"	"0.9"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_small3.wav"
+	}
+}
+
+"ib.factory"
+{
+	"dsp" "10"
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"pitch"		"100"
+		"wave"		"bms_ambience\room_ambience\r_ambience_large5.wav"
+	}
+
+
+	"playlooping"
+	{
+		"volume"	"0.5"
+		"pitch"		"100"
+		"wave"		"bms_ambience\room_ambience\r_ambience_tramIndustrial1.wav"
+	}
+
+}
+
+"ib.vista"
+{
+	"dsp"	"1"
+	
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_desertday1.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_wind2.wav"
+	}
+}
+
+"ib.cave"
+{
+	"dsp"	"24"
+	
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_wind1.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_wind5.wav"
+	}
+}
+
+"ib.tunnels_door"
+{
+	"dsp"	"9"
+	
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large4.wav"
+	}
+}
+
+"ib.vat_room"
+{
+	"dsp"	"19"
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_industrial5.wav"
+	}
+}
+
+"ib.am_entrance"
+{
+	"dsp"	"10"
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large8.wav"
+	}
+}
+
+
+"ib.bridge_room"
+{
+	"dsp"	"10"
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large2.wav"
+	}
+}
+
+
+"ib.reactor"
+{
+	"dsp"	"10"
+	"playlooping"
+	{
+		"volume"	"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large6.wav"
+	}
+}
+

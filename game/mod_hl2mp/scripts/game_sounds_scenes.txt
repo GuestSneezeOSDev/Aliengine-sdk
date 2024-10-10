@@ -1,0 +1,111 @@
+"ss_open_silo_doors.ZombieGrabScream"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"*vo/c1a3a/SiloDoors/GRD_zombiegrabscream.wav"
+
+}
+
+"bang_on_window.Hit"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+	"soundlevel"		"SNDLVL_NORM"
+	"attenuation"	"0.55"
+
+	"rndwave"
+	{
+		"wave"			"BMS_objects/crashes_hits/hit1.wav"
+		"wave"			"BMS_objects/crashes_hits/hit2.wav"
+	}
+}
+
+"bang_on_window.Thud"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+	"soundlevel"		"SNDLVL_NORM"
+	"attenuation"	"0.55"
+	"rndwave"
+	{
+		"wave"			"BMS_objects/crashes_hits/thud1.wav"
+		"wave"			"BMS_objects/crashes_hits/thud2.wav"
+		"wave"			"BMS_objects/crashes_hits/thud3.wav"
+	}
+}
+
+"UC_sci_attack01_sci"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"BMS_scripted/uc/zombie_intro-sci.wav"
+}
+
+"UC_sci_attack01_zombie"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"BMS_scripted/uc/zombie_intro-zombie.wav"
+}
+
+"UC_Climbout_Sewer"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"BMS_scripted/uc/zombie_sewer.wav"
+}
+
+"Zombie_Spaz"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"BMS_scripted/uc/zombie_spaz.wav"
+}
+
+"SCI_CPR"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"BMS_scripted/uc/rescesutate.wav"
+}
+
+"UC_GRD_ReachMedkit"
+{
+	"channel"		"CHAN_VOICE"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"BMS_scripted/uc/reach_medkit.wav"
+}
+
+"UC_LaserHallway_ConsoleCrash"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"BMS_objects/crashes_hits/metal_crash1.wav"
+}
+
+"PU_GRD_Slide_Down_Wall"
+{
+	"channel"		"CHAN_BODY"
+	"volume"		"VOL_NORM"
+	"pitch"			"PITCH_NORM"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"BMS_scripted/pu/pu_guard_slide_down_wall.wav"
+}

@@ -1,0 +1,21 @@
+WeaponData
+{
+	printname	"Gluon"
+	bucket		"3"
+	bucket_position	"2"
+	item_flags	"0"
+	playermodel	"models/weapons/w_egon.mdl"
+	primary_ammo	"energy"
+	viewmodel	"models/weapons/v_egon.mdl"
+	weight		"8"
+	default_clip	"30"
+	anim_prefix	"gluon"
+
+	SoundData
+	{
+		empty		"weapon_gluon.Empty"
+		special1	"weapon_gluon.Special1"
+		special2	"weapon_gluon.Special2"
+		special3	"weapon_gluon.Special3"
+	}
+}

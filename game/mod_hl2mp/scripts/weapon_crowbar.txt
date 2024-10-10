@@ -1,0 +1,18 @@
+WeaponData
+{
+	printname	"Crowbar"
+	bucket		"0"
+	bucket_position	"0"
+	item_flags	"0"
+	playermodel	"models/weapons/w_crowbar.mdl"
+	viewmodel	"models/weapons/v_crowbar.mdl"
+	weight		"0"
+	anim_prefix	"crowbar"
+
+	SoundData
+	{
+		melee_hit	"weapon_crowbar.Melee_Hit"
+		melee_miss	"weapon_crowbar.Melee_Miss"
+	}
+
+}

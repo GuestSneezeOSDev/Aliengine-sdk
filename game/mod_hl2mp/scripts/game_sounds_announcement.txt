@@ -1,0 +1,556 @@
+//----------------------------------------------------------------------------
+//c1a0
+//----------------------------------------------------------------------------
+"C1A0_01"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_01.wav"
+}
+
+"C1A0_02"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_02.wav"
+}
+
+"C1A0_03"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_03.wav"
+}
+
+"C1A0_04"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_04.wav"
+}
+
+"C1A0_05"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+
+	"wave"			"vox_overhead/C1A0_05.wav"
+}
+
+"C1A0_06"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_06.wav"
+}
+
+"C1A0_07"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_07.wav"
+}
+
+"C1A0_08"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_08.wav"
+}
+
+"C1A0_09"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_09.wav"
+}
+
+"C1A0_10"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+
+	"wave"			"vox_overhead/C1A0_10.wav"
+}
+
+"C1A0_11"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_11.wav"
+}
+
+"C1A0_12"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_12.wav"
+}
+
+"C1A0_13"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_13.wav"
+}
+
+"C1A0_14"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_14.wav"
+}
+
+"C1A0_15"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+
+	"wave"			"vox_overhead/C1A0_15.wav"
+}
+
+"C1A0_16"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_16.wav"
+}
+
+"C1A0_17"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_17.wav"
+}
+
+"C1A0_18"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_18.wav"
+}
+
+"C1A0_19"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_19.wav"
+}
+
+"C1A0_20"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+
+	"wave"			"vox_overhead/C1A0_20.wav"
+}
+
+"C1A0_21"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_21.wav"
+}
+
+"C1A0_22"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_22.wav"
+}
+
+"C1A0_23"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_23.wav"
+}
+
+"C1A0_24"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_24.wav"
+}
+
+"C1A0_25"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+
+	"wave"			"vox_overhead/C1A0_25.wav"
+}
+
+"C1A0_26"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_26.wav"
+}
+
+"C1A0_27"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_27.wav"
+}
+
+"C1A0_28"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_28.wav"
+}
+
+"C1A0_29"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_29.wav"
+}
+
+"C1A0_30"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+
+	"wave"			"vox_overhead/C1A0_30.wav"
+}
+
+"C1A0_31"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_31.wav"
+}
+
+"C1A0_32"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_32.wav"
+}
+
+"C1A0_33"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_33.wav"
+}
+
+"C1A0_34"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_34.wav"
+}
+
+"C1A0_35"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+
+	"wave"			"vox_overhead/C1A0_35.wav"
+}
+
+"C1A0_36"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_36.wav"
+}
+
+"C1A0_37"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_37.wav"
+}
+
+"C1A0_38"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_38.wav"
+}
+
+"C1A0_39"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+	"wave"			"vox_overhead/C1A0_39.wav"
+}
+
+"C1A0_40"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+
+	"wave"			"vox_overhead/C1A0_40.wav"
+}
+
+"C1A0_41"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_NORM"
+
+	"wave"			"vox_overhead/C1A0_41.wav"
+}
+
+//----------------------------------------------------------------------------
+//c1a1
+//----------------------------------------------------------------------------
+"C1A1_00"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"attenuation"	"1.25"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_130dB"
+	"wave"			"vox_overhead/C1A1_01.wav"
+}
+
+"C1A1_01"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"attenuation"	"1.25"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_130dB"
+	"wave"			"vox_overhead/C1A1_01.wav"
+}
+
+"C1A1_02"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"attenuation"	"1.25"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_130dB"
+	"wave"			"vox_overhead/C1A1_02.wav"
+}
+
+"C1A1_03"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"attenuation"	"1.25"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_130dB"
+	"wave"			"vox_overhead/C1A1_03.wav"
+}
+
+"C1A1_04"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"attenuation"	"1.25"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_130dB"
+	"wave"			"vox_overhead/C1A1_04.wav"
+}
+
+"C1A1_05"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"attenuation"	"1.25"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_130dB"
+	"wave"			"vox_overhead/C1A1_05.wav"
+}
+
+"C1A1_06"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"attenuation"	"1.25"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_130dB"
+	"wave"			"vox_overhead/C1A1_06.wav"
+}
+
+"C1A1_07"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"attenuation"	"1.25"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_130dB"
+	"wave"			"vox_overhead/C1A1_07.wav"
+}
+
+"C1A1_08"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"attenuation"	"1.25"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_130dB"
+	"wave"			"vox_overhead/C1A1_08.wav"
+}
+
+"C1A1_09"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"attenuation"	"1.25"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_130dB"
+	"wave"			"vox_overhead/C1A1_09.wav"
+}
+
+"C1A1_10"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"attenuation"	"1.25"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_130dB"
+	"wave"			"vox_overhead/C1A1_10.wav"
+}
+
+"C1A1_11"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"0.8"
+	"attenuation"	"1.25"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_130dB"
+	"wave"			"vox_overhead/C1A1_11.wav"
+}
+
+//----------------------------------------------------------------------------
+//c1a3 WGH
+//----------------------------------------------------------------------------
+"C1A3_01"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"1"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_90dB"
+	"attenuation"	"0.6"
+	"wave"			"vox_overhead/C1A3_01.wav"
+}
+
+"C1A3_02"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"1"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_90dB"
+	"attenuation"	"0.6"
+	"wave"			"vox_overhead/C1A3_02.wav"
+}
+
+"C1A3_03"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"1"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_90dB"
+	"attenuation"	"0.6"
+	"wave"			"vox_overhead/C1A3_03.wav"
+}
+
+"C1A3_04"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"1"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_90dB"
+	"attenuation"	"0.6"
+	"wave"			"vox_overhead/C1A3_04.wav"
+}
+
+"C1A3_05_SWITCH"
+{
+	"channel"		"CHAN_STREAM"
+	"volume"		"1"
+	"pitch"			"100"
+	"soundlevel"		"SNDLVL_120dB"
+	"attenuation"	"0.4"
+	"wave"			"vox_overhead/C1A3_05_Switchover.wav"
+}

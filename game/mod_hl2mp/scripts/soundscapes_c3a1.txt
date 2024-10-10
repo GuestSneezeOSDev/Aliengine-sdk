@@ -1,0 +1,355 @@
+//Forget About Freeman: The 2008 finincial crisis was simply a cover for the repair costs of the Black Mesa facility.
+
+"c1a1.util_indamb"
+{
+	"playrandom"
+	{
+		"volume"	"1.0"
+		"pitch"		"90,110"
+		"time"		"11.0, 20.0"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_140dB"
+		"rndwave"
+		{
+			"wave"	"BMS_ambience\soundscape\ind_amb1.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb2.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb3.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb4.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb5.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb6.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb7.wav"
+			"wave"	"BMS_ambience\soundscape\ind_amb8.wav"
+
+		}
+	}
+}
+
+
+
+"c3a1a.tunnel"
+{
+	"dsp"	"6"
+	"playlooping"
+	{
+		"volume"		"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med11.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_ob_mortars_ug.wav"
+	}
+}
+
+
+"c3a1a.hallway"
+{
+	"dsp"	"17"
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med9.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_ob_mortars_ug.wav"
+	}
+}
+
+
+"c3a1a.garage.small"
+{
+	"dsp"	"18"
+	"playlooping"
+	{
+		"volume"		"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med12.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_ob_mortars_ug.wav"
+	}
+}
+
+
+"c3a1a.garage.med"
+{
+	"dsp"	"19"
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med12.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med11.wav"
+	}
+}
+
+
+"c3a1a.garage.large"
+{
+	"dsp"	"19"
+	"playlooping"
+	{
+		"volume"		"0.5"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med11.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large7.wav"
+	}
+}
+
+
+"c3a1a.garage.sewer"
+{
+	"dsp"	"25"
+	"playlooping"
+	{
+		"volume"		"0.9"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_rumble1.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.3"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med12.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.1"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+}
+
+"c3a1a.sewer"
+{
+	"dsp"	"1"
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large8.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_water1.wav"
+	}
+
+	"playsoundscape"
+	{
+		"name"		"c1a1.util_indamb"
+		"volume"	"0.2"
+	}
+}
+
+
+"c3a1a.sewer.topside"  //light battle sounds
+{
+	"dsp"	"1"
+	"playlooping"
+	{
+		"volume"		"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_ob_farboom.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.2"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_ob_fargunfire.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_ob_mortars_ug.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large8.wav"
+	}
+}
+
+
+"c3a1a.topside"  //heavy battle sounds
+{
+	"dsp"	"0"
+	"playlooping"
+	{
+		"volume"		"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_outdoorbattle1a.wav"
+	}
+
+
+	"playrandom"
+	{
+		"time"		"5, 12"
+		"volume"	"0.6,1.0"
+		"pitch"		"95,105"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_140db"
+		"rndwave"
+		{
+			"wave"	"BMS_ambience\soundscape\soundscape_boom1.wav"
+			"wave"	"BMS_ambience\soundscape\soundscape_boom2.wav"
+		}
+	}
+
+	"playrandom"
+	{
+		"time"		"110, 120"
+		"volume"	"1.0,1.0"
+		"pitch"		"95,105"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_140db"
+		"rndwave"
+		{
+			"wave"	"BMS_ambience\soundscape\soundscape_farchopper1.wav"
+		}
+	}
+
+	"playrandom"
+	{
+		"time"		"50, 60"
+		"volume"	"1.0,1.0"
+		"pitch"		"95,105"
+		"position"	"random"
+		"soundlevel"	"SNDLVL_140db"
+		"rndwave"
+		{
+			"wave"	"BMS_ambience\soundscape\soundscape_farjet1.wav"
+			"wave"	"BMS_ambience\soundscape\soundscape_farjet2.wav"
+			"wave"	"BMS_ambience\soundscape\soundscape_farjet3.wav"
+		}
+	}
+}
+
+
+"c3a1a.topside.indoors" //light echoed
+{
+	"dsp"	"18"
+	"playlooping"
+	{
+		"volume"		"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_ob_farboom.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_ob_mortars_ug.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large4.wav"
+	}
+}
+
+
+"c3a1a.elevator.shaft"
+{
+	"dsp"	"1"
+	"playlooping"
+	{
+		"volume"		"0.9"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large7.wav"
+	}
+}
+
+
+"c3a1a.hallway2"
+{
+	"dsp"	"1"
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med10.wav"
+	}
+}
+
+
+"c3a1a.mechbay"
+{
+	"dsp"	"25"
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large2.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large6.wav"
+	}
+}
+
+
+"c3a1a.lchallway"
+{
+	"dsp"	"6"
+	"playlooping"
+	{
+		"volume"		"0.4"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med11.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"1.0"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_large6.wav"
+	}
+}
+

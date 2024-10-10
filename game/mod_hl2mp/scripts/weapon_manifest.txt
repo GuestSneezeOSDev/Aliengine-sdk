@@ -1,0 +1,15 @@
+weapon_manifest
+{
+	"file"		"scripts/weapon_357.txt"
+	"file"		"scripts/weapon_crossbow.txt"
+	"file"		"scripts/weapon_crowbar.txt"
+	"file"		"scripts/weapon_tua.txt"
+	"file"		"scripts/weapon_glock.txt"
+	"file"		"scripts/weapon_gluon.txt"
+	"file"		"scripts/weapon_grenade.txt"
+	"file"		"scripts/weapon_hivehand.txt"
+	"file"		"scripts/weapon_mp5.txt"
+	"file"		"scripts/weapon_satchel.txt"
+	"file"		"scripts/weapon_shotgun.txt"
+	"file"		"scripts/weapon_tripmine.txt"
+}

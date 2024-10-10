@@ -1,0 +1,200 @@
+// Anomalous Materials: Someone explain to me why Gordon's job inside the test chamber, couldn't have been done by a robot, or even a monkey...
+
+
+"c1a0.computers"
+{
+	"playlooping"
+	{
+		"pitch"			"100"
+		"volume"		"1.0"
+		"soundlevel"  	"SNDLVL_60dB"
+
+		"wave"	"bms_ambience/machine_ambience/m_ambience_comp1.wav"
+	}
+	
+	"playlooping"
+	{
+		"pitch"			"100"
+		"volume"		"1.0"
+		"soundlevel"  	"SNDLVL_60dB"
+
+		"wave"	"bms_ambience/machine_ambience/m_ambience_comp2.wav"
+	}
+
+	"playlooping"
+	{
+		"pitch"			"100"
+		"volume"		"1.0"
+		"soundlevel"  	"SNDLVL_60dB"
+
+		"wave"	"bms_ambience/machine_ambience/m_ambience_comp3.wav"
+	}
+	
+}
+
+
+////////////////////////// Soundscapes for use in levels /////////////////////////////
+
+"c1a0.contolroom"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med4.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_lab1.wav"
+	}
+	
+	"playsoundscape"
+	{
+		"name"				"c1a0.computers"
+		"positionoverride"	"0"
+	}
+
+	"playsoundscape"
+	{
+		"name"				"c1a0.computers"
+		"positionoverride"	"1"
+	}
+
+}
+
+"c1a0.labs"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med4.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_lab1.wav"
+	}
+			
+}
+
+"c1a0.labsppl"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.6"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med4.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_lab1.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.2"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_ppl2.wav"
+	}
+			
+}
+
+"c1a0.halls"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.8"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med4.wav"
+	}
+
+}
+
+"c1a0.lockerroom"	
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med4.wav"
+	}
+
+	"playlooping"
+	{
+		"volume"		"0.15"
+		"pitch"		"100"
+		"wave"		"BMS_objects\hum\hum1.wav"
+	}
+}
+
+"c1a0.tuberoom"
+{
+	"dsp"	"2"
+	"playlooping"
+	{
+		"volume"		"0.7"
+		"pitch"		"100"
+		"wave"		"BMS_ambience\room_ambience\r_ambience_med4.wav"
+	}
+}
+
+"c1a0.testchamber"
+{
+	"dsp"	"10"
+
+	"playlooping"
+	{
+		"volume"	"1.0"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_large8.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+}
+
+"c1a0.shaft"
+{
+	"dsp"	"10"
+
+	"playlooping"
+	{
+		"volume"	"0.7"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_large2.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+}
+
+"c1a0.xen"
+
+{
+	"dsp"	"10"
+
+	"playlooping"
+	{
+		"volume"	"0.9"
+		"wave"	"BMS_ambience\room_ambience\r_ambience_xen3.wav"
+		"pitch"		"100"
+		"attenuation"	"ATTN_IDLE"
+	}
+
+	"playlooping"
+	{
+		"volume"	"0.3"
+		"pitch"		"100"
+		"wave"		"bms_ambience\room_ambience\r_ambience_xen5.wav"
+	}
+}

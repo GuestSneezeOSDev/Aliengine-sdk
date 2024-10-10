@@ -1,0 +1,138 @@
+"npc_sounds_alien_controller.Idle"
+{
+	"channel"		"CHAN_VOICE"
+	"pitch"		"PITCH_NORM"
+	"volume"		"VOL_NORM"
+	"soundlevel"	"SNDLVL_NORM"
+
+	"rndwave"
+	{
+		"wave"		"npc/alien_controller/con_idle1.wav"
+		"wave"		"npc/alien_controller/con_idle2.wav"
+	}
+}
+
+"npc_sounds_alien_controller.Alert"
+{
+	"channel"		"CHAN_VOICE"
+	"pitch"		"PITCH_NORM"
+	"volume"		"VOL_NORM"
+	"soundlevel"	"SNDLVL_85db"
+
+	"rndwave"
+	{
+		"wave"		"npc/alien_controller/con_alert1.wav"
+		"wave"		"npc/alien_controller/con_alert2.wav"
+	}
+}
+
+"npc_sounds_alien_controller.Pain"
+{
+	"channel"	"CHAN_VOICE"
+	"pitch"		"PITCH_NORM"
+	"volume"	"VOL_NORM"
+	"soundlevel"	"SNDLVL_85db"
+
+	"rndwave"
+	{
+		"wave"		"npc/alien_controller/con_pain1.wav"
+		"wave"		"npc/alien_controller/con_pain2.wav"
+		"wave"		"npc/alien_controller/con_pain3.wav"
+	}
+}
+
+"npc_sounds_alien_controller.Die"
+{
+	"channel"	"CHAN_VOICE"
+	"pitch"		"PITCH_NORM"
+	"volume"	"VOL_NORM"
+	"soundlevel"	"SNDLVL_140dB"
+
+	"rndwave"
+	{
+		"wave"		"npc/alien_controller/con_die1.wav"
+	}
+}
+
+"npc_sounds_alien_controller.Attack"
+{
+	"channel"	"CHAN_VOICE"
+	"pitch"		"PITCH_NORM"
+	"volume"	"VOL_NORM"
+	"soundlevel"	"SNDLVL_85db"
+
+	"rndwave"
+	{
+		"wave"		"npc/alien_controller/con_alert1.wav"
+		"wave"		"npc/alien_controller/con_alert2.wav"
+	}
+}
+
+"npc_sounds_alien_controller.Lift"
+{
+	"channel"	"CHAN_VOICE"
+	"pitch"		"PITCH_NORM"
+	"volume"	"VOL_NORM"
+	"soundlevel"	"SNDLVL_GUNFIRE"
+
+	"rndwave"
+	{
+		"wave"		"npc/alien_controller/con_lift1.wav"
+		"wave"		"npc/alien_controller/con_lift2.wav"
+	}
+}
+
+"npc_sounds_alien_controller.Throw"
+{
+	"channel"	"CHAN_VOICE"
+	"pitch"		"PITCH_NORM"
+	"volume"	"VOL_NORM"
+	"soundlevel"	"SNDLVL_85db"
+
+	"rndwave"
+	{
+		"wave"		"npc/alien_controller/con_throw1.wav"
+	}
+}
+
+"npc_sounds_alien_controller.HoverLoop"
+{
+	"channel"	"CHAN_STATIC"
+	"pitch"		"PITCH_NORM"
+	"volume"	"VOL_NORM"
+	"soundlevel"	"SNDLVL_120dB"
+
+	"rndwave"
+	{
+		"wave"		"^npc/alien_controller/con_hover.wav"
+	}
+}
+
+"npc_sounds_alien_controller.Grenade.Loop"
+{
+	"channel"	"CHAN_STATIC"
+	"pitch"		"PITCH_NORM"
+	"volume"	"0.5"
+	"soundlevel"	"SNDLVL_GUNFIRE"
+
+	"rndwave"
+	{
+		"wave"		"npc/alien_controller/energyorb_loop.wav"
+	}
+}
+
+"npc_sounds_alien_controller.Grenade.Detonate"
+{
+	"channel"	"CHAN_VOICE"
+	"pitch"		"PITCH_NORM"
+	"volume"	"0.5"
+	"soundlevel"	"SNDLVL_GUNFIRE"
+
+	"rndwave"
+	{
+		"wave"		"npc/alien_controller/energyorb_exp.wav"
+	}
+}
+
+
+

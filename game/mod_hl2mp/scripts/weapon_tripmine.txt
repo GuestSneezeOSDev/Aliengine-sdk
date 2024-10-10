@@ -1,0 +1,14 @@
+WeaponData
+{
+	printname	"Tripmines"
+	bucket		"4"
+	bucket_position	"2"
+	clip_size	"-1"
+	default_clip	"1"
+	item_flags	"0"
+	playermodel	"models/weapons/w_tripmine.mdl"
+	primary_ammo	"grenade_tripmine"
+	viewmodel	"models/weapons/v_tripmine.mdl"
+	weight		"0"
+	anim_prefix	"tripmine"
+}

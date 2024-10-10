@@ -1,0 +1,25 @@
+WeaponData
+{
+	printname	"Crossbow"
+	bucket		"2"
+	bucket_position	"2"
+	clip_size	"5"
+	item_flags	"0"
+	playermodel	"models/weapons/w_crossbow.mdl"
+	primary_ammo	"bolt"
+	viewmodel	"models/weapons/v_crossbow.mdl"
+	weight		"5"
+	anim_prefix	"crossbow"
+
+	SoundData
+	{
+		double_shot 	"weapon_crossbow.Single"
+		double_shot_npc	"weapon_crossbow.Single_NPC"
+		reload		"weapon_crossbow.Reload"
+		reload_npc	"weapon_crossbow.Reload_NPC"
+		empty		"weapon_crossbow.Empty"
+		single_shot	"weapon_crossbow.Single"
+		single_shot_npc	"weapon_crossbow.Single_NPC"
+		special1	"weapon_crossbow.Special1"
+	}
+}

@@ -1,0 +1,25 @@
+WeaponData
+{
+	printname	"Hivehand"
+	bucket		"3"
+	bucket_position	"3"
+	clip_size		"-1"
+	default_clip	"8"
+	playermodel	"models/weapons/w_hgun.mdl"
+	primary_ammo	"grenade_hornet"
+	viewmodel	"models/weapons/v_hgun.mdl"
+	weight		"7"
+	anim_prefix	"hivehand"
+	item_flags	"65"
+	fov		"65"
+
+	SoundData
+	{
+		double_shot	"weapon_hivehand.Double"
+		double_shot_npc	"weapon_hivehand.Double_NPC"
+		empty		"weapon_hivehand.Empty"
+		single_shot	"weapon_hivehand.Single"
+		single_shot_npc	"weapon_hivehand.Single_NPC"
+		special1	"weapon_hivehand.BackgroundLoop"
+	}
+}

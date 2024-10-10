@@ -1,0 +1,25 @@
+soundscapes_manifest
+{
+	"file"		"scripts/soundscapes.txt"
+
+	// List BMS soundscape files here
+	
+	"file"		"scripts/soundscapes_c0a0.txt"
+	"file"		"scripts/soundscapes_c1a0.txt"
+	"file"		"scripts/soundscapes_c1a1.txt"
+	"file"		"scripts/soundscapes_c1a2.txt"
+	"file"		"scripts/soundscapes_c1a3.txt"
+	"file"		"scripts/soundscapes_c1a4.txt"
+	"file"		"scripts/soundscapes_c2a1.txt"
+	"file"		"scripts/soundscapes_c2a2.txt"
+	"file"		"scripts/soundscapes_c2a3.txt"
+	"file"		"scripts/soundscapes_c2a4q.txt"
+	"file"		"scripts/soundscapes_c2a4r.txt"
+	"file"		"scripts/soundscapes_c2a5.txt"
+	"file"		"scripts/soundscapes_c3a1.txt"
+	"file"		"scripts/soundscapes_c3a2.txt"
+
+	// List HL2 soundscape files here	
+
+	"file"		"scripts/soundscapes_generic.txt"
+	}
