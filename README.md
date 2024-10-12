@@ -37,7 +37,7 @@ This projects aims to recreate Xengine / Black Mesa Engine Branch
 
 - [X] In-game new lights and xog editors
 - [X] Multiple VRAD upgrades, such as support for Alpha-Tested textures, 4-way blends, baked Ambient Occlusion, Real Sky Ambient Light, and more
-- [X] 64-bit shader compiler
+- [ ] 64-bit shader compiler
 
 
 # Software used
