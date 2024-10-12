@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -26,7 +26,7 @@ public:
 	
 	// Initialize.
 #if defined( CLIENT_DLL )
-	void Init( const C_BaseAnimating *pStudioHdr, matrix3x4_t *pBones );
+	void Init( const C_BaseAnimating *pAnimating, matrix3x4_t *pBones );
 #endif
 	
 	int GetReadableBones();
@@ -72,9 +72,9 @@ inline CBoneAccessor::CBoneAccessor( matrix3x4_t *pBones )
 }
 
 #if defined( CLIENT_DLL )
-	inline void CBoneAccessor::Init( const C_BaseAnimating *pStudioHdr, matrix3x4_t *pBones )
+	inline void CBoneAccessor::Init( const C_BaseAnimating *pAnimating, matrix3x4_t *pBones )
 	{
-		m_pAnimating = pStudioHdr;
+		m_pAnimating = pAnimating;
 		m_pBones = pBones;
 	}
 #endif

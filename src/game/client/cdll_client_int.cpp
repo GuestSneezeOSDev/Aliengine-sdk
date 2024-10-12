@@ -117,6 +117,7 @@
 #include "tf_hud_disconnect_prompt.h"
 #include "../engine/audio/public/sound.h"
 #include "tf_shared_content_manager.h"
+#include "tf_gamerules.h"
 #endif
 #include "clientsteamcontext.h"
 #include "renamed_recvtable_compat.h"
@@ -124,6 +125,7 @@
 #include "sourcevr/isourcevirtualreality.h"
 #include "client_virtualreality.h"
 #include "mumble.h"
+#include "vgui_controls/BuildGroup.h"
 
 // NVNT includes
 #include "hud_macros.h"
@@ -902,7 +904,7 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 		return false;
 	if ( (networkstringtable = (INetworkStringTableContainer *)appSystemFactory(INTERFACENAME_NETWORKSTRINGTABLECLIENT,NULL)) == NULL )
 		return false;
-	if ( (partition = (ISpatialPartition *)appSystemFactory(INTERFACEVERSION_SPATIALPARTITION, NULL)) == NULL )
+	if ( (::partition = (ISpatialPartition *)appSystemFactory(INTERFACEVERSION_SPATIALPARTITION, NULL)) == NULL )
 		return false;
 	if ( (shadowmgr = (IShadowMgr *)appSystemFactory(ENGINE_SHADOWMGR_INTERFACE_VERSION, NULL)) == NULL )
 		return false;
@@ -952,7 +954,8 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 #endif
 
 	// it's ok if this is NULL. That just means the sourcevr.dll wasn't found
-	g_pSourceVR = (ISourceVirtualReality *)appSystemFactory(SOURCE_VIRTUAL_REALITY_INTERFACE_VERSION, NULL);
+	if ( CommandLine()->CheckParm( "-vr" ) )
+		g_pSourceVR = (ISourceVirtualReality *)appSystemFactory(SOURCE_VIRTUAL_REALITY_INTERFACE_VERSION, NULL);
 
 	factorylist_t factories;
 	factories.appSystemFactory = appSystemFactory;
@@ -1202,7 +1205,7 @@ void CHLClient::Shutdown( void )
 	
 	ParticleMgr()->Term();
 	
-	ClearKeyValuesCache();
+	vgui::BuildGroup::ClearResFileCache();
 
 #ifndef NO_STEAM
 	ClientSteamContext().Shutdown();
@@ -1749,10 +1752,10 @@ void CHLClient::LevelShutdown( void )
 //-----------------------------------------------------------------------------
 void CHLClient::SetCrosshairAngle( const QAngle& angle )
 {
-	CHudCrosshair *crosshair = GET_HUDELEMENT( CHudCrosshair );
-	if ( crosshair )
+	CHudCrosshair *pCrosshair = GET_HUDELEMENT( CHudCrosshair );
+	if ( pCrosshair )
 	{
-		crosshair->SetCrosshairAngle( angle );
+		pCrosshair->SetCrosshairAngle( angle );
 	}
 }
 
@@ -2109,10 +2112,11 @@ void OnRenderStart()
 	g_pPortalRender->UpdatePortalPixelVisibility(); //updating this one or two lines before querying again just isn't cutting it. Update as soon as it's cheap to do so.
 #endif
 
-	partition->SuppressLists( PARTITION_ALL_CLIENT_EDICTS, true );
+	::partition->SuppressLists( PARTITION_ALL_CLIENT_EDICTS, true );
 	C_BaseEntity::SetAbsQueriesValid( false );
 
 	Rope_ResetCounters();
+	UpdateLocalPlayerVisionFlags();
 
 	// Interpolate server entities and move aiments.
 	{
@@ -2152,7 +2156,7 @@ void OnRenderStart()
 	// This will place all entities in the correct position in world space and in the KD-tree
 	C_BaseAnimating::UpdateClientSideAnimations();
 
-	partition->SuppressLists( PARTITION_ALL_CLIENT_EDICTS, false );
+	::partition->SuppressLists( PARTITION_ALL_CLIENT_EDICTS, false );
 
 	// Process OnDataChanged events.
 	ProcessOnDataChangedEvents();
@@ -2265,7 +2269,7 @@ void CHLClient::FrameStageNotify( ClientFrameStage_t curStage )
 			C_BaseEntity::EnableAbsRecomputations( false );
 			C_BaseEntity::SetAbsQueriesValid( false );
 			Interpolation_SetLastPacketTimeStamp( engine->GetLastTimeStamp() );
-			partition->SuppressLists( PARTITION_ALL_CLIENT_EDICTS, true );
+			::partition->SuppressLists( PARTITION_ALL_CLIENT_EDICTS, true );
 
 			PREDICTION_STARTTRACKVALUE( "netupdate" );
 		}
@@ -2277,7 +2281,7 @@ void CHLClient::FrameStageNotify( ClientFrameStage_t curStage )
 			// reenable abs recomputation since now all entities have been updated
 			C_BaseEntity::EnableAbsRecomputations( true );
 			C_BaseEntity::SetAbsQueriesValid( true );
-			partition->SuppressLists( PARTITION_ALL_CLIENT_EDICTS, false );
+			::partition->SuppressLists( PARTITION_ALL_CLIENT_EDICTS, false );
 
 			PREDICTION_ENDTRACKVALUE();
 		}
@@ -2439,10 +2443,18 @@ bool CHLClient::CanRecordDemo( char *errorMsg, int length ) const
 
 void CHLClient::OnDemoRecordStart( char const* pDemoBaseName )
 {
+	if ( GetClientModeNormal() )
+	{
+		return GetClientModeNormal()->OnDemoRecordStart( pDemoBaseName );
+	}
 }
 
 void CHLClient::OnDemoRecordStop()
 {
+	if ( GetClientModeNormal() )
+	{
+		return GetClientModeNormal()->OnDemoRecordStop();
+	}
 }
 
 void CHLClient::OnDemoPlaybackStart( char const* pDemoBaseName )
@@ -2569,7 +2581,11 @@ void CHLClient::ClientAdjustStartSoundParams( StartSoundParams_t& params )
 			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pEntity, flVoicePitchScale, voice_pitch_scale );
 
 			int iHalloweenVoiceSpell = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pEntity, iHalloweenVoiceSpell, halloween_voice_modulation );
+			if ( TF_IsHolidayActive( kHoliday_HalloweenOrFullMoon ) )
+			{
+				CALL_ATTRIB_HOOK_INT_ON_OTHER( pEntity, iHalloweenVoiceSpell, halloween_voice_modulation );
+			}
+
 			if ( iHalloweenVoiceSpell > 0 )
 			{
 				params.pitch *= 0.8f;
@@ -2618,7 +2634,7 @@ CSteamID GetSteamIDForPlayerIndex( int iPlayerIndex )
 		{
 			if ( pi.friendsID )
 			{
-				return CSteamID( pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual );
+				return CSteamID( pi.friendsID, 1, GetUniverse(), k_EAccountTypeIndividual );
 			}
 		}
 	}

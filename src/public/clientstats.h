@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -35,7 +35,7 @@ struct IClientStatsTime
 struct IClientStatsTextDisplay
 {
 	// Draws the stats
-	virtual void DrawStatsText( const char *fmt, ... ) = 0;
+	virtual void DrawStatsText( PRINTF_FORMAT_STRING const char *fmt, ... ) = 0;
 
 	virtual void SetDrawColor( unsigned char r, unsigned char g, unsigned char b ) = 0;
 
@@ -49,7 +49,7 @@ struct IClientStatsTextDisplay
 // the engine to allow clients to render their own stats.
 //-----------------------------------------------------------------------------
 
-class IClientStats
+abstract_class IClientStats
 {
 public:
 	// This is called at startup to tell the stats about time
@@ -80,7 +80,7 @@ public:
 //-----------------------------------------------------------------------------
 
 template <int timedStatCount, int countedStatCount>
-class CBaseClientStats : public IClientStats
+abstract_class CBaseClientStats : public IClientStats
 {
 public:
 	void Init( IClientStatsTime* pTime );

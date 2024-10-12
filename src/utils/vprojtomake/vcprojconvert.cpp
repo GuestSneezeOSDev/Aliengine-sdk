@@ -1,9 +1,13 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //=============================================================================//
+#ifdef _LINUX
+#include <ctime> // needed by xercesc
+#endif
+
 #include "stdafx.h"
 #include "tier0/platform.h"
 #include <stdio.h>
@@ -19,17 +23,21 @@
 #include <dirent.h> // scandir()
 #define _stat stat
 
+
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/util/XMLString.hpp>
 #include <xercesc/dom/DOM.hpp>
 #include <xercesc/sax/HandlerBase.hpp>
 #include <xercesc/parsers/XercesDOMParser.hpp>
+
+#include "valve_minmax_off.h"
 #if defined(XERCES_NEW_IOSTREAMS)
 #include <iostream>
 #else
 #include <iostream.h>
 #endif
 
+#include "valve_minmax_on.h"
 
 #define IXMLDOMNode DOMNode
 #define IXMLDOMNodeList DOMNodeList
@@ -440,7 +448,7 @@ bool CVCProjConvert::ExtractIncludes( IXMLDOMElement *pDoc, CConfiguration & con
 				if ( toolName == "VCCLCompilerTool" )
 				{
 					CUtlSymbol defines = GetXMLAttribValue( pElem, "PreprocessorDefinitions" );
-					char *str = (char *)_alloca( Q_strlen( defines.String() + 1 ));
+					char *str = (char *)_alloca( Q_strlen( defines.String() ) + 1 );
 					Assert( str );
 					Q_strcpy( str, defines.String() );
 					// now tokenize the string on the ";" char
@@ -465,7 +473,7 @@ bool CVCProjConvert::ExtractIncludes( IXMLDOMElement *pDoc, CConfiguration & con
 					}
 
 					CUtlSymbol includes = GetXMLAttribValue( pElem, "AdditionalIncludeDirectories" );
-					char *str2 = (char *)_alloca( Q_strlen( includes.String() + 1 ));
+					char *str2 = (char *)_alloca( Q_strlen( includes.String() ) + 1 );
 					Assert( str2 );
 					Q_strcpy( str2, includes.String() );
 					// now tokenize the string on the ";" char
@@ -498,7 +506,7 @@ bool CVCProjConvert::ExtractIncludes( IXMLDOMElement *pDoc, CConfiguration & con
 				if ( toolName == "VCCLCompilerTool" )
 				{
 					CUtlSymbol defines = GetXMLAttribValue( node, "PreprocessorDefinitions" );
-					char *str = (char *)_alloca( Q_strlen( defines.String() + 1 ));
+					char *str = (char *)_alloca( Q_strlen( defines.String() ) + 1 );
 					Assert( str );
 					Q_strcpy( str, defines.String() );
 					// now tokenize the string on the ";" char
@@ -523,7 +531,7 @@ bool CVCProjConvert::ExtractIncludes( IXMLDOMElement *pDoc, CConfiguration & con
 					}
 
 					CUtlSymbol includes = GetXMLAttribValue( node, "AdditionalIncludeDirectories" );
-					char *str2 = (char *)_alloca( Q_strlen( includes.String() + 1 ));
+					char *str2 = (char *)_alloca( Q_strlen( includes.String() ) + 1 );
 					Assert( str2 );
 					Q_strcpy( str2, includes.String() );
 					// now tokenize the string on the ";" char
@@ -540,7 +548,6 @@ bool CVCProjConvert::ExtractIncludes( IXMLDOMElement *pDoc, CConfiguration & con
 						*delim = 0;
 						delim++;
 						Q_FixSlashes( curpos );
-						Q_strlower( curpos );
 						char fullPath[ MAX_PATH ];
 						Q_snprintf( fullPath, sizeof(fullPath), "%s/%s", m_BaseDir.String(), curpos );
 						Q_StripTrailingSlash( fullPath );
@@ -727,13 +734,13 @@ const char *findFileInDirCaseInsensitive(const char *file)
         if( !dirName )
                 return NULL;
 
-        strncpy( dirName , file, dirSep - file );
+		Q_strncpy( dirName, file, dirSep - file );
         dirName[ dirSep - file ] = '\0';
 
         struct dirent **namelist;
         int n;
 
-        strncpy( fileName, dirSep + 1, MAX_PATH );
+		Q_strncpy( fileName, dirSep + 1, MAX_PATH );
 
 
         n = scandir( dirName , &namelist, CheckName, alphasort );

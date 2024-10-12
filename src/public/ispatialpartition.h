@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -47,6 +47,12 @@ enum
 	PARTITION_CLIENT_SOLID_EDICTS			\
 	)
 
+
+// These are the only handles in the spatial partition that the game is controlling (everything but static props)
+// These masks are used to handle updating the dirty spatial partition list in each game DLL
+#define PARTITION_CLIENT_GAME_EDICTS (PARTITION_ALL_CLIENT_EDICTS & ~PARTITION_CLIENT_STATIC_PROPS)
+#define PARTITION_SERVER_GAME_EDICTS (PARTITION_ENGINE_SOLID_EDICTS|PARTITION_ENGINE_TRIGGER_EDICTS|PARTITION_ENGINE_NON_STATIC_EDICTS)
+
 //-----------------------------------------------------------------------------
 // Clients that want to know about all elements within a particular
 // volume must inherit from this
@@ -77,6 +83,9 @@ class IPartitionEnumerator
 {
 public:
 	virtual IterationRetval_t EnumElement( IHandleEntity *pHandleEntity ) = 0;
+	// XXX(johns): This should have a virtual destructor, but would be ABI breaking (non-versioned interface implemented
+	//             by the game)
+	// virtual ~IPartitionEnumerator(){}
 };
 
 
@@ -86,7 +95,9 @@ public:
 class IPartitionQueryCallback
 {
 public:
-	virtual void OnPreQuery() = 0;
+	virtual void OnPreQuery_V1() = 0;
+	virtual void OnPreQuery( SpatialPartitionListMask_t listMask ) = 0;
+	virtual void OnPostQuery( SpatialPartitionListMask_t listMask ) = 0;
 };
 
 
@@ -99,9 +110,14 @@ enum
 };
 
 
-class ISpatialPartition
+abstract_class ISpatialPartition
 {
 public:
+	// Add a virtual destructor to silence the clang warning.
+	// This is harmless but not important since the only derived class
+	// doesn't have a destructor.
+	virtual ~ISpatialPartition() {}
+
 	// Create/destroy a handle for this dude in our system. Destroy
 	// will also remove it from all lists it happens to be in
 	virtual SpatialPartitionHandle_t CreateHandle( IHandleEntity *pHandleEntity ) = 0;
@@ -132,11 +148,11 @@ public:
 
 	// A fast method to insert + remove a handle from the tree...
 	// This is used to suppress collision of a single model..
-	virtual SpatialTempHandle_t FastRemove( SpatialPartitionHandle_t handle ) = 0;
-	virtual void FastInsert( SpatialPartitionHandle_t handle, SpatialTempHandle_t tempHandle ) = 0;
+	virtual SpatialTempHandle_t HideElement( SpatialPartitionHandle_t handle ) = 0;
+	virtual void UnhideElement( SpatialPartitionHandle_t handle, SpatialTempHandle_t tempHandle ) = 0;
 	
 	// Installs callbacks to get called right before a query occurs
-	virtual void InstallQueryCallback( IPartitionQueryCallback *pCallback ) = 0;
+	virtual void InstallQueryCallback_V1( IPartitionQueryCallback *pCallback ) = 0;
 	virtual void RemoveQueryCallback( IPartitionQueryCallback *pCallback ) = 0;
 
 	// Gets all entities in a particular volume...
@@ -177,19 +193,24 @@ public:
 	virtual void SuppressLists( SpatialPartitionListMask_t nListMask, bool bSuppress ) = 0;
 	virtual SpatialPartitionListMask_t GetSuppressedLists() = 0;
 
-	virtual void RenderAllObjectsInTree( float flTime ) {}
-	virtual void RenderObjectsInPlayerLeafs( const Vector &vecPlayerMin, const Vector &vecPlayerMax, float flTime ) {}
-	virtual void RenderLeafsForRayTraceStart( float flTime  ) {}
-	virtual void RenderLeafsForRayTraceEnd( void ) {}
-	virtual void RenderLeafsForHullTraceStart( float flTime  ) {}
-	virtual void RenderLeafsForHullTraceEnd( void ) {}
-	virtual void RenderLeafsForBoxStart( float flTime  ) {}
-	virtual void RenderLeafsForBoxEnd( void ) {}
-	virtual void RenderLeafsForSphereStart( float flTime  ) {}
-	virtual void RenderLeafsForSphereEnd( void ) {}
+	virtual void RenderAllObjectsInTree( float flTime ) = 0;
+	virtual void RenderObjectsInPlayerLeafs( const Vector &vecPlayerMin, const Vector &vecPlayerMax, float flTime ) = 0;
+	virtual void RenderLeafsForRayTraceStart( float flTime ) = 0;
+	virtual void RenderLeafsForRayTraceEnd( void ) = 0;
+	virtual void RenderLeafsForHullTraceStart( float flTime ) = 0;
+	virtual void RenderLeafsForHullTraceEnd( void ) = 0;
+	virtual void RenderLeafsForBoxStart( float flTime ) = 0;
+	virtual void RenderLeafsForBoxEnd( void ) = 0;
+	virtual void RenderLeafsForSphereStart( float flTime ) = 0;
+	virtual void RenderLeafsForSphereEnd( void ) = 0;
 
-	virtual void RenderObjectsInBox( const Vector &vecMin, const Vector &vecMax, float flTime ) {}
-	virtual void RenderObjectsInSphere( const Vector &vecCenter, float flRadius, float flTime ) {}
+	virtual void RenderObjectsInBox( const Vector &vecMin, const Vector &vecMax, float flTime ) = 0;
+	virtual void RenderObjectsInSphere( const Vector &vecCenter, float flRadius, float flTime ) = 0;
+	virtual void RenderObjectsAlongRay( const Ray_t& ray, float flTime ) = 0;
+
+	virtual void ReportStats( const char *pFileName ) = 0;
+
+	virtual void InstallQueryCallback( IPartitionQueryCallback *pCallback ) = 0;
 };
 
 #endif

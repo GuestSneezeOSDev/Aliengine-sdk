@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,7 +12,7 @@
 
 class IConnectionlessPacketHandler;
 
-class INetwork
+abstract_class INetwork
 {
 public:
 	virtual	~INetwork( void ) {};
@@ -30,7 +30,7 @@ public:
 
 	virtual void ProcessSocket( netsrc_t sock, IConnectionlessPacketHandler * handler ) = 0;
 
-	virtual void OutOfBandPrintf(netsrc_t sock, netadr_t &adr, const char *format, ...) = 0;
+	virtual void OutOfBandPrintf(netsrc_t sock, netadr_t &adr, PRINTF_FORMAT_STRING const char *format, ...) = 0;
 	virtual void SendConnectionless(netsrc_t sock, netadr_t &adr, unsigned char * data, int length ) = 0;
 
 	virtual void LogBadPacket(netpacket_t * packet) = 0;

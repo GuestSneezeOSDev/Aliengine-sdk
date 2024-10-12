@@ -693,7 +693,7 @@ void CMultiPlayerAnimState::AddVCDSequenceToGestureSlot( int iGestureSlot, int i
 	m_aGestureSlots[iGestureSlot].m_pAnimLayer->m_flLayerAnimtime = 0.0f;
 	m_aGestureSlots[iGestureSlot].m_pAnimLayer->m_flLayerFadeOuttime = 0.0f;
 
-	pPlayer->m_flOverlayPrevEventCycle[iGestureSlot] = -1.0;
+	pPlayer->m_flOverlayPrevEventCycle[iGestureSlot] = flCycle == 0.f ? -1.0 : flCycle;
 
 #else
 
@@ -1937,9 +1937,12 @@ void CMultiPlayerAnimState::DebugShowEyeYaw( void )
 	AngleVectors( angles, &vecForward, &vecRight, &vecUp );
 
 	// Draw a red triangle on the ground for the eye yaw.
-	debugoverlay->AddTriangleOverlay( ( vecPos + vecRight * flBaseSize / 2.0f ), 
-		( vecPos - vecRight * flBaseSize / 2.0f ), 
-		( vecPos + vecForward * flHeight, 255, 0, 0, 255, false, 0.01f );
+	if ( debugoverlay )
+	{
+		debugoverlay->AddTriangleOverlay( ( vecPos + vecRight * flBaseSize / 2.0f ), 
+			( vecPos - vecRight * flBaseSize / 2.0f ), 
+			( vecPos + vecForward * flHeight, 255, 0, 0, 255, false, 0.01f );
+	}
 
 #endif
 }
@@ -2020,20 +2023,23 @@ void CMultiPlayerAnimState::DebugShowAnimState( int iStartLine )
 
 	Anim_StateLog( "--------------------------------------------\n\n" );
 
-	// Draw a red triangle on the ground for the eye yaw.
-	float flBaseSize = 10;
-	float flHeight = 80;
-	Vector vBasePos = GetBasePlayer()->GetAbsOrigin() + Vector( 0, 0, 3 );
-	QAngle angles( 0, 0, 0 );
-	angles[YAW] = m_flEyeYaw;
-	Vector vForward, vRight, vUp;
-	AngleVectors( angles, &vForward, &vRight, &vUp );
-	debugoverlay->AddTriangleOverlay( vBasePos+vRight*flBaseSize/2, vBasePos-vRight*flBaseSize/2, vBasePos+vForward*flHeight, 255, 0, 0, 255, false, 0.01 );
+	if ( debugoverlay )
+	{
+		// Draw a red triangle on the ground for the eye yaw.
+		float flBaseSize = 10;
+		float flHeight = 80;
+		Vector vBasePos = GetBasePlayer()->GetAbsOrigin() + Vector( 0, 0, 3 );
+		QAngle angles( 0, 0, 0 );
+		angles[YAW] = m_flEyeYaw;
+		Vector vForward, vRight, vUp;
+		AngleVectors( angles, &vForward, &vRight, &vUp );
+		debugoverlay->AddTriangleOverlay( vBasePos+vRight*flBaseSize/2, vBasePos-vRight*flBaseSize/2, vBasePos+vForward*flHeight, 255, 0, 0, 255, false, 0.01 );
 
-	// Draw a blue triangle on the ground for the body yaw.
-	angles[YAW] = m_angRender[YAW];
-	AngleVectors( angles, &vForward, &vRight, &vUp );
-	debugoverlay->AddTriangleOverlay( vBasePos+vRight*flBaseSize/2, vBasePos-vRight*flBaseSize/2, vBasePos+vForward*flHeight, 0, 0, 255, 255, false, 0.01 );	
+		// Draw a blue triangle on the ground for the body yaw.
+		angles[YAW] = m_angRender[YAW];
+		AngleVectors( angles, &vForward, &vRight, &vUp );
+		debugoverlay->AddTriangleOverlay( vBasePos+vRight*flBaseSize/2, vBasePos-vRight*flBaseSize/2, vBasePos+vForward*flHeight, 0, 0, 255, 255, false, 0.01 );	
+	}
 }
 
 // Debug!

@@ -467,6 +467,8 @@ public:
 
 	virtual CDmgAccumulator	*GetDmgAccumulator( void ) { return NULL; }
 
+	void					SetSoundsEnabled( bool bSoundsEnabled ) { m_bSoundsEnabled = bSoundsEnabled; }
+
 // Client only methods
 #else
 
@@ -586,6 +588,10 @@ public:
 	bool					SetIdealActivity( Activity ideal );
 	void					MaintainIdealActivity( void );
 
+#ifdef CLIENT_DLL
+	virtual const Vector&	GetViewmodelOffset() { return vec3_origin; }
+#endif // CLIENT_DLL
+
 private:
 	Activity				m_Activity;
 	int						m_nIdealSequence;
@@ -642,6 +648,8 @@ private:
 	
 	// Server only
 #if !defined( CLIENT_DLL )
+
+	bool					m_bSoundsEnabled;
 
 	// Outputs
 protected:

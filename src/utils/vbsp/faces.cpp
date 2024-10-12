@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,7 +12,7 @@
 #include "utilmatlib.h"
 #include <float.h>
 #include "mstristrip.h"
-#include "vstdlib/strtools.h"
+#include "tier1/strtools.h"
 #include "materialpatch.h"
 /*
 
@@ -139,7 +139,7 @@ int	GetVertexnum (Vector& in)
 	
 // emit a vertex
 	if (numvertexes == MAX_MAP_VERTS)
-		Error ("numvertexes == MAX_MAP_VERTS");
+		Error ("Too many unique verts, max = %d (map has too much brush geometry)\n", MAX_MAP_VERTS);
 
 	dvertexes[numvertexes].point[0] = vert[0];
 	dvertexes[numvertexes].point[1] = vert[1];
@@ -176,7 +176,7 @@ int	GetVertexnum (Vector& v)
 		if ( fabs(v[i] - (int)(v[i]+0.5)) < INTEGRAL_EPSILON )
 			v[i] = (int)(v[i]+0.5);
 		if (v[i] < MIN_COORD_INTEGER || v[i] > MAX_COORD_INTEGER)
-			Error ("GetVertexnum: outside world");
+			Error ("GetVertexnum: outside world, vertex %.1f %.1f %.1f", v.x, v.y, v.z);
 	}
 
 	// search for an existing vertex match
@@ -194,7 +194,7 @@ int	GetVertexnum (Vector& v)
 
 	// new point
 	if (numvertexes == MAX_MAP_VERTS)
-		Error ("MAX_MAP_VERTS");
+		Error ("Too many unique verts, max = %d (map has too much brush geometry)\n", MAX_MAP_VERTS);
 	VectorCopy (v, dv->point);
 	numvertexes++;
 	c_uniqueverts++;
@@ -276,7 +276,7 @@ void EmitFaceVertexes (face_t **pListHead, face_t *f)
 		if (noweld)
 		{	// make every point unique
 			if (numvertexes == MAX_MAP_VERTS)
-				Error ("MAX_MAP_VERTS");
+				Error ("Too many unique verts, max = %d (map has too much brush geometry)\n", MAX_MAP_VERTS);
 			superverts[i] = numvertexes;
 			VectorCopy (w->p[i], dvertexes[numvertexes].point);
 			numvertexes++;
@@ -467,7 +467,7 @@ void TestEdge (vec_t start, vec_t end, int p1, int p2, int startvert)
 
 	// the edge p1 to p2 is now free of tjunctions
 	if (numsuperverts >= MAX_SUPERVERTS)
-		Error ("MAX_SUPERVERTS");
+		Error ("Edge with too many vertices due to t-junctions.  Max %d verts along an edge!\n", MAX_SUPERVERTS);
 	superverts[numsuperverts] = p1;
 	numsuperverts++;
 }
@@ -679,15 +679,13 @@ void FixFaceEdges (face_t **pList, face_t *f)
 		f->numPrims = 1;
 		newPrim.firstIndex = g_numprimindices;
 		newPrim.firstVert = g_numprimverts;
-		int triangleCount = numsuperverts - 2;
-		Assert(outIndices.Count() == triangleCount * 3);
 		newPrim.indexCount = outIndices.Count();
 		newPrim.vertCount = 0;
 		newPrim.type = PRIM_TRILIST;
 		g_numprimindices += newPrim.indexCount;
 		if ( g_numprimitives > MAX_MAP_PRIMITIVES || g_numprimindices > MAX_MAP_PRIMINDICES )
 		{
-			Error("Too many t-junctions to fix up!\n");
+			Error("Too many t-junctions to fix up! (%d prims, max %d :: %d indices, max %d)\n", g_numprimitives, MAX_MAP_PRIMITIVES, g_numprimindices, MAX_MAP_PRIMINDICES );
 		}
 		for ( i = 0; i < outIndices.Count(); i++ )
 		{
@@ -749,7 +747,6 @@ face_t *FixTjuncs (node_t *headnode, face_t *pLeafFaceList)
 	c_uniqueverts = 0;
 	c_faceoverflows = 0;
 	EmitNodeFaceVertexes_r (headnode);
-	EmitLeafFaceVertexes( &pLeafFaceList );
 
 	// UNDONE: This count is wrong with tjuncs off on details - since 
 
@@ -759,10 +756,21 @@ face_t *FixTjuncs (node_t *headnode, face_t *pLeafFaceList)
 	c_degenerate = 0;
 	c_facecollapse = 0;
 	c_tjunctions = 0;
-	if (!notjunc)
+	
+	if ( g_bAllowDetailCracks )
 	{
 		FixEdges_r (headnode);
+		EmitLeafFaceVertexes( &pLeafFaceList );
 		FixLeafFaceEdges( &pLeafFaceList );
+	}
+	else
+	{
+		EmitLeafFaceVertexes( &pLeafFaceList );
+		if (!notjunc)
+		{
+			FixEdges_r (headnode);
+			FixLeafFaceEdges( &pLeafFaceList );
+		}
 	}
 
 
@@ -859,7 +867,7 @@ void IntSort( CUtlVector<int> &theList )
 int AddEdge( int v1, int v2, face_t *f )
 {
 	if (numedges >= MAX_MAP_EDGES)
-		Error ("numedges == MAX_MAP_EDGES");
+		Error ("Too many edges in map, max == %d", MAX_MAP_EDGES);
 
 	g_VertEdgeList[v1].AddToTail( numedges );
 	g_VertEdgeList[v2].AddToTail( numedges );
@@ -1131,7 +1139,7 @@ void MergeFaceList(face_t **pList)
 			if (f2->merged || f2->split[0] || f2->split[1])
 				continue;
 
-			plane = &mapplanes[f1->planenum];
+			plane = &g_MainMap->mapplanes[f1->planenum];
 			merged = TryMerge (f1, f2, plane->normal);
 			if (!merged)
 				continue;
@@ -1262,9 +1270,7 @@ static bool AssignBottomWaterMaterialToFace( face_t *f )
 		return false;
 	}
 
-	plane_t *plane = &mapplanes[f->planenum];
-
-	//Assert( plane->normal.z < 0 );
+	//Assert( mapplanes[f->planenum].normal.z < 0 );
 	texinfo_t newTexInfo;
 	newTexInfo.flags = pTexInfo->flags;
 	int j, k;
@@ -1543,7 +1549,7 @@ static void SubdivideFaceBySubdivSize( face_t *f, float subdivsize )
 	int xi, yi;
 	winding_t **windings = ( winding_t ** )new pwinding_t[xSteps * ySteps];
 	memset( windings, 0, sizeof( winding_t * ) * xSteps * ySteps );
-	int numWindings = 0;
+
 	for( yi = 0, y = yStart; y < yEnd; y += ( int )subdivsize, yi++ )
 	{
 		for( xi = 0, x = xStart; x < xEnd; x += ( int )subdivsize, xi++ )

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -102,6 +102,7 @@ public:
 
 	CTraceListData( int nLeafMax = TLD_DEF_LEAF_MAX, int nEntityMax = TLD_DEF_ENTITY_MAX )
 	{
+		MEM_ALLOC_CREDIT();
 		m_nLeafCount = 0;
 		m_aLeafList.SetSize( nLeafMax );
 

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -349,6 +349,7 @@ int PrintUsage( const char *pExtra, ... )
 			"\t\tif -vtex was specified, passes the parameters to that process.\n"
 			"\t\tUsed to add parameters to the generated .vmt file\n"
 		"\t-BaseDir <basedir>\n"
+		"\t-game <basedir>\n"
 			"\t\tSpecifies where the root mod directory is.\n"
 		"\t-WadFile <wildcard>\n"
 			"\t\t-wadfile will make (power-of-2) TGAs, VTFs, and VMTs for each\n"
@@ -496,9 +497,23 @@ void WriteResizeInfoFile( const char *pBaseDir, const char *pSubDir, const char 
 
 void RunVTexOnFile( const char *pBaseDir, const char *pFilename )
 {
+	char executableDir[MAX_PATH];
+	GetModuleFileName( NULL, executableDir, sizeof( executableDir ) );
+	
+	char *pLastSlash = max( strrchr( executableDir, '/' ), strrchr( executableDir, '\\' ) );
+	if ( !pLastSlash )
+		Error( "Can't find filename in '%s'.\n", executableDir );
+	
+	*pLastSlash = 0;
+
+	// Set the vproject environment variable (vtex doesn't allow game yet).
+	char envStr[MAX_PATH];
+	_snprintf( envStr, sizeof( envStr ), "vproject=%s", pBaseDir );
+	putenv( envStr );
+
 	// Call vtex on this texture now.
 	char vtexCommand[1024];
-	sprintf( vtexCommand, "%s\\..\\bin\\vtex.exe -quiet -nopause \"%s\"", pBaseDir, pFilename );
+	sprintf( vtexCommand, "%s\\vtex.exe -quiet -nopause \"%s\"", executableDir, pFilename );
 	if ( system( vtexCommand ) != 0 )
 	{
 		Error( "\tCommand '%s' failed!\n", vtexCommand );

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -26,5 +26,7 @@ bspbrush_t *MakeBspBrushList (mapbrush_t **pBrushes, int nBrushCount, const Vect
 void WriteBrushMap (char *name, bspbrush_t *list);
 
 bspbrush_t *ChopBrushes (bspbrush_t *head);
+bspbrush_t *IntersectBrush (bspbrush_t *a, bspbrush_t *b);
+qboolean BrushesDisjoint (bspbrush_t *a, bspbrush_t *b);
 
 #endif // CSG_H

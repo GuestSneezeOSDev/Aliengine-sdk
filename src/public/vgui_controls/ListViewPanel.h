@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,8 +12,8 @@
 #pragma once
 #endif
 
-#include <UtlLinkedList.h>
-#include <UtlVector.h>
+#include <utllinkedlist.h>
+#include <utlvector.h>
 
 namespace vgui
 {
@@ -77,9 +77,9 @@ protected:
 	virtual void PerformLayout();
 	virtual void Paint();
 	virtual void ApplySchemeSettings(IScheme *pScheme);
-	virtual void OnMousePressed(enum MouseCode code);
-	virtual void OnMouseDoublePressed(enum MouseCode code);
-	virtual void OnKeyCodeTyped(enum KeyCode code);
+	virtual void OnMousePressed( MouseCode code);
+	virtual void OnMouseDoublePressed( MouseCode code);
+	virtual void OnKeyCodeTyped( KeyCode code);
 	virtual void OnKeyTyped(wchar_t unichar);
 	MESSAGE_FUNC( OnSliderMoved, "ScrollBarSliderMoved" );
 	virtual int GetItemsPerColumn();
@@ -87,9 +87,9 @@ protected:
 private:
 	ScrollBar			*m_hbar;
 
-	friend ListViewItem;
-	void 	OnItemMousePressed(ListViewItem* pItem, enum MouseCode code);
-	void 	OnItemMouseDoublePressed(ListViewItem* pItem, enum MouseCode code);
+	friend class ListViewItem;
+	void 	OnItemMousePressed(ListViewItem* pItem, MouseCode code);
+	void 	OnItemMouseDoublePressed(ListViewItem* pItem, MouseCode code);
 	int 	GetItemsMaxWidth();
 	int 	GetItemIndex(int itemID);
 	void 	OnShiftSelect(int itemID);

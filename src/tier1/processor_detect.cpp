@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: win32 dependant ASM code for CPU capability detection
 //
@@ -6,22 +6,27 @@
 // $NoKeywords: $
 //=============================================================================//
 
+#if defined( _X360 ) || defined( WIN64 )
+
+bool CheckMMXTechnology(void) { return false; }
+bool CheckSSETechnology(void) { return false; }
+bool CheckSSE2Technology(void) { return false; }
+bool Check3DNowTechnology(void) { return false; }
+
+#elif defined( _WIN32 ) && !defined( _X360 )
 
 #pragma optimize( "", off )
 #pragma warning( disable: 4800 ) //'int' : forcing value to bool 'true' or 'false' (performance warning)
 
 // stuff from windows.h
-typedef unsigned int DWORD;
 #ifndef EXCEPTION_EXECUTE_HANDLER
 #define EXCEPTION_EXECUTE_HANDLER       1
 #endif
 
-
-// --------------------------------------------------------------------------
 bool CheckMMXTechnology(void)
 {
-    BOOL retval = TRUE;
-    DWORD RegEDX;
+    int retval = true;
+    unsigned int RegEDX = 0;
 
 #ifdef CPUID
 	_asm pushad;
@@ -42,7 +47,7 @@ bool CheckMMXTechnology(void)
     } 
 	__except(EXCEPTION_EXECUTE_HANDLER) 
 	{ 
-		retval = FALSE; 
+		retval = false; 
 	}
 
 	// If CPUID not supported, then certainly no MMX extensions.
@@ -57,12 +62,12 @@ bool CheckMMXTechnology(void)
 		   } 
 		   __except(EXCEPTION_EXECUTE_HANDLER) 
 		   { 
-			   retval = FALSE; 
+			   retval = false; 
 		   }
 		}
 
 		else
-			retval = FALSE;           // processor supports CPUID but does not support MMX technology
+			retval = false;           // processor supports CPUID but does not support MMX technology
 
 		// if retval == 0 here, it means the processor has MMX technology but
 		// floating-point emulation is on; so MMX technology is unavailable
@@ -74,11 +79,11 @@ bool CheckMMXTechnology(void)
 
     return retval;
 }
-// --------------------------------------------------------------------------
+
 bool CheckSSETechnology(void)
 {
-    BOOL retval = TRUE;
-    DWORD RegEDX;
+    int retval = true;
+    unsigned int RegEDX = 0;
 
 #ifdef CPUID
 	_asm pushad;
@@ -100,7 +105,7 @@ bool CheckSSETechnology(void)
     } 
 	__except(EXCEPTION_EXECUTE_HANDLER) 
 	{ 
-		retval = FALSE; 
+		retval = false; 
 	}
 
 	// If CPUID not supported, then certainly no SSE extensions.
@@ -128,11 +133,11 @@ bool CheckSSETechnology(void)
 #endif
 
 			{ 
-				retval = FALSE; 
+				retval = false; 
 			}
 		}
 		else
-			retval = FALSE;
+			retval = false;
 	}
 #ifdef CPUID
 	_asm popad;
@@ -140,10 +145,11 @@ bool CheckSSETechnology(void)
 
     return retval;
 }
+
 bool CheckSSE2Technology(void)
 {
-    BOOL retval = TRUE;
-    DWORD RegEDX;
+    int retval = true;
+    unsigned int RegEDX = 0;
 
 #ifdef CPUID
 	_asm pushad;
@@ -165,7 +171,7 @@ bool CheckSSE2Technology(void)
     } 
 	__except(EXCEPTION_EXECUTE_HANDLER) 
 	{ 
-		retval = FALSE; 
+		retval = false; 
 	}
 
 	// If CPUID not supported, then certainly no SSE extensions.
@@ -187,11 +193,11 @@ bool CheckSSE2Technology(void)
 			__except(EXCEPTION_EXECUTE_HANDLER) 
 
 			{ 
-				retval = FALSE; 
+				retval = false; 
 			}
 		}
 		else
-			retval = FALSE;
+			retval = false;
 	}
 #ifdef CPUID
 	_asm popad;
@@ -200,11 +206,10 @@ bool CheckSSE2Technology(void)
     return retval;
 }
 
-// --------------------------------------------------------------------------
 bool Check3DNowTechnology(void)
 {
-    BOOL retval = TRUE;
-    DWORD RegEAX;
+    int retval = true;
+    unsigned int RegEAX = 0;
 
 #ifdef CPUID
 	_asm pushad;
@@ -226,7 +231,7 @@ bool Check3DNowTechnology(void)
     } 
 	__except(EXCEPTION_EXECUTE_HANDLER) 
 	{ 
-		retval = FALSE; 
+		retval = false; 
 	}
 
 	// If CPUID not supported, then there is definitely no 3DNow support
@@ -247,13 +252,13 @@ bool Check3DNowTechnology(void)
 			}
 			__except(EXCEPTION_EXECUTE_HANDLER) 
 			{ 
-				retval = FALSE; 
+				retval = false; 
 			}
 		}
 		else
 		{
 			// processor supports CPUID but does not support AMD CPUID functions
-			retval = FALSE;					
+			retval = false;					
 		}
 	}
 
@@ -266,3 +271,4 @@ bool Check3DNowTechnology(void)
 
 #pragma optimize( "", on )
 
+#endif // _WIN32

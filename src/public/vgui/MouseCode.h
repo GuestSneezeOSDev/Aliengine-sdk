@@ -1,31 +1,23 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
-// Purpose: 
+// Purpose: names mouse button inputs
+// NOTE: Button codes also contain key codes, but we won't worry about that
 //
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 
 #ifndef MOUSECODE_H
 #define MOUSECODE_H
 
-#include <vgui/VGUI.h>
+#ifdef _WIN32
+#pragma once
+#endif
+
+#include "inputsystem/ButtonCode.h"
 
 namespace vgui
 {
-
-//-----------------------------------------------------------------------------
-// Purpose: names mouse button inputs
-//-----------------------------------------------------------------------------
-enum MouseCode
-{
-	MOUSE_LEFT = 0,
-	MOUSE_RIGHT,
-	MOUSE_MIDDLE,
-	MOUSE_4,
-	MOUSE_5,
-	MOUSE_LAST,
-};
-
-} // namespace vgui
+typedef ButtonCode_t MouseCode;
+}
 
 #endif // MOUSECODE_H

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -27,7 +27,7 @@ extern ServerClass *g_pServerClassHead;
 class ServerClass
 {
 public:
-				ServerClass( char *pNetworkName, SendTable *pTable )
+				ServerClass( const char *pNetworkName, SendTable *pTable )
 				{
 					m_pNetworkName = pNetworkName;
 					m_pTable = pTable;
@@ -69,7 +69,7 @@ public:
 
 
 public:
-	char						*m_pNetworkName;
+	const char					*m_pNetworkName;
 	SendTable					*m_pTable;
 	ServerClass					*m_pNext;
 	int							m_ClassID;	// Managed by the engine.
@@ -85,7 +85,6 @@ class CBaseNetworkable;
 #define DECLARE_SERVERCLASS()									\
 	public:														\
 		virtual ServerClass* GetServerClass();					\
-		virtual char const* GetClassName();						\
 		static SendTable *m_pClassSendTable;					\
 		template <typename T> friend int ServerClassInit(T *);	\
 		virtual int YouForgotToImplementOrDeclareServerClass();	\
@@ -136,7 +135,6 @@ class CBaseNetworkable;
 		&sendTable::g_SendTable\
 	); \
 	\
-	char const*	DLLClassName::GetClassName() {return #DLLClassName;}\
 	ServerClass* DLLClassName::GetServerClass() {return &g_##DLLClassName##_ClassReg;} \
 	SendTable *DLLClassName::m_pClassSendTable = &sendTable::g_SendTable;\
 	int DLLClassName::YouForgotToImplementOrDeclareServerClass() {return 0;}

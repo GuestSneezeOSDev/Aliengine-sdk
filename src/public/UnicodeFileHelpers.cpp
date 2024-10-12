@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -6,7 +6,7 @@
 
 #include <stdlib.h>
 #include <ctype.h>
-#include "UtlBuffer.h"
+#include "utlbuffer.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -14,7 +14,7 @@
 //-----------------------------------------------------------------------------
 // Purpose: Advances until non-whitespace hit
 //-----------------------------------------------------------------------------
-wchar_t *AdvanceOverWhitespace(wchar_t *Start)
+ucs2 *AdvanceOverWhitespace(ucs2 *Start)
 {
 	while (*Start != 0 && iswspace(*Start))
 	{
@@ -27,7 +27,7 @@ wchar_t *AdvanceOverWhitespace(wchar_t *Start)
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-wchar_t *ReadUnicodeToken(wchar_t *start, wchar_t *token, int tokenBufferSize, bool &quoted)
+ucs2 *ReadUnicodeToken(ucs2 *start, ucs2 *token, int tokenBufferSize, bool &quoted)
 {
 	// skip over any whitespace
 	start = AdvanceOverWhitespace(start);
@@ -46,7 +46,7 @@ wchar_t *ReadUnicodeToken(wchar_t *start, wchar_t *token, int tokenBufferSize, b
 		// copy out the string until we hit an end quote
 		start++;
 		int count = 0;
-		while (*start && *start != '\"' && count < tokenBufferSize)
+		while (*start && *start != '\"' && count < tokenBufferSize-1)
 		{
 			// check for special characters
 			if (*start == '\\' && *(start+1) == 'n')
@@ -78,7 +78,7 @@ wchar_t *ReadUnicodeToken(wchar_t *start, wchar_t *token, int tokenBufferSize, b
 	{
 		// copy out the string until we hit a whitespace
 		int count = 0;
-		while (*start && !iswspace(*start) && count < tokenBufferSize)
+		while (*start && !iswspace(*start) && count < tokenBufferSize-1)
 		{
 			// no checking for special characters if it's not a quoted string
 			*token = *start;
@@ -96,7 +96,7 @@ wchar_t *ReadUnicodeToken(wchar_t *start, wchar_t *token, int tokenBufferSize, b
 //-----------------------------------------------------------------------------
 // Purpose: Same as above but no translation of \n
 //-----------------------------------------------------------------------------
-wchar_t *ReadUnicodeTokenNoSpecial(wchar_t *start, wchar_t *token, int tokenBufferSize, bool &quoted)
+ucs2 *ReadUnicodeTokenNoSpecial(ucs2 *start, ucs2 *token, int tokenBufferSize, bool &quoted)
 {
 	// skip over any whitespace
 	start = AdvanceOverWhitespace(start);
@@ -115,7 +115,7 @@ wchar_t *ReadUnicodeTokenNoSpecial(wchar_t *start, wchar_t *token, int tokenBuff
 		// copy out the string until we hit an end quote
 		start++;
 		int count = 0;
-		while (*start && *start != '\"' && count < tokenBufferSize)
+		while (*start && *start != '\"' && count < tokenBufferSize-1)
 		{
 			// check for special characters
 			/*
@@ -150,7 +150,7 @@ wchar_t *ReadUnicodeTokenNoSpecial(wchar_t *start, wchar_t *token, int tokenBuff
 	{
 		// copy out the string until we hit a whitespace
 		int count = 0;
-		while (*start && !iswspace(*start) && count < tokenBufferSize)
+		while (*start && !iswspace(*start) && count < tokenBufferSize-1)
 		{
 			// no checking for special characters if it's not a quoted string
 			*token = *start;
@@ -168,7 +168,7 @@ wchar_t *ReadUnicodeTokenNoSpecial(wchar_t *start, wchar_t *token, int tokenBuff
 //-----------------------------------------------------------------------------
 // Purpose: Returns the first character after the next EOL characters
 //-----------------------------------------------------------------------------
-wchar_t *ReadToEndOfLine(wchar_t *start)
+ucs2 *ReadToEndOfLine(ucs2 *start)
 {
 	if (!*start)
 		return start;

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: A Class to create a window that you can type and edit text in.
 //          Window can hold single line or multiline text. 
@@ -21,7 +21,7 @@
 #include <vgui_controls/Label.h>
 #include <vgui_controls/ListPanel.h>
 
-#include <UtlVector.h>
+#include <utlvector.h>
 
 namespace vgui
 {
@@ -92,8 +92,10 @@ public:
 
 	virtual void SetText(const wchar_t *wszText);
 	virtual void SetText(const char *text);
-	virtual void GetText(char *buf, int bufLen);
-	virtual void GetText(wchar_t *buf, int bufLen);
+	virtual void GetText(OUT_Z_BYTECAP(bufLenInBytes) char *buf, int bufLenInBytes);
+	virtual void GetText(OUT_Z_BYTECAP(bufLenInBytes) wchar_t *buf, int bufLenInBytes);
+	virtual int GetTextLength() const;
+	virtual bool IsTextFullySelected() const;
 
 	// editing
 	virtual void GotoLeft();		// move cursor one char left
@@ -109,7 +111,7 @@ public:
 
 	virtual void InsertChar(wchar_t ch);
 	virtual void InsertString(const char *text);
-	virtual void InsertString(wchar_t *wszText);
+	virtual void InsertString(const wchar_t *wszText);
 	virtual void Backspace();								   
 	virtual void Delete();
 	virtual void SelectNone();
@@ -144,6 +146,7 @@ public:
 	
 	// set whether the box handles more than one line of entry
 	virtual void SetMultiline(bool state);
+	virtual bool IsMultiline();
 
 	// sets visibility of scrollbar
 	virtual void SetVerticalScrollbar(bool state);
@@ -193,6 +196,8 @@ public:
 		"TextChanged"	- sent when the text is edited by the user
 			
 		"TextNewLine" - sent when the end key is pressed in the text entry AND _sendNewLines is true
+
+		"TextKillFocus" - sent when focus leaves textentry field
 	*/
 
 	// Selects all the text in the text entry.
@@ -211,6 +216,19 @@ public:
 
 	// By default, we draw the language shortname on the right hand side of the control
 	void SetDrawLanguageIDAtLeft( bool state );
+
+	virtual bool GetDropContextMenu( Menu *menu, CUtlVector< KeyValues * >& data );
+	virtual bool IsDroppable( CUtlVector< KeyValues * >& data );
+	virtual void OnPanelDropped( CUtlVector< KeyValues * >& data );
+	virtual Panel *GetDragPanel();
+	virtual void OnCreateDragData( KeyValues *msg );
+
+	void SelectAllOnFocusAlways( bool status );
+	void SetSelectionTextColor( const Color& clr );
+	void SetSelectionBgColor( const Color& clr );
+	void SetSelectionUnfocusedBgColor( const Color& clr );
+
+	void SetUseFallbackFont( bool bState, HFont hFallback );
 
 protected:
 	virtual void ResetCursorBlink();
@@ -231,18 +249,20 @@ protected:
 	virtual void AddAnotherLine(int &cx, int &cy);
 	virtual int  GetYStart(); // works out ypixel position drawing started at
 
-	virtual void SelectCheck();	 // check if we are in text selection mode
+	virtual bool SelectCheck( bool fromMouse = false );	 // check if we are in text selection mode
 	MESSAGE_FUNC_WCHARPTR( OnSetText, "SetText", text );
 	MESSAGE_FUNC( OnSliderMoved, "ScrollBarSliderMoved" ); // respond to scroll bar events
 	virtual void OnKillFocus();
 	virtual void OnMouseWheeled(int delta);	// respond to mouse wheel events
+	virtual void OnKeyCodePressed(KeyCode code); //respond to keyboard events
 	virtual void OnKeyCodeTyped(KeyCode code);	//respond to keyboard events
 	virtual	void OnKeyTyped(wchar_t unichar);	//respond to keyboard events
 
 	virtual void OnCursorMoved(int x, int y);  // respond to moving the cursor with mouse button down
 	virtual void OnMousePressed(MouseCode code); // respond to mouse down events
-	virtual void OnMouseDoublePressed(MouseCode code);
-	virtual void OnMouseReleased(MouseCode codel);	// respond to mouse up events
+	virtual void OnMouseDoublePressed( MouseCode code );
+	virtual void OnMouseTriplePressed( MouseCode code );
+	virtual void OnMouseReleased( MouseCode code );	// respond to mouse up events
 
 	virtual void OnKeyFocusTicked(); // do while window has keyboard focus
 	virtual void OnMouseFocusTicked(); // do while window has mouse focus
@@ -254,7 +274,13 @@ protected:
 
 	// Returns the character index the drawing should Start at
 	virtual int GetStartDrawIndex(int &lineBreakIndexIndex);
-	
+
+public:
+	// helper accessors for common gets
+	virtual float GetValueAsFloat();
+	virtual int GetValueAsInt();
+
+protected:
     void ScrollRight(); // scroll to right until cursor is visible
     void ScrollLeft();  // scroll to left 
 	bool IsCursorOffRightSideOfWindow(int cursorPos); // check if cursor is off right side of window
@@ -264,6 +290,8 @@ protected:
 	void OnSetFocus();
 	// Change keyboard layout type
 	void OnChangeIME( bool forward );
+
+	bool NeedsEllipses( HFont font, int *pIndex );
 
 private:
 	MESSAGE_FUNC_INT( OnSetState, "SetState", state );
@@ -277,7 +305,15 @@ private:
 	void CalcBreakIndex(); // calculate _recalculateLineBreaksIndex
 	void CreateEditMenu(); // create copy/cut/paste menu
 
+public:
+	Menu *GetEditMenu(); // retrieve copy/cut/paste menu
+
+private:
 	void	FlipToLastIME();
+
+public:
+	virtual void GetTextRange( wchar_t *buf, int from, int numchars );	// copy a portion of the text to the buffer and add zero-termination
+	virtual void GetTextRange( char *buf, int from, int numchars );	// copy a portion of the text to the buffer and add zero-termination
 
 private:
 
@@ -327,7 +363,8 @@ private:
 	Menu				*m_pEditMenu; ///cut/copy/paste popup
 
 	int				   _recalculateBreaksIndex; // tells next linebreakindex index to Start recalculating line breaks	
-	bool			   _selectAllOnFirstFocus; // highlights all text in window when focus is gained.
+	bool			   _selectAllOnFirstFocus : 1; // highlights all text in window when focus is gained.
+	bool				_selectAllOnFocusAlways : 1;
 	bool			   _firstFocusStatus; // keep track if we've had that first focus or not
 	bool				m_bAllowNumericInputOnly;
 	bool				m_bAllowNonAsciiCharacters;
@@ -343,6 +380,9 @@ private:
 	int					m_hPreviousIME;
 	bool				m_bDrawLanguageIDAtLeft;
 	int					m_nLangInset;
+
+	bool				m_bUseFallbackFont : 1;
+	HFont				m_hFallbackFont;
 };
 
 }

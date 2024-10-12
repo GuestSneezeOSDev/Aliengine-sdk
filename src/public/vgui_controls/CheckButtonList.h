@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,7 +11,7 @@
 #endif
 
 #include <vgui_controls/EditablePanel.h>
-#include "UtlVector.h"
+#include "utlvector.h"
 
 namespace vgui
 {
@@ -32,6 +32,9 @@ public:
 
 	// clears the list
 	void RemoveAll();
+
+	// number of items in list that are checked
+	int GetCheckedItemCount();
 
 	// item iteration
 	bool IsItemIDValid(int itemID);
@@ -54,7 +57,7 @@ protected:
 	virtual void OnMouseWheeled(int delta);
 
 private:
-	MESSAGE_FUNC( OnCheckButtonChecked, "CheckButtonChecked" );
+	MESSAGE_FUNC_PARAMS( OnCheckButtonChecked, "CheckButtonChecked", pParams );
 	MESSAGE_FUNC( OnScrollBarSliderMoved, "ScrollBarSliderMoved" );
 
 	struct CheckItem_t
@@ -64,7 +67,6 @@ private:
 	};
 	CUtlVector<CheckItem_t> m_CheckItems;
 	vgui::ScrollBar *m_pScrollBar;
-	bool m_bIgnoreCheckSignals;
 };
 
 }

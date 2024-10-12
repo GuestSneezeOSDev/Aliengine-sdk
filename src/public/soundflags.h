@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -26,7 +26,8 @@ enum
 	CHAN_BODY		= 4,
 	CHAN_STREAM		= 5,		// allocate stream channel from the static or dynamic area
 	CHAN_STATIC		= 6,		// allocate channel from the static area 
-	CHAN_VOICE_BASE	= 7,		// allocate channel for network voice data
+	CHAN_VOICE2		= 7,
+	CHAN_VOICE_BASE	= 8,		// allocate channel for network voice data
 	CHAN_USER_BASE	= (CHAN_VOICE_BASE+128)		// Anything >= this number is allocated to game code.
 };
 
@@ -122,14 +123,27 @@ enum SoundFlags_t
 	SND_DELAY			= (1<<4),		// sound has an initial delay
 	SND_STOP_LOOPING	= (1<<5),		// stop all looping sounds on the entity.
 	SND_SPEAKER			= (1<<6),		// being played again by a microphone through a speaker
+ 
+	SND_SHOULDPAUSE		= (1<<7),		// this sound should be paused if the game is paused
+	SND_IGNORE_PHONEMES	= (1<<8),
+	SND_IGNORE_NAME		= (1<<9),		// used to change all sounds emitted by an entity, regardless of scriptname
+
+	SND_DO_NOT_OVERWRITE_EXISTING_ON_CHANNEL = (1<<10),
 };
 
-#define SND_FLAG_BITS_ENCODE 7
+#define SND_FLAG_BITS_ENCODE 11
 
-#define MAX_SOUND_INDEX_BITS	13
+#define MAX_SOUND_INDEX_BITS	14
 #define	MAX_SOUNDS				(1<<MAX_SOUND_INDEX_BITS)
 
+#if !defined( IN_XBOX_CODELINE )
+// +/-4096 msec
 #define MAX_SOUND_DELAY_MSEC_ENCODE_BITS	(13)
+#else
+// +/-65536 msec, 64 seconds
+#define MAX_SOUND_DELAY_MSEC_ENCODE_BITS	(17)
+#endif
+
 // Subtract one to leave room for the sign bit
 #define MAX_SOUND_DELAY_MSEC				(1<<(MAX_SOUND_DELAY_MSEC_ENCODE_BITS-1))    // 4096 msec or about 4 seconds
 

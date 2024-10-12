@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,6 +13,13 @@
 #include "studio.h"
 #include "optimize.h"
 
-void SpewPerfStats( studiohdr_t *pStudioHdr, const char *pFilename );
+enum
+{
+	SPEWPERFSTATS_SHOWSTUDIORENDERWARNINGS = 1,
+	SPEWPERFSTATS_SHOWPERF = 2,
+	SPEWPERFSTATS_SPREADSHEET = 4,
+};
+
+void SpewPerfStats( studiohdr_t *pStudioHdr, const char *pFilename, unsigned int flags );
 
 #endif // PERFSTATS_H

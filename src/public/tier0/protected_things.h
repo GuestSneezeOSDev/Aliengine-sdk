@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -20,7 +20,7 @@
 
 // Eventually, ALL of these should be protected, but one man can only accomplish so much in
 // one day AND work on features too!
-#if defined( PROTECTED_STRINGS_ENABLE )
+#if defined( PROTECTED_STRINGS_ENABLE ) && !defined(DISABLE_PROTECTED_STRINGS)
 
 	#if defined( printf )
 		#undef printf
@@ -130,139 +130,140 @@
 #endif
 
 
-#if defined( PROTECT_FILEIO_FUNCTIONS )
-	#if defined( fopen )
-		#undef fopen
-	#endif
-	#define fopen				fopen_USE_FILESYSTEM_INSTEAD
-
-	#if defined( _wfopen )
-		#undef _wfopen
-	#endif
-	#define _wfopen				_wfopen_USE_FILESYSTEM_INSTEAD
-#endif	
-
-
-#if defined( PROTECTED_THINGS_ENABLE )
+#if defined( PROTECTED_THINGS_ENABLE ) && !defined( _X360 ) && !defined(DISABLE_PROTECTED_THINGS)
 
 	#if defined( GetTickCount )
 		#undef GetTickCount
 	#endif
-	#define GetTickCount		GetTickCount__HEY_YOU__USE_PLATFORM_LIB
+	#define GetTickCount		GetTickCount__USE_VCR_MODE
 	
 	
 	#if defined( timeGetTime )
 		#undef timeGetTime
 	#endif
-	#define timeGetTime			timeGetTime__HEY_YOU__USE_PLATFORM_LIB
-
-
+	#define timeGetTime			timeGetTime__USE_VCR_MODE
 	#if defined( clock )
 		#undef clock
 	#endif
-	#define time				time__HEY_YOU__USE_PLATFORM_LIB
+	#define time				time__USE_VCR_MODE
 	
 	
 	#if defined( recvfrom )
 		#undef recvfrom
 	#endif
-	#define recvfrom			recvfrom__HEY_YOU__USE_PLATFORM_LIB
+	#define recvfrom			recvfrom__USE_VCR_MODE
 
 
 	#if defined( GetCursorPos )
 		#undef GetCursorPos
 	#endif
-	#define GetCursorPos		GetCursorPos__HEY_YOU__USE_PLATFORM_LIB
+	#define GetCursorPos		GetCursorPos__USE_VCR_MODE
 	
 	
 	#if defined( ScreenToClient )
 		#undef ScreenToClient
 	#endif
-	#define ScreenToClient		ScreenToClient__HEY_YOU__USE_PLATFORM_LIB
+	#define ScreenToClient		ScreenToClient__USE_VCR_MODE
 	
 	
 	#if defined( GetCommandLine )
 		#undef GetCommandLine
 	#endif
-	#define GetCommandLine		GetCommandLine__HEY_YOU__USE_PLATFORM_LIB
+	#define GetCommandLine		GetCommandLine__USE_VCR_MODE
 	
 	
 	#if defined( RegOpenKeyEx )
 		#undef RegOpenKeyEx
 	#endif
-	#define RegOpenKeyEx		RegOpenKeyEx__HEY_YOU__USE_PLATFORM_LIB
+	#define RegOpenKeyEx		RegOpenKeyEx__USE_VCR_MODE
 	
 	
 	#if defined( RegOpenKey )
 		#undef RegOpenKey
 	#endif
-	#define RegOpenKey			RegOpenKey__HEY_YOU__USE_PLATFORM_LIB
+	#define RegOpenKey			RegOpenKey__USE_VCR_MODE
 	
 	
 	#if defined( RegSetValueEx )
 		#undef RegSetValueEx
 	#endif
-	#define RegSetValueEx		RegSetValueEx__HEY_YOU__USE_PLATFORM_LIB
+	#define RegSetValueEx		RegSetValueEx__USE_VCR_MODE
 	
 	
 	#if defined( RegSetValue )
 		#undef RegSetValue
 	#endif
-	#define RegSetValue			RegSetValue__HEY_YOU__USE_PLATFORM_LIB
+	#define RegSetValue			RegSetValue__USE_VCR_MODE
 	
 	
 	#if defined( RegQueryValueEx )
 		#undef RegQueryValueEx
 	#endif		
-	#define RegQueryValueEx		RegQueryValueEx__HEY_YOU__USE_PLATFORM_LIB
+	#define RegQueryValueEx		RegQueryValueEx__USE_VCR_MODE
 	
 	
 	#if defined( RegQueryValue )
 		#undef RegQueryValue
 	#endif		
-	#define RegQueryValue		RegQueryValue__HEY_YOU__USE_PLATFORM_LIB
+	#define RegQueryValue		RegQueryValue__USE_VCR_MODE
 	
 	
 	#if defined( RegCreateKeyEx )
 		#undef RegCreateKeyEx
 	#endif
-	#define RegCreateKeyEx		RegCreateKeyEx__HEY_YOU__USE_PLATFORM_LIB
+	#define RegCreateKeyEx		RegCreateKeyEx__USE_VCR_MODE
 	
 	
 	#if defined( RegCreateKey )
 		#undef RegCreateKey
 	#endif
-	#define RegCreateKey		RegCreateKey__HEY_YOU__USE_PLATFORM_LIB
+	#define RegCreateKey		RegCreateKey__USE_VCR_MODE
 	
 	
 	#if defined( RegCloseKey )
 		#undef RegCloseKey
 	#endif
-	#define RegCloseKey			RegCloseKey__HEY_YOU__USE_PLATFORM_LIB
+	#define RegCloseKey			RegCloseKey__USE_VCR_MODE
 	
 	
 	#if defined( GetNumberOfConsoleInputEvents )
 		#undef GetNumberOfConsoleInputEvents
 	#endif
-	#define GetNumberOfConsoleInputEvents	GetNumberOfConsoleInputEvents__HEY_YOU__USE_PLATFORM_LIB
+	#define GetNumberOfConsoleInputEvents	GetNumberOfConsoleInputEvents__USE_VCR_MODE
 	
 	
 	#if defined( ReadConsoleInput )
 		#undef ReadConsoleInput
 	#endif
-	#define ReadConsoleInput	ReadConsoleInput__HEY_YOU__USE_PLATFORM_LIB
+	#define ReadConsoleInput	ReadConsoleInput__USE_VCR_MODE
 
 
 	#if defined( GetAsyncKeyState )
 		#undef GetAsyncKeyState
 	#endif
-	#define GetAsyncKeyState	GetAsyncKeyState__HEY_YOU__USE_PLATFORM_LIB
+	#define GetAsyncKeyState	GetAsyncKeyState__USE_VCR_MODE
 
 	
 	#if defined( GetKeyState )
 		#undef GetKeyState
 	#endif
-	#define GetKeyState			GetKeyState__HEY_YOU__USE_PLATFORM_LIB
+	#define GetKeyState			GetKeyState__USE_VCR_MODE
+
+
+	#if defined( CreateThread )
+		#undef CreateThread
+	#endif
+	#define CreateThread		CreateThread__USE_VCR_MODE
+
+	#if defined( WaitForSingleObject )
+		#undef WaitForSingleObject
+	#endif
+	#define WaitForSingleObject	WaitForSingleObject__USE_VCR_MODE
+
+	#if defined( EnterCriticalSection )
+		#undef EnterCriticalSection
+	#endif
+	#define EnterCriticalSection EnterCriticalSection__USE_VCR_MODE
 
 #endif
 

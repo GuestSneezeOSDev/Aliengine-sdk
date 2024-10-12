@@ -1,32 +1,28 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
-//=============================================================================//
+//===========================================================================//
 
 #include <stdlib.h>
 #include <tier0/dbg.h>
 #include "interface.h"
 #include "istudiorender.h"
-#include "matsys.h"
 #include "studio.h"
 #include "optimize.h"
 #include "cmdlib.h"
+#include "studiomdl.h"
+#include "perfstats.h"
 
 extern void MdlError( char const *pMsg, ... );
 
-static CSysModule *g_pStudioRenderModule = NULL;
-static IStudioRender *g_pStudioRender = NULL;
-static void UpdateStudioRenderConfig( void );
 static StudioRenderConfig_t s_StudioRenderConfig;
 
-class CStudioDataCache : public IStudioDataCache
+class CStudioDataCache : public CBaseAppSystem<IStudioDataCache>
 {
 public:
 	bool VerifyHeaders( studiohdr_t *pStudioHdr );
 	vertexFileHeader_t *CacheVertexData( studiohdr_t *pStudioHdr );
-	OptimizedModel::FileHeader_t *CacheIndexData( studiohdr_t *pStudioHdr );
-//	studiohwdata_t *CacheHWData( studiohdr_t *pStudioHdr );
 };
 
 static CStudioDataCache	g_StudioDataCache;
@@ -60,50 +56,10 @@ vertexFileHeader_t *CStudioDataCache::CacheVertexData( studiohdr_t *pStudioHdr )
 	return (vertexFileHeader_t*)pStudioHdr->pVertexBase;
 }
 
-/*
-=================
-CacheIndexData
-
-Cache model's specified dynamic data
-=================
-*/
-OptimizedModel::FileHeader_t *CStudioDataCache::CacheIndexData( studiohdr_t *pStudioHdr )
-{
-	// minimal implementation - return persisted data
-	return (OptimizedModel::FileHeader_t*)pStudioHdr->pIndexBase;
-}
-
-void InitStudioRender( void )
-{
-	if ( g_pStudioRenderModule )
-		return;
-	Assert( g_MatSysFactory );
-
-	g_pStudioRenderModule = g_pFullFileSystem->LoadModule( "StudioRender.dll" );
-	if( !g_pStudioRenderModule )
-	{
-		MdlError( "Can't load StudioRender.dll\n" );
-	}
-	CreateInterfaceFn studioRenderFactory = Sys_GetFactory( g_pStudioRenderModule );
-	if (!studioRenderFactory )
-	{
-		MdlError( "Can't get factory for StudioRender.dll\n" );
-	}
-	g_pStudioRender = ( IStudioRender * )studioRenderFactory( STUDIO_RENDER_INTERFACE_VERSION, NULL );
-	if (!g_pStudioRender)
-	{
-		MdlError( "Unable to init studio render system version %s\n", STUDIO_RENDER_INTERFACE_VERSION );
-	}
-
-	g_pStudioRender->Init( g_MatSysFactory, g_ShaderAPIFactory, g_ShaderAPIFactory, Sys_GetFactoryThis() );
-	UpdateStudioRenderConfig();
-}
-
 static void UpdateStudioRenderConfig( void )
 {
 	memset( &s_StudioRenderConfig, 0, sizeof(s_StudioRenderConfig) );
 
-	s_StudioRenderConfig.eyeGloss = true;
 	s_StudioRenderConfig.bEyeMove = true;
 	s_StudioRenderConfig.fEyeShiftX = 0.0f;
 	s_StudioRenderConfig.fEyeShiftY = 0.0f;
@@ -117,53 +73,61 @@ static void UpdateStudioRenderConfig( void )
 	s_StudioRenderConfig.bFlex = true;
 	s_StudioRenderConfig.bEyes = true;
 	s_StudioRenderConfig.bWireframe = false;
-	s_StudioRenderConfig.bNormals = false;
+	s_StudioRenderConfig.bDrawNormals = false;
 	s_StudioRenderConfig.skin = 0;
 	s_StudioRenderConfig.maxDecalsPerModel = 0;
 	s_StudioRenderConfig.bWireframeDecals = false;
 	s_StudioRenderConfig.fullbright = false;
 	s_StudioRenderConfig.bSoftwareLighting = false;
-	s_StudioRenderConfig.pConDPrintf = Warning;
-	s_StudioRenderConfig.pConPrintf = Warning;
 	s_StudioRenderConfig.bShowEnvCubemapOnly = false;
 	g_pStudioRender->UpdateConfig( s_StudioRenderConfig );
 }
 
-void ShutdownStudioRender( void )
+static SpewOutputFunc_t				s_pSavedSpewFunc;
+
+SpewRetval_t NullSpewOutputFunc( SpewType_t spewType, const tchar *pMsg )
 {
-	if ( !g_pStudioRenderModule )
-		return;
-
-	if ( g_pStudioRender )
+	switch( spewType )
 	{
-		g_pStudioRender->Shutdown();
+	case SPEW_WARNING:
+		return SPEW_CONTINUE;
+	case SPEW_MESSAGE:
+	case SPEW_ASSERT:
+	case SPEW_ERROR:
+	case SPEW_LOG:
+		Assert( s_pSavedSpewFunc );
+		if( s_pSavedSpewFunc )
+		{
+			return s_pSavedSpewFunc( spewType, pMsg );
+		}
+		break;
 	}
-	g_pStudioRender = NULL;
-
-	g_pFullFileSystem->UnloadModule( g_pStudioRenderModule );
-	g_pStudioRenderModule = NULL;
+	Assert( 0 );
+	return SPEW_CONTINUE;
 }
 
-
-void SpewPerfStats( studiohdr_t *pStudioHdr, const char *pFilename )
+void SpewPerfStats( studiohdr_t *pStudioHdr, const char *pFilename, unsigned int flags )
 {
 	char							fileName[260];
 	vertexFileHeader_t				*pNewVvdHdr;
-	vertexFileHeader_t				*pVvdHdr;
-	OptimizedModel::FileHeader_t	*pVtxHdr;
-	DrawModelInfo_t					drawModelInfo;
+	vertexFileHeader_t				*pVvdHdr = 0;
+	OptimizedModel::FileHeader_t	*pVtxHdr = 0;
 	studiohwdata_t					studioHWData;
-	int								vvdSize;
+	int								vvdSize = 0;
 	const char						*prefix[] = {".dx80.vtx", ".dx90.vtx", ".sw.vtx"};
-
-	if (!pStudioHdr->numbodyparts)
+	s_pSavedSpewFunc				= NULL;
+	if( !( flags & SPEWPERFSTATS_SHOWSTUDIORENDERWARNINGS ) )
 	{
-		// no stats on these
-		return;
+		s_pSavedSpewFunc = GetSpewOutputFunc();
+		SpewOutputFunc( NullSpewOutputFunc );
 	}
 
-	// Need to load up StudioRender.dll to spew perf stats.
-	InitStudioRender();
+	// no stats on these
+	if (!pStudioHdr->numbodyparts)
+		return;
+
+	// Need to update the render config to spew perf stats.
+	UpdateStudioRenderConfig();
 
 	// persist the vvd data
 	Q_StripExtension( pFilename, fileName, sizeof( fileName ) );
@@ -217,10 +181,6 @@ void SpewPerfStats( studiohdr_t *pStudioHdr, const char *pFilename )
 		Q_StripExtension( pFilename, fileName, sizeof( fileName ) );
 		strcat( fileName, prefix[j] );
 
-		printf( "\n" );
-		printf( "Performance Stats: %s\n", fileName );
-		printf( "------------------\n" );
-
 		// persist the vtx data
 		if (FileExists(fileName))
 		{
@@ -245,20 +205,59 @@ void SpewPerfStats( studiohdr_t *pStudioHdr, const char *pFilename )
 		pStudioHdr->pVertexBase = (void *)pVvdHdr;
 		pStudioHdr->pIndexBase  = (void *)pVtxHdr;
 
-		g_pStudioRender->LoadModel( pStudioHdr, &studioHWData );
-		memset( &drawModelInfo, 0, sizeof( DrawModelInfo_t ) );
-		drawModelInfo.m_pStudioHdr = pStudioHdr;
-		drawModelInfo.m_pHardwareData = &studioHWData;	
-		int i;
-		for( i = studioHWData.m_RootLOD; i < studioHWData.m_NumLODs; i++ )
+		g_pStudioRender->LoadModel( pStudioHdr, pVtxHdr, &studioHWData );
+
+		if( flags & SPEWPERFSTATS_SHOWPERF )
 		{
-			CUtlBuffer statsOutput( 0, 0, true /* text */ );
-			printf( "LOD: %d\n", i );
-			drawModelInfo.m_Lod = i;
-			g_pStudioRender->GetPerfStats( drawModelInfo, &statsOutput );
-			printf( "\tactual tris: %d\n", ( int )drawModelInfo.m_ActualTriCount );
-			printf( "\ttexture memory bytes: %d\n", ( int )drawModelInfo.m_TextureMemoryBytes );
-			printf( ( char * )statsOutput.Base() );
+			if(  flags & SPEWPERFSTATS_SPREADSHEET )
+			{
+				printf( "%s,%s,%d,", fileName, prefix[j], studioHWData.m_NumLODs - studioHWData.m_RootLOD );
+			}
+			else
+			{
+				printf( "\n" );
+				printf( "Performance Stats: %s\n", fileName );
+				printf( "------------------\n" );
+			}
+		}
+
+		int i;
+		if( flags & SPEWPERFSTATS_SHOWPERF )
+		{
+			for( i = studioHWData.m_RootLOD; i < studioHWData.m_NumLODs; i++ )
+			{
+				DrawModelInfo_t drawModelInfo;
+				drawModelInfo.m_Skin = 0;
+				drawModelInfo.m_Body = 0;
+				drawModelInfo.m_HitboxSet = 0;
+				drawModelInfo.m_pClientEntity = 0;
+				drawModelInfo.m_pColorMeshes = 0;
+				drawModelInfo.m_pStudioHdr = pStudioHdr;
+				drawModelInfo.m_pHardwareData = &studioHWData;	
+				CUtlBuffer statsOutput( 0, 0, CUtlBuffer::TEXT_BUFFER );
+				if( !( flags & SPEWPERFSTATS_SPREADSHEET ) )
+				{
+					printf( "LOD:%d\n", i );
+				}
+				drawModelInfo.m_Lod = i;
+
+				DrawModelResults_t results;
+				g_pStudioRender->GetPerfStats( &results, drawModelInfo, &statsOutput );
+				if( flags & SPEWPERFSTATS_SPREADSHEET )
+				{
+					printf( "%d,%d,%d,", results.m_ActualTriCount, results.m_NumBatches, results.m_NumMaterials  );
+				}
+				else
+				{
+					printf( "    actual tris:%d\n", ( int )results.m_ActualTriCount );
+					printf( "    texture memory bytes: %d (only valid in a rendering app)\n", ( int )results.m_TextureMemoryBytes );
+					printf( ( char * )statsOutput.Base() );
+				}
+			}
+			if( flags & SPEWPERFSTATS_SPREADSHEET )
+			{
+				printf( "\n" );
+			}
 		}
 		g_pStudioRender->UnloadModel( &studioHWData );
 		free(pVtxHdr);
@@ -266,5 +265,10 @@ void SpewPerfStats( studiohdr_t *pStudioHdr, const char *pFilename )
 
 	if (pVvdHdr)
 		free(pVvdHdr);
+
+	if( !( flags & SPEWPERFSTATS_SHOWSTUDIORENDERWARNINGS ) )
+	{
+		SpewOutputFunc( s_pSavedSpewFunc );
+	}
 }
 

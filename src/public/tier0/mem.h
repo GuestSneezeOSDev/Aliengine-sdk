@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Memory allocation!
 //
@@ -13,9 +13,10 @@
 #endif
 
 #include <stddef.h>
+
 #include "tier0/platform.h"
 
-#ifndef STATIC_TIER0
+#if !defined(STATIC_TIER0) && !defined(_STATIC_LINKED)
 
 #ifdef TIER0_DLL_EXPORT
 #  define MEM_INTERFACE DLL_EXPORT
@@ -36,6 +37,7 @@
 //-----------------------------------------------------------------------------
 MEM_INTERFACE void *MemAllocScratch( int nMemSize );
 MEM_INTERFACE void MemFreeScratch();
+MEM_INTERFACE void MemAllocOOMError( size_t nSize );
 
 #ifdef _LINUX
 MEM_INTERFACE void ZeroMemory( void *mem, size_t length );

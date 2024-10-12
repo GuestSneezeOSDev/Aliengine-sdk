@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Client-server neutral sound interface
 //
@@ -18,6 +18,7 @@
 #include "soundflags.h"
 #include "irecipientfilter.h"
 #include "utlvector.h"
+#include "engine/SndInfo.h"
 
 //-----------------------------------------------------------------------------
 // forward declaration
@@ -25,6 +26,7 @@
 class Vector;
 
 // Handy defines for EmitSound
+#define SOUND_FROM_UI_PANEL			-2		// Sound being played inside a UI panel on the client
 #define SOUND_FROM_LOCAL_PLAYER		-1
 #define SOUND_FROM_WORLD			0
 
@@ -41,7 +43,7 @@ class Vector;
 #define SNDLEVEL_FROM_COMPATIBILITY_MODE( x )	((soundlevel_t)(int)( (x) - 256 ))
 
 // Tells if the given sndlevel is marked as compatibility mode.
-#define SNDLEVEL_IS_COMPATIBILITY_MODE( x )		( (x) >= 256 )
+#define SNDLEVEL_IS_COMPATIBILITY_MODE( x )		( (x) >= soundlevel_t(256) )
 
 
 	
@@ -51,12 +53,11 @@ class Vector;
 #define IENGINESOUND_CLIENT_INTERFACE_VERSION	"IEngineSoundClient003"
 #define IENGINESOUND_SERVER_INTERFACE_VERSION	"IEngineSoundServer003"
 
-
-class IEngineSound
+abstract_class IEngineSound
 {
 public:
 	// Precache a particular sample
-	virtual bool PrecacheSound( const char *pSample, bool preload = false ) = 0;
+	virtual bool PrecacheSound( const char *pSample, bool bPreload = false, bool bIsUISound = false ) = 0;
 	virtual bool IsSoundPrecached( const char *pSample ) = 0;
 	virtual void PrefetchSound( const char *pSample ) = 0;
 
@@ -72,15 +73,15 @@ public:
 	// NOTE: setting iEntIndex to -1 will cause the sound to be emitted from the local
 	// player (client-side only)
 	virtual void EmitSound( IRecipientFilter& filter, int iEntIndex, int iChannel, const char *pSample, 
-		float flVolume, float flAttenuation, int iFlags = 0, int iPitch = PITCH_NORM, 
+		float flVolume, float flAttenuation, int iFlags = 0, int iPitch = PITCH_NORM, int iSpecialDSP = 0, 
 		const Vector *pOrigin = NULL, const Vector *pDirection = NULL, CUtlVector< Vector >* pUtlVecOrigins = NULL, bool bUpdatePositions = true, float soundtime = 0.0f, int speakerentity = -1 ) = 0;
 
 	virtual void EmitSound( IRecipientFilter& filter, int iEntIndex, int iChannel, const char *pSample, 
-		float flVolume, soundlevel_t iSoundlevel, int iFlags = 0, int iPitch = PITCH_NORM, 
+		float flVolume, soundlevel_t iSoundlevel, int iFlags = 0, int iPitch = PITCH_NORM, int iSpecialDSP = 0, 
 		const Vector *pOrigin = NULL, const Vector *pDirection = NULL, CUtlVector< Vector >* pUtlVecOrigins = NULL, bool bUpdatePositions = true, float soundtime = 0.0f, int speakerentity = -1 ) = 0;
 
 	virtual void EmitSentenceByIndex( IRecipientFilter& filter, int iEntIndex, int iChannel, int iSentenceIndex, 
-		float flVolume, soundlevel_t iSoundlevel, int iFlags = 0, int iPitch = PITCH_NORM,
+		float flVolume, soundlevel_t iSoundlevel, int iFlags = 0, int iPitch = PITCH_NORM,int iSpecialDSP = 0, 
 		const Vector *pOrigin = NULL, const Vector *pDirection = NULL, CUtlVector< Vector >* pUtlVecOrigins = NULL, bool bUpdatePositions = true, float soundtime = 0.0f, int speakerentity = -1 ) = 0;
 
 	virtual void StopSound( int iEntIndex, int iChannel, const char *pSample ) = 0;
@@ -102,6 +103,20 @@ public:
 //	virtual EntChannel_t	CreateEntChannel() = 0;
 
 	virtual float GetDistGainFromSoundLevel( soundlevel_t soundlevel, float dist ) = 0;
+
+	// Client .dll only functions
+	virtual int		GetGuidForLastSoundEmitted() = 0;
+	virtual bool	IsSoundStillPlaying( int guid ) = 0;
+	virtual void	StopSoundByGuid( int guid ) = 0;
+	// Set's master volume (0.0->1.0)
+	virtual void	SetVolumeByGuid( int guid, float fvol ) = 0;
+
+	// Retrieves list of all active sounds
+	virtual void	GetActiveSounds( CUtlVector< SndInfo_t >& sndlist ) = 0;
+
+	virtual void	PrecacheSentenceGroup( const char *pGroupName ) = 0;
+	virtual void	NotifyBeginMoviePlayback() = 0;
+	virtual void	NotifyEndMoviePlayback() = 0;
 };
 
 

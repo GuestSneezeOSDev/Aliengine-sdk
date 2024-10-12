@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -46,7 +46,7 @@ int FindNeighborCornerVert( CCoreDispInfo *pDisp, const Vector &vTest )
 }
 
 
-int GetAllNeighbors( const CCoreDispInfo *pDisp, int iNeighbors[512] )
+int GetAllNeighbors( const CCoreDispInfo *pDisp, int (&iNeighbors)[512] )
 {
 	int nNeighbors = 0;
 
@@ -139,7 +139,7 @@ void BlendCorners( CCoreDispInfo **ppListBase, int listSize )
 				25 );
 #endif
 
-			for ( iNeighbor=0; iNeighbor < nNeighbors; iNeighbor++ )
+			for ( int iNeighbor=0; iNeighbor < nNeighbors; iNeighbor++ )
 			{
 				int iNBListIndex = iNeighbors[iNeighbor];
 				if ( nbCornerVerts[iNeighbor] == -1 )

@@ -283,7 +283,7 @@ void CGenericClassBasedReplay::AddKill( const char *pPlayerName, int nPlayerClas
 {
 	KillData_t *pNewKillData = new KillData_t;
 
-	V_strcpy( pNewKillData->m_szPlayerName , pPlayerName );
+	V_strcpy_safe( pNewKillData->m_szPlayerName , pPlayerName );
 	pNewKillData->m_nPlayerClass = nPlayerClass;
 
 	ConVarRef replay_debug( "replay_debug" );
@@ -416,7 +416,7 @@ void CGenericClassBasedReplay::SetPlayerTeam( int nPlayerTeam )
 
 void CGenericClassBasedReplay::RecordPlayerDeath( const char *pKillerName, int nKillerClass )
 {
-	V_strcpy( m_szKillerName, pKillerName );
+	V_strcpy_safe( m_szKillerName, pKillerName );
 	m_nKillerClass = nKillerClass;
 }
 

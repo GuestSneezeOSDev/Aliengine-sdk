@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -22,15 +22,15 @@ public:
 	// constructors
 	Color()
 	{
-		SetColor(0, 0, 0, 0);
+		*((int *)this) = 0;
 	}
-	Color(int r,int g,int b)
+	Color(int _r,int _g,int _b)
 	{
-		SetColor(r, g, b, 0);
+		SetColor(_r, _g, _b, 0);
 	}
-	Color(int r,int g,int b,int a)
+	Color(int _r,int _g,int _b,int _a)
 	{
-		SetColor(r, g, b, a);
+		SetColor(_r, _g, _b, _a);
 	}
 	
 	// set the color
@@ -38,20 +38,20 @@ public:
 	// g - green component (0-255)
 	// b - blue component (0-255)
 	// a - alpha component, controls transparency (0 - transparent, 255 - opaque);
-	void SetColor(int r, int g, int b, int a = 0)
+	void SetColor(int _r, int _g, int _b, int _a = 0)
 	{
-		_color[0] = (unsigned char)r;
-		_color[1] = (unsigned char)g;
-		_color[2] = (unsigned char)b;
-		_color[3] = (unsigned char)a;
+		_color[0] = (unsigned char)_r;
+		_color[1] = (unsigned char)_g;
+		_color[2] = (unsigned char)_b;
+		_color[3] = (unsigned char)_a;
 	}
 
-	void GetColor(int &r, int &g, int &b, int &a) const
+	void GetColor(int &_r, int &_g, int &_b, int &_a) const
 	{
-		r = _color[0];
-		g = _color[1];
-		b = _color[2];
-		a = _color[3];
+		_r = _color[0];
+		_g = _color[1];
+		_b = _color[2];
+		_a = _color[3];
 	}
 
 	void SetRawColor( int color32 )
@@ -74,14 +74,25 @@ public:
 		return _color[index];
 	}
 
+	const unsigned char &operator[](int index) const
+	{
+		return _color[index];
+	}
+
 	bool operator == (const Color &rhs) const
 	{
 		return ( *((int *)this) == *((int *)&rhs) );
 	}
 
-	bool operator != (Color &rhs) const
+	bool operator != (const Color &rhs) const
 	{
 		return !(operator==(rhs));
+	}
+
+	Color &operator=( const Color &rhs )
+	{
+		SetRawColor( rhs.GetRawColor() );
+		return *this;
 	}
 
 private:

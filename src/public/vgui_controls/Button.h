@@ -1,9 +1,9 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 
 #ifndef BUTTON_H
 #define BUTTON_H
@@ -16,11 +16,10 @@
 #include <vgui/Dar.h>
 #include <Color.h>
 #include <vgui_controls/Label.h>
+#include "vgui/MouseCode.h"
 
 namespace vgui
 {
-
-enum MouseCode;
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -53,6 +52,9 @@ public:
 	virtual void SetSelected(bool state);
 	// Check selected state
 	virtual bool IsSelected( void );
+
+	virtual void SetBlink(bool state);
+	virtual bool IsBlinking( void );
 
 	//Set whether or not the button captures all mouse input when depressed.
 	virtual void SetUseCaptureMouse( bool state );
@@ -105,13 +107,29 @@ public:
 	virtual void SetDefaultColor(Color fgColor, Color bgColor);
 	// Set armed button colors
 	virtual void SetArmedColor(Color fgColor, Color bgColor);
+	// Set selected button colors
+	virtual void SetSelectedColor(Color fgColor, Color bgColor);
 	// Set depressed button colors
 	virtual void SetDepressedColor(Color fgColor, Color bgColor);
+	// Set blink button color
+	virtual void SetBlinkColor(Color fgColor);
 
 	// Get button foreground color
 	virtual Color GetButtonFgColor();
 	// Get button background color
 	virtual Color GetButtonBgColor();
+
+	Color		  GetButtonDefaultFgColor() { return _defaultFgColor; }
+	Color		  GetButtonDefaultBgColor() { return _defaultBgColor; }
+
+	Color		  GetButtonArmedFgColor() { return _armedFgColor; }
+	Color		  GetButtonArmedBgColor() { return _armedBgColor; }
+
+	Color		  GetButtonSelectedFgColor() { return _selectedFgColor; }
+	Color		  GetButtonSelectedBgColor() { return _selectedBgColor; }
+
+	Color		  GetButtonDepressedFgColor() { return _depressedFgColor; }
+	Color		  GetButtonDepressedBgColor() { return _depressedBgColor; }
 
 	// Set default button border attributes.
 	virtual void SetDefaultBorder(IBorder *border);
@@ -140,6 +158,18 @@ public:
 	virtual void OnCursorExited();
 	virtual void SizeToContents();
 
+	virtual KeyValues *GetCommand();
+
+	bool IsDrawingFocusBox();
+	void DrawFocusBox( bool bEnable );
+
+	bool ShouldPaint(){ return _paint; }
+	void SetShouldPaint( bool paint ){ _paint = paint; }
+
+	virtual void ApplySettings( KeyValues *inResourceData );
+	virtual void NavigateTo();
+	virtual void NavigateFrom();
+
 protected:
 	virtual void DrawFocusBorder(int tx0, int ty0, int tx1, int ty1);
 
@@ -159,17 +189,28 @@ protected:
 
 	// Get control settings for editing
 	virtual void GetSettings( KeyValues *outResourceData );
-	virtual void ApplySettings( KeyValues *inResourceData );
 	virtual const char *GetDescription( void );
 
-private:
-	bool               _armed;		// whether the mouse is over the button
-	bool		       _depressed;	// whether the button is visual depressed
-	bool               _selected;	// whether the mouse is being held down on this button
-	bool			   _forceDepressed;
-	bool               _buttonBorderEnabled;
-	bool			   _useCaptureMouse;
-	bool			   _keyDown;
+	KeyValues *GetActionMessage();
+	void PlayButtonReleasedSound();
+
+protected:
+	enum ButtonFlags_t
+	{
+		ARMED					= 0x0001,
+		DEPRESSED				= 0x0002,
+		FORCE_DEPRESSED			= 0x0004,
+		BUTTON_BORDER_ENABLED	= 0x0008,
+		USE_CAPTURE_MOUSE		= 0x0010,
+		BUTTON_KEY_DOWN			= 0x0020,
+		DEFAULT_BUTTON			= 0x0040,
+		SELECTED				= 0x0080,
+		DRAW_FOCUS_BOX			= 0x0100,
+		BLINK					= 0x0200,
+		ALL_FLAGS				= 0xFFFF,
+	};
+
+	CUtlFlags< unsigned short > _buttonFlags;	// see ButtonFlags_t
 	int                _mouseClickMask;
 	KeyValues		  *_actionMessage;
 	ActivationType_t   _activationType;
@@ -180,11 +221,17 @@ private:
 
 	Color			   _defaultFgColor, _defaultBgColor;
 	Color			   _armedFgColor, _armedBgColor;
+	Color			   _selectedFgColor, _selectedBgColor;
 	Color              _depressedFgColor, _depressedBgColor;
 	Color              _keyboardFocusColor;
+	Color			   _blinkFgColor;
+
+	bool				_paint;
 
 	unsigned short	   m_sArmedSoundName, m_sDepressedSoundName, m_sReleasedSoundName;
-	bool _defaultButton;	// true if this is the button that gets activated by default when the user hits enter
+	bool m_bSelectionStateSaved;
+	bool m_bStaySelectedOnClick;
+	bool m_bStayArmedOnClick;
 };
 
 } // namespace vgui

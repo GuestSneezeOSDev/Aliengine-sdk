@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -9,7 +9,7 @@
 #define DISPCOLL_H
 #pragma once
 
-#include "Vector.h"
+#include "mathlib/vector.h"
 
 class CCoreDispInfo;
 

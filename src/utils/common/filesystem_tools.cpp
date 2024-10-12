@@ -1,10 +1,10 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
-//=============================================================================//
+//===========================================================================//
 
-#ifdef _WIN32
+#if defined( _WIN32 ) && !defined( _X360 )
 #include <windows.h>
 #include <direct.h>
 #include <io.h> // _chmod
@@ -14,10 +14,11 @@
 
 #include <stdio.h>
 #include <sys/stat.h>
-#include "vstdlib/strtools.h"
+#include "tier1/strtools.h"
 #include "filesystem_tools.h"
-#include "vstdlib/ICommandLine.h"
+#include "tier0/icommandline.h"
 #include "KeyValues.h"
+#include "tier2/tier2.h"
 
 #ifdef MPI
 	#include "vmpi.h"
@@ -36,7 +37,6 @@
 IBaseFileSystem *g_pFileSystem = NULL;
 
 // These are only used for tools that need the search paths that the engine's file system provides.
-IFileSystem			*g_pFullFileSystem = NULL;
 CSysModule			*g_pFullFileSystemModule = NULL;
 
 // ---------------------------------------------------------------------------
@@ -51,6 +51,27 @@ char		qdir[1024];
 
 // This is the base engine + mod-specific game dir (e.g. "c:\tf2\mytfmod\")
 char		gamedir[1024];	
+
+void FileSystem_SetupStandardDirectories( const char *pFilename, const char *pGameInfoPath )
+{
+	// Set qdir.
+	if ( !pFilename )
+	{
+		pFilename = ".";
+	}
+
+	Q_MakeAbsolutePath( qdir, sizeof( qdir ), pFilename, NULL );
+	Q_StripFilename( qdir );
+	Q_strlower( qdir );
+	if ( qdir[0] != 0 )
+	{
+		Q_AppendSlash( qdir, sizeof( qdir ) );
+	}
+
+	// Set gamedir.
+	Q_MakeAbsolutePath( gamedir, sizeof( gamedir ), pGameInfoPath );
+	Q_AppendSlash( gamedir, sizeof( gamedir ) );
+}
 
 
 bool FileSystem_Init_Normal( const char *pFilename, FSInitType_t initType, bool bOnlyUseDirectoryName )
@@ -93,20 +114,9 @@ bool FileSystem_Init_Normal( const char *pFilename, FSInitType_t initType, bool 
 		g_pFileSystem = g_pFullFileSystem = loadModuleInfo.m_pFileSystem;
 		g_pFullFileSystemModule = loadModuleInfo.m_pModule;
 
-		
-		// Set qdir.
-		if ( !pFilename )
-			pFilename = ".";
+		FileSystem_AddSearchPath_Platform( g_pFullFileSystem, loadModuleInfo.m_GameInfoPath );
 
-		Q_MakeAbsolutePath( qdir, sizeof( qdir ), pFilename, NULL );
-		Q_StripFilename( qdir );
-		strlwr( qdir );
-		if ( qdir[0] != 0 )
-			Q_AppendSlash( qdir, sizeof( qdir ) );
-
-		// Set gamedir.
-		Q_MakeAbsolutePath( gamedir, sizeof( gamedir ), loadModuleInfo.m_GameInfoPath );
-		Q_AppendSlash( gamedir, sizeof( gamedir ) );
+		FileSystem_SetupStandardDirectories( pFilename, loadModuleInfo.m_GameInfoPath );
 	}
 	else
 	{
@@ -123,6 +133,7 @@ bool FileSystem_Init_Normal( const char *pFilename, FSInitType_t initType, bool 
 			return false;
 
 		g_pFullFileSystem->RemoveAllSearchPaths();
+		g_pFullFileSystem->AddSearchPath( "../platform", "PLATFORM" );
 		g_pFullFileSystem->AddSearchPath( ".", "GAME" );
 
 		g_pFileSystem = g_pFullFileSystem;
@@ -191,20 +202,5 @@ CreateInterfaceFn FileSystem_GetFactory()
 	if ( g_bUseMPI )
 		return VMPI_FileSystem_GetFactory();
 #endif
-
-return Sys_GetFactory( g_pFullFileSystemModule );
+	return Sys_GetFactory( g_pFullFileSystemModule );
 }
-
-
-bool FileSystem_SetGame( const char *szModDir )
-{
-	g_pFullFileSystem->RemoveAllSearchPaths();
-	if ( FileSystem_SetBasePaths( g_pFullFileSystem ) != FS_OK )
-		return false;
-
-	CFSSearchPathsInit fsInit;
-	fsInit.m_pDirectoryName = szModDir;
-	fsInit.m_pFileSystem = g_pFullFileSystem;
-	return ( FileSystem_LoadSearchPaths( fsInit ) == FS_OK );
-}
-

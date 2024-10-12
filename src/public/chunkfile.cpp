@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Implements an interface for reading and writing heirarchical
 //			text files of key value pairs. The format of the file is as follows:
@@ -33,22 +33,21 @@
 //=============================================================================//
 
 #include <fcntl.h>
+#ifdef _WIN32
 #include <io.h>
+#endif
 #include <math.h>
-#include <sys\stat.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "ChunkFile.h"
-#include "Vector.h"
-#include "Vector4D.h"
-#include "vstdlib/strtools.h"
+#include "chunkfile.h"
+#include "mathlib/vector.h"
+#include "mathlib/vector4d.h"
+#include "tier1/strtools.h"
 
-//
-// Fixes an infinite loop that occurs when loading certain VMFs. The bug
-// occurs with Worldcraft built with DevStudio SP4.
-//
-#pragma optimize("g", off)
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
 
 
 //-----------------------------------------------------------------------------
@@ -689,9 +688,9 @@ bool CChunkFile::ReadKeyValueColor(const char *pszValue, unsigned char &chRed, u
 {
 	if (pszValue != NULL)
 	{
-		int r;
-		int g;
-		int b;
+		int r = 0;
+		int g = 0;
+		int b = 0;
 		
 		if (sscanf(pszValue, "%d %d %d", &r, &g, &b) == 3)
 		{
@@ -718,6 +717,23 @@ bool CChunkFile::ReadKeyValuePoint(const char *pszValue, Vector &Point)
 	if (pszValue != NULL)
 	{
 		return(sscanf(pszValue, "(%f %f %f)", &Point.x, &Point.y, &Point.z) == 3);
+	}
+
+	return(false);
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : pszValue - 
+//			pfVector - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CChunkFile::ReadKeyValueVector2(const char *pszValue, Vector2D &vec)
+{
+	if (pszValue != NULL)
+	{
+		return ( sscanf( pszValue, "[%f %f]", &vec.x, &vec.y) == 2 );
 	}
 
 	return(false);
@@ -875,9 +891,22 @@ ChunkFileResult_t CChunkFile::WriteKeyValuePoint(const char *pszKey, const Vecto
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-// Input  : pszKey - 
-//			fVector - 
-// Output : 
+//-----------------------------------------------------------------------------
+ChunkFileResult_t CChunkFile::WriteKeyValueVector2(const char *pszKey, const Vector2D &vec)
+{
+	if (pszKey != NULL)
+	{
+		char szBuf[MAX_KEYVALUE_LEN];
+		Q_snprintf( szBuf, sizeof( szBuf ), "\"%s\" \"[%g %g]\"", pszKey, (double)vec.x, (double)vec.y );
+		return(WriteLine(szBuf));
+	}
+
+	return(ChunkFile_Ok);
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: 
 //-----------------------------------------------------------------------------
 ChunkFileResult_t CChunkFile::WriteKeyValueVector3(const char *pszKey, const Vector &vec)
 {

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -8,10 +8,10 @@
 
 #include "vbsp.h"
 #include "utlvector.h"
-#include "vmatrix.h"
+#include "mathlib/vmatrix.h"
 #include "iscratchpad3d.h"
 #include "csg.h"
-
+#include "fmtstr.h"
 
 int		c_active_portals;
 int		c_peak_portals;
@@ -355,13 +355,12 @@ winding_t	*BaseWindingForNode (node_t *node)
 	Vector		normal;
 	vec_t		dist;
 
-	w = BaseWindingForPlane (mapplanes[node->planenum].normal
-		, mapplanes[node->planenum].dist);
+	w = BaseWindingForPlane (g_MainMap->mapplanes[node->planenum].normal, g_MainMap->mapplanes[node->planenum].dist);
 
 	// clip by all the parents
 	for (n=node->parent ; n && w ; )
 	{
-		plane = &mapplanes[n->planenum];
+		plane = &g_MainMap->mapplanes[n->planenum];
 
 		if (n->children[0] == node)
 		{	// take front
@@ -395,8 +394,8 @@ void MakeNodePortal (node_t *node)
 	portal_t	*new_portal, *p;
 	winding_t	*w;
 	Vector		normal;
-	float		dist;
-	int			side;
+	float		dist = 0.0f;
+	int			side = 0;
 
 	w = BaseWindingForNode (node);
 
@@ -416,7 +415,9 @@ void MakeNodePortal (node_t *node)
 			dist = -p->plane.dist;
 		}
 		else
+		{
 			Error ("CutNodePortals_r: mislinked portal");
+		}
 
 		ChopWindingInPlace (&w, normal, dist, 0.1);
 	}
@@ -435,7 +436,7 @@ void MakeNodePortal (node_t *node)
 
 
 	new_portal = AllocPortal ();
-	new_portal->plane = mapplanes[node->planenum];
+	new_portal->plane = g_MainMap->mapplanes[node->planenum];
 	new_portal->onnode = node;
 	new_portal->winding = w;	
 
@@ -455,11 +456,11 @@ void SplitNodePortals (node_t *node)
 {
 	portal_t	*p, *next_portal, *new_portal;
 	node_t		*f, *b, *other_node;
-	int			side;
+	int			side = 0;
 	plane_t		*plane;
 	winding_t	*frontwinding, *backwinding;
 
-	plane = &mapplanes[node->planenum];
+	plane = &g_MainMap->mapplanes[node->planenum];
 	f = node->children[0];
 	b = node->children[1];
 
@@ -585,7 +586,16 @@ void MakeTreePortals_r (node_t *node)
 	{
 		if (node->mins[i] < (MIN_COORD_INTEGER-SIDESPACE) || node->maxs[i] > (MAX_COORD_INTEGER+SIDESPACE))
 		{
-			Warning("WARNING: node with unbounded volume\n");
+			const char *pMatName = "<NO BRUSH>";
+			// split by brush side
+			if ( node->side )
+			{
+				texinfo_t *pTexInfo = &texinfo[node->side->texinfo];
+				dtexdata_t *pTexData = GetTexData( pTexInfo->texdata );
+				pMatName = TexDataStringTable_GetString( pTexData->nameStringTableID );
+			}
+			Vector point = node->portals->winding->p[0];
+			Warning("WARNING: BSP node with unbounded volume (material: %s, near %s)\n", pMatName, VecToString(point) );
 			break;
 		}
 	}
@@ -705,7 +715,7 @@ qboolean PlaceOccupant (node_t *headnode, Vector& origin, entity_t *occupant)
 	node = headnode;
 	while (node->planenum != PLANENUM_LEAF)
 	{
-		plane = &mapplanes[node->planenum];
+		plane = &g_MainMap->mapplanes[node->planenum];
 		d = DotProduct (origin, plane->normal) - plane->dist;
 		if (d >= 0)
 			node = node->children[0];
@@ -1010,7 +1020,7 @@ float AngleOffset( float flBaseAngle, float flTestAngle )
 }
 
 
-int FindUniquePoints( const Vector2D *pPoints, int nPoints, int *indexMap, float flTolerance )
+int FindUniquePoints( const Vector2D *pPoints, int nPoints, int *indexMap, int nMaxIndexMapPoints, float flTolerance )
 {
 	float flToleranceSqr = flTolerance * flTolerance;
 
@@ -1026,6 +1036,9 @@ int FindUniquePoints( const Vector2D *pPoints, int nPoints, int *indexMap, float
 		}
 		if ( j == nUniquePoints )
 		{
+			if ( nUniquePoints >= nMaxIndexMapPoints )
+				Error( "FindUniquePoints: overflowed unique point list (size %d).", nMaxIndexMapPoints );
+
 			indexMap[nUniquePoints++] = i;
 		}
 	}
@@ -1044,11 +1057,10 @@ int Convex2D( Vector2D const *pPoints, int nPoints, int *indices, int nMaxIndice
 	if( nPoints == 0 )
 		return 0;
 
-	nPoints = min( nPoints, ARRAYSIZE( indexMap ) );
 
 	// If we don't collapse the points into a unique set, we can loop around forever
 	// and max out nMaxIndices.
-	nPoints = FindUniquePoints( pPoints, nPoints, indexMap, 0.1f );
+	nPoints = FindUniquePoints( pPoints, nPoints, indexMap, ARRAYSIZE( indexMap ), 0.1f );
 	memset( touched, 0, nPoints*sizeof(touched[0]) );
 
 	// Find the (lower) left side.
@@ -1082,26 +1094,30 @@ int Convex2D( Vector2D const *pPoints, int nPoints, int *indices, int nMaxIndice
 		for( i=0; i < nPoints; i++ )
 		{
 			Vector2D vTo = pPoints[indexMap[i]] - *pStartPoint;
-			if( vTo.LengthSqr() <= 0.1f )
+			float flDistToSqr = vTo.LengthSqr();
+			if ( flDistToSqr <= 0.1f )
 				continue;
 
 			// Get the angle from the edge to this point.
 			float flAngle = atan2( vTo.y, vTo.x );
 			flAngle = AngleOffset( flEdgeAngle, flAngle );
 
-			if( flAngle < flMinAngle )
+			if( fabs( flAngle - flMinAngle ) < 0.00001f )
 			{
-				flMinAngle = flAngle;
-				iMinAngle = indexMap[i];
-			}
-			else if( fabs( flAngle - flMinAngle ) < 0.00001f )
-			{
+				float flDistToTestSqr = pStartPoint->DistToSqr( pPoints[iMinAngle] );
+
 				// If the angle is the same, pick the point farthest away.
-				if( vTo.LengthSqr() > (pPoints[iMinAngle] - *pStartPoint).LengthSqr() )
+				// unless the current one is closing the face loop
+				if ( iMinAngle != indices[0] && flDistToSqr > flDistToTestSqr )
 				{
 					flMinAngle = flAngle;
 					iMinAngle = indexMap[i];
 				}
+			}
+			else if( flAngle < flMinAngle )
+			{
+				flMinAngle = flAngle;
+				iMinAngle = indexMap[i];
 			}
 		}
 
@@ -1122,6 +1138,13 @@ int Convex2D( Vector2D const *pPoints, int nPoints, int *indices, int nMaxIndice
 			if( nIndices >= nMaxIndices )
 				break;
 
+			for ( int jj = 0; jj < nIndices; jj++ )
+			{
+				// if this assert hits, this routine is broken and is generating a spiral
+				// rather than a closed polygon - basically an edge overlap of some kind
+				Assert(indices[jj] != iMinAngle );
+			}
+
 			indices[nIndices] = iMinAngle;
 			++nIndices;
 		}
@@ -1131,7 +1154,6 @@ int Convex2D( Vector2D const *pPoints, int nPoints, int *indices, int nMaxIndice
 	
 	return nIndices;
 }
-
 
 void FindPortalsLeadingToArea_R( 
 	node_t *pHeadNode, 
@@ -1160,7 +1182,7 @@ void FindPortalsLeadingToArea_R(
 			p->nodes[0]->area == iDestArea && p->nodes[1]->area == iSrcArea )
 		{
 			// Make sure the plane normals point the same way.
-			plane_t *pMapPlane = &mapplanes[p->onnode->planenum];
+			plane_t *pMapPlane = &g_MainMap->mapplanes[p->onnode->planenum];
 			float flDot = fabs( pMapPlane->normal.Dot( pPlane->normal ) );
 			if( fabs( 1 - flDot ) < 0.01f )
 			{
@@ -1192,10 +1214,11 @@ void EmitClipPortalGeometry( node_t *pHeadNode, portal_t *pPortal, int iSrcArea,
 	for( int iPortal=0; iPortal < portals.Size(); iPortal++ )
 	{
 		portal_t *pPointPortal = portals[iPortal];
-
-		winding_t *pWinding = portals[iPortal]->winding;
+		winding_t *pWinding = pPointPortal->winding;
 		for( int i=0; i < pWinding->numpoints; i++ )
+		{
 			points.AddToTail( pWinding->p[i] );
+		}
 	}
 
 	// Get the 2D convex hull.
@@ -1234,7 +1257,8 @@ void EmitClipPortalGeometry( node_t *pHeadNode, portal_t *pPortal, int iSrcArea,
 
 	if( dp->m_FirstClipPortalVert + dp->m_nClipPortalVerts >= MAX_MAP_PORTALVERTS )
 	{
-		Error( "MAX_MAP_PORTALVERTS" );
+		Vector *p = pPortal->winding->p;
+		Error( "MAX_MAP_PORTALVERTS (probably a broken areaportal near %.1f %.1f %.1f ", p->x, p->y, p->z );
 	}
 	
 	for( i=0; i < nIndices; i++ )
@@ -1277,7 +1301,7 @@ void EmitAreaPortals (node_t *headnode)
 	dareaportal_t	*dp;
 
 	if (c_areas > MAX_MAP_AREAS)
-		Error ("MAX_MAP_AREAS");
+		Error ("Map is split into too many unique areas (max = %d)\nProbably too many areaportals", MAX_MAP_AREAS);
 	numareas = c_areas+1;
 	numareaportals = 1;		// leave 0 as an error
 
@@ -1433,7 +1457,7 @@ static void DisplayPortalError( portal_t *p, int viscontents )
 
 	Vector center;
 	WindingCenter( p->winding, center );
-	Warning( "\nFindPortalSide: Couldn't find a good match for which brush to assign to a portal near (%.1f, %.1f, %.1f)\n", center.x, center.y, center.z);
+	Warning( "\nFindPortalSide: Couldn't find a good match for which brush to assign to a portal near (%.1f %.1f %.1f)\n", center.x, center.y, center.z);
 	Warning( "Leaf 0 contents: %s\n", contents[0] );
 	Warning( "Leaf 1 contents: %s\n", contents[1] );
 	Warning( "viscontents (node 0 contents ^ node 1 contents): %s\n", contents[2] );
@@ -1498,7 +1522,7 @@ void FindPortalSide (portal_t *p)
 	for (j=0 ; j<2 ; j++)
 	{
 		n = p->nodes[j];
-		p1 = &mapplanes[p->onnode->planenum];
+		p1 = &g_MainMap->mapplanes[p->onnode->planenum];
 
 		for (bb=n->brushlist ; bb ; bb=bb->next)
 		{
@@ -1521,7 +1545,7 @@ void FindPortalSide (portal_t *p)
 					goto gotit;
 				}
 
-				p2 = &mapplanes[side->planenum&~1];
+				p2 = &g_MainMap->mapplanes[side->planenum&~1];
 
 				float dist = ComputeDistFromPlane( p->winding, p2, bestdist );
 				if (dist < bestdist)
@@ -1611,7 +1635,7 @@ void MarkVisibleSides (tree_t *tree, int startbrush, int endbrush, int detailScr
 	// clear all the visible flags
 	for (i=startbrush ; i<endbrush ; i++)
 	{
-		mb = &mapbrushes[i];
+		mb = &g_MainMap->mapbrushes[i];
 
 		if ( detailScreen != FULL_DETAIL )
 		{

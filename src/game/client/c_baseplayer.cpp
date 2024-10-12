@@ -50,6 +50,10 @@
 #include "sourcevr/isourcevirtualreality.h"
 #include "client_virtualreality.h"
 
+#ifdef TF_CLIENT_DLL
+#include "tf_gamerules.h"
+#endif
+
 #if defined USES_ECON_ITEMS
 #include "econ_wearable.h"
 #endif
@@ -111,7 +115,7 @@ ConVar	spec_freeze_distance_min( "spec_freeze_distance_min", "96", FCVAR_CHEAT, 
 ConVar	spec_freeze_distance_max( "spec_freeze_distance_max", "200", FCVAR_CHEAT, "Maximum random distance from the target to stop when framing them in observer freeze cam." );
 #endif
 
-static ConVar	cl_first_person_uses_world_model ( "cl_first_person_uses_world_model", "0", FCVAR_ARCHIVE, "Causes the third person model to be drawn instead of the view model" );
+static ConVar	cl_first_person_uses_world_model ( "cl_first_person_uses_world_model", "0", FCVAR_NONE, "Causes the third person model to be drawn instead of the view model" );
 
 ConVar demo_fov_override( "demo_fov_override", "0", FCVAR_CLIENTDLL | FCVAR_DONTRECORD, "If nonzero, this value will be used to override FOV during demo playback." );
 
@@ -341,6 +345,7 @@ BEGIN_PREDICTION_DATA_NO_BASE( CPlayerLocalData )
 	DEFINE_PRED_FIELD_TOL( m_flFallVelocity, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, 0.5f ),
 //	DEFINE_PRED_FIELD( m_nOldButtons, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_FIELD( m_nOldButtons, FIELD_INTEGER ),
+	DEFINE_FIELD( m_flOldForwardMove, FIELD_FLOAT ),
 	DEFINE_PRED_FIELD( m_flStepSize, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_FIELD( m_flFOVRate, FIELD_FLOAT ),
 
@@ -468,8 +473,8 @@ void C_BasePlayer::Spawn( void )
 	ClearFlags();
 	AddFlag( FL_CLIENT );
 
-	int effects = GetEffects() & EF_NOSHADOW;
-	SetEffects( effects );
+	int fEffects = GetEffects() & EF_NOSHADOW;
+	SetEffects( fEffects );
 
 	m_iFOV	= 0;	// init field of view.
 
@@ -717,8 +722,8 @@ void C_BasePlayer::FireGameEvent( IGameEvent *event )
 {
 	if ( FStrEq( event->GetName(), "base_player_teleported" ) )
 	{
-		const int index = event->GetInt( "entindex" );
-		if ( index == entindex() && IsLocalPlayer() )
+		const int index_ = event->GetInt( "entindex" );
+		if ( index_ == entindex() && IsLocalPlayer() )
 		{
 			// In VR, we want to make sure our head and body
 			// are aligned after we teleport.
@@ -1589,11 +1594,11 @@ void C_BasePlayer::CalcRoamingView(Vector& eyeOrigin, QAngle& eyeAngles, float& 
 	
 	if ( spec_track.GetInt() > 0 )
 	{
-		C_BaseEntity *target =  ClientEntityList().GetBaseEntity( spec_track.GetInt() );
+		C_BaseEntity *pTarget =  ClientEntityList().GetBaseEntity( spec_track.GetInt() );
 
-		if ( target )
+		if ( pTarget )
 		{
-			Vector v = target->GetAbsOrigin(); v.z += 54;
+			Vector v = pTarget->GetAbsOrigin(); v.z += 54;
 			QAngle a; VectorAngles( v - eyeOrigin, a );
 
 			NormalizeAngles( a );
@@ -1887,6 +1892,14 @@ void C_BasePlayer::ThirdPersonSwitch( bool bThirdperson )
 	{
 		return false;
 	}
+
+#ifdef TF_CLIENT_DLL
+	if ( TFGameRules() && TFGameRules()->IsCompetitiveMode() && TFGameRules()->PlayersAreOnMatchSummaryStage() )
+	{
+		return false;
+	}
+#endif
+
 	int ObserverMode = pLocalPlayer->GetObserverMode();
 	if ( ( ObserverMode == OBS_MODE_NONE ) || ( ObserverMode == OBS_MODE_IN_EYE ) )
 	{
@@ -2151,11 +2164,11 @@ void C_BasePlayer::Simulate()
 //		Consider using GetRenderedWeaponModel() instead - it will get the
 //		viewmodel or the active weapon as appropriate.
 //-----------------------------------------------------------------------------
-C_BaseViewModel *C_BasePlayer::GetViewModel( int index /*= 0*/, bool bObserverOK )
+C_BaseViewModel *C_BasePlayer::GetViewModel( int index_ /*= 0*/, bool bObserverOK )
 {
-	Assert( index >= 0 && index < MAX_VIEWMODELS );
+	Assert( index_ >= 0 && index_ < MAX_VIEWMODELS );
 
-	C_BaseViewModel *vm = m_hViewModel[ index ];
+	C_BaseViewModel *vm = m_hViewModel[index_];
 	
 	if ( bObserverOK && GetObserverMode() == OBS_MODE_IN_EYE )
 	{
@@ -2164,7 +2177,7 @@ C_BaseViewModel *C_BasePlayer::GetViewModel( int index /*= 0*/, bool bObserverOK
 		// get the targets viewmodel unless the target is an observer itself
 		if ( target && target != this && !target->IsObserver() )
 		{
-			vm = target->GetViewModel( index );
+			vm = target->GetViewModel( index_ );
 		}
 	}
 
@@ -2833,16 +2846,7 @@ bool C_BasePlayer::GetSteamID( CSteamID *pID )
 	{
 		if ( pi.friendsID && steamapicontext && steamapicontext->SteamUtils() )
 		{
-#if 1	// new
-			static EUniverse universe = k_EUniverseInvalid;
-
-			if ( universe == k_EUniverseInvalid )
-				universe = steamapicontext->SteamUtils()->GetConnectedUniverse();
-
-			pID->InstancedSet( pi.friendsID, 1, universe, k_EAccountTypeIndividual );
-#else	// old
-			pID->InstancedSet( pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual );
-#endif
+			pID->InstancedSet( pi.friendsID, 1, GetUniverse(), k_EAccountTypeIndividual );
 
 			return true;
 		}

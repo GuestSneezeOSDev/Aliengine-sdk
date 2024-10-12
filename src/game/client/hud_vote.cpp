@@ -4,6 +4,8 @@
 
 
 #include "cbase.h"
+#include "inputsystem/iinputsystem.h"
+#include "input.h"
 #include "hud.h"
 #include "hudelement.h"
 #include "hud_macros.h"
@@ -62,25 +64,21 @@ public:
 		SetText( "#GameUI_Vote_Notification_Text" );
 		AddStringToken( "initiator", m_wszPlayerName );
 	}
-	virtual bool CanBeTriggered()
-	{
-		return true;
-	}
+
+	virtual EType NotificationType() { return eType_AcceptDecline; }
+
 	virtual void Trigger()
 	{
-		CTFGenericConfirmDialog *pDialog = ShowConfirmDialog( "#GameUI_Vote_Notification_Title", 
-															  "#GameUI_Vote_Notification_Text", 
-															  "#GameUI_Vote_Notification_View", 
+		CTFGenericConfirmDialog *pDialog = ShowConfirmDialog( "#GameUI_Vote_Notification_Title",
+															  "#GameUI_Vote_Notification_Text",
+															  "#GameUI_Vote_Notification_View",
 															  "#cancel", &ConfirmShowVoteSetup );
 		pDialog->SetContext( this );
 		pDialog->AddStringToken( "initiator", m_wszPlayerName );
 		// so we aren't deleted
 		SetIsInUse( true );
 	}
-	virtual bool CanBeAcceptedOrDeclined()
-	{
-		return true;
-	}
+
 	virtual void Accept()
 	{
 		ConfirmShowVoteSetup( true, this );
@@ -878,6 +876,8 @@ CHudVote::CHudVote( const char *pElementName ) : CHudElement( pElementName ), Ba
 		m_nVoteOptionCount[index] = 0;
 	}
 	m_pVoteActive = new EditablePanel( this, "VoteActive" );
+	m_pVoteActiveIssueLabel = new vgui::Label( m_pVoteActive, "Issue", "" );
+	m_pVoteActiveTargetAvatar = new CAvatarImagePanel( m_pVoteActive, "TargetAvatarImage" );
 	m_voteBar = new VoteBarPanel( m_pVoteActive, "VoteBar" );
 	m_pVoteFailed = new EditablePanel( this, "VoteFailed" );
 	m_pVotePassed = new EditablePanel( this, "VotePassed" );
@@ -897,6 +897,8 @@ void CHudVote::ApplySchemeSettings( vgui::IScheme *pScheme )
 	SetProportional( true );
 
 	LoadControlSettings( "Resource/UI/VoteHud.res" );
+
+	m_pVoteActiveIssueLabel->GetPos( m_nVoteActiveIssueLabelX, m_nVoteActiveIssueLabelY );
 }
 
 //-----------------------------------------------------------------------------
@@ -935,6 +937,8 @@ void CHudVote::LevelInit( void )
 	m_flVoteResultCycleTime = -1;
 	m_flHideTime = -1;
 	m_flPostVotedHideTime = -1;
+	m_bPlayerVoted = false;
+	m_bShowVoteActivePanel = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -1053,7 +1057,7 @@ void CHudVote::MsgFunc_CallVoteFailed( bf_read &msg )
 		case VOTE_FAILED_RATE_EXCEEDED:
 		{
 			const char *pszTimeString = ( bMinutes ) ? ( ( nTime < 2 ) ? "#GameUI_vote_failed_vote_spam_min" : "#GameUI_vote_failed_vote_spam_mins" ) : "#GameUI_vote_failed_vote_spam";
-			g_pVGuiLocalize->ConstructString( wszHeaderString, sizeof( wszHeaderString ), g_pVGuiLocalize->Find( pszTimeString ), 1, wszTime );
+			g_pVGuiLocalize->ConstructString_safe( wszHeaderString, g_pVGuiLocalize->Find( pszTimeString ), 1, wszTime );
 			m_pCallVoteFailed->SetDialogVariable( "FailedReason", wszHeaderString );
 			break;
 		}
@@ -1077,7 +1081,7 @@ void CHudVote::MsgFunc_CallVoteFailed( bf_read &msg )
 		case VOTE_FAILED_ON_COOLDOWN:
 		{
 			const char *pszTimeString = ( bMinutes ) ? ( ( nTime < 2 ) ? "#GameUI_vote_failed_recently_min" : "#GameUI_vote_failed_recently_mins" ) : "#GameUI_vote_failed_recently";
-			g_pVGuiLocalize->ConstructString( wszHeaderString, sizeof( wszHeaderString ), g_pVGuiLocalize->Find( pszTimeString ), 1, wszTime );
+			g_pVGuiLocalize->ConstructString_safe( wszHeaderString, g_pVGuiLocalize->Find( pszTimeString ), 1, wszTime );
 			m_pCallVoteFailed->SetDialogVariable( "FailedReason", wszHeaderString );
 			break;
 		}
@@ -1109,7 +1113,7 @@ void CHudVote::MsgFunc_CallVoteFailed( bf_read &msg )
 		case VOTE_FAILED_CANNOT_KICK_FOR_TIME:
 		{
 			const char *pszTimeString = ( bMinutes ) ? ( ( nTime < 2 ) ? "#GameUI_vote_failed_cannot_kick_min" : "#GameUI_vote_failed_cannot_kick_mins" ) : "#GameUI_vote_failed_cannot_kick";
-			g_pVGuiLocalize->ConstructString( wszHeaderString, sizeof( wszHeaderString ), g_pVGuiLocalize->Find( pszTimeString ), 1, wszTime );
+			g_pVGuiLocalize->ConstructString_safe( wszHeaderString, g_pVGuiLocalize->Find( pszTimeString ), 1, wszTime );
 			m_pCallVoteFailed->SetDialogVariable( "FailedReason", wszHeaderString );
 			break;
 		}
@@ -1128,6 +1132,10 @@ void CHudVote::MsgFunc_CallVoteFailed( bf_read &msg )
 
 		case VOTE_FAILED_KICK_LIMIT_REACHED:
 			m_pCallVoteFailed->SetControlString( "FailedReason", "#GameUI_vote_failed_kick_limit" );
+			break;
+
+		case VOTE_FAILED_KICK_DENIED_BY_GC:
+			m_pCallVoteFailed->SetControlString( "FailedReason", "#GameUI_vote_failed_kick_limit_gc" );
 			break;
 	}	
 }
@@ -1224,17 +1232,17 @@ void CHudVote::MsgFunc_VoteStart( bf_read &msg )
 	}
 
 	// DisplayString
-	char szIssue[k_MAX_VOTE_NAME_LENGTH];
-	szIssue[0] = 0;
+	char szIssue[k_MAX_VOTE_NAME_LENGTH] = { 0 };
 	msg.ReadString( szIssue, sizeof(szIssue) );
 
 	// DetailString
-	char szParam1[k_MAX_VOTE_NAME_LENGTH];
-	szParam1[0] = 0;
+	char szParam1[k_MAX_VOTE_NAME_LENGTH] = { 0 };
 	msg.ReadString( szParam1, sizeof(szParam1) );
 
 	m_bIsYesNoVote = msg.ReadByte();
+	int iTargetEntIndex = msg.ReadByte();
 
+	m_flVoteResultCycleTime = -1.f;
 	m_bVotingActive = true;
 	m_pVoteFailed->SetVisible( false );
 	m_pVotePassed->SetVisible( false );
@@ -1271,7 +1279,7 @@ void CHudVote::MsgFunc_VoteStart( bf_read &msg )
 	g_pVGuiLocalize->ConvertANSIToUnicode( pszCallerName, wszCallerName, sizeof( wszCallerName ) );
 
 	// String
-	g_pVGuiLocalize->ConstructString( wszHeaderString, sizeof( wszHeaderString ), g_pVGuiLocalize->Find( "#GameUI_vote_header" ), 1, wszCallerName );
+	g_pVGuiLocalize->ConstructString_safe( wszHeaderString, g_pVGuiLocalize->Find( "#GameUI_vote_header" ), 1, wszCallerName );
 
 	// Final
 	m_pVoteActive->SetDialogVariable( "header", wszHeaderString );
@@ -1297,7 +1305,7 @@ void CHudVote::MsgFunc_VoteStart( bf_read &msg )
 			pwcParam = wcParam;
 		}
 
-		g_pVGuiLocalize->ConstructString( wcIssue, sizeof(wcIssue), g_pVGuiLocalize->Find( szIssue ), 1, pwcParam );
+		g_pVGuiLocalize->ConstructString_safe( wcIssue, g_pVGuiLocalize->Find( szIssue ), 1, pwcParam );
 		pwcIssue = wcIssue;
 	}
 	else
@@ -1312,18 +1320,18 @@ void CHudVote::MsgFunc_VoteStart( bf_read &msg )
 	{
 		// YES / NO UI
 		wchar_t wzFinal[k_MAX_VOTE_NAME_LENGTH] = L"";
-		wchar_t *pszText = g_pVGuiLocalize->Find( "#GameUI_vote_yes_pc_instruction" );
+		wchar_t *pszText = g_pVGuiLocalize->Find( ::input->IsSteamControllerActive() ? "#GameUI_vote_yes_sc_instruction" : "#GameUI_vote_yes_pc_instruction" );
 		if ( pszText )
 		{
-			UTIL_ReplaceKeyBindings( pszText, 0, wzFinal, sizeof( wzFinal ) );
+			UTIL_ReplaceKeyBindings( pszText, 0, wzFinal, sizeof( wzFinal ), GAME_ACTION_SET_FPSCONTROLS );
 			if ( m_pVoteActive )
 				m_pVoteActive->SetControlString( "LabelOption1", wzFinal );
 		}
 
-		pszText = g_pVGuiLocalize->Find( "#GameUI_vote_no_pc_instruction" );
+		pszText = g_pVGuiLocalize->Find( ::input->IsSteamControllerActive() ? "#GameUI_vote_no_sc_instruction" : "#GameUI_vote_no_pc_instruction" );
 		if ( pszText )
 		{
-			UTIL_ReplaceKeyBindings( pszText, 0, wzFinal, sizeof( wzFinal ) );
+			UTIL_ReplaceKeyBindings( pszText, 0, wzFinal, sizeof( wzFinal ), GAME_ACTION_SET_FPSCONTROLS );
 			if ( m_pVoteActive )
 				m_pVoteActive->SetControlString( "LabelOption2", wzFinal );
 		}
@@ -1373,6 +1381,22 @@ void CHudVote::MsgFunc_VoteStart( bf_read &msg )
 			}
 		}
 	}
+
+	// Is the target a player?
+	int nTargetLabelX = m_nVoteActiveIssueLabelX;
+	C_BasePlayer *pTargetPlayer = NULL;
+	if ( iTargetEntIndex )
+	{
+		pTargetPlayer = UTIL_PlayerByIndex( iTargetEntIndex );
+		if ( pTargetPlayer )
+		{
+			m_pVoteActiveTargetAvatar->SetPlayer( pTargetPlayer );
+			m_pVoteActiveTargetAvatar->SetShouldDrawFriendIcon( false );
+			nTargetLabelX += ( m_pVoteActiveTargetAvatar->GetWide() + XRES( 3 ) );
+		}
+	}
+	m_pVoteActiveIssueLabel->SetPos( nTargetLabelX, m_nVoteActiveIssueLabelY );
+	m_pVoteActiveTargetAvatar->SetVisible( pTargetPlayer ?  true : false );
 
 	IGameEvent *event = gameeventmanager->CreateEvent( "vote_started" );
 	if ( event )
@@ -1438,7 +1462,7 @@ void CHudVote::MsgFunc_VotePass( bf_read &msg )
 			pwcParam = wcParam;
 		}
 
-		g_pVGuiLocalize->ConstructString( wcIssue, sizeof(wcIssue), g_pVGuiLocalize->Find( szResult ), 1, pwcParam );
+		g_pVGuiLocalize->ConstructString_safe( wcIssue, g_pVGuiLocalize->Find( szResult ), 1, pwcParam );
 		pwcIssue = wcIssue;
 	}
 	else
@@ -1796,5 +1820,15 @@ bool CHudVote::IsPlayingDemo() const
 bool CHudVote::IsVoteUIActive( void )
 {
 	return m_bShowVoteActivePanel;
+}
+
+bool CHudVote::IsShowingVoteSetupDialog()
+{
+	return m_pVoteSetupDialog && m_pVoteSetupDialog->IsEnabled() && m_pVoteSetupDialog->IsVisible();
+}
+
+bool CHudVote::IsShowingVotingUI()
+{
+	return m_pVoteActive && m_pVoteActive->IsEnabled() && m_pVoteActive->IsVisible();
 }
 

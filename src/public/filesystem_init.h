@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,6 +12,13 @@
 
 
 #include "filesystem.h"
+
+
+// If this option is on the command line, then filesystem_init won't bring up the vconfig
+// dialog even if FS_ERRORMODE_VCONFIG is used.
+#define CMDLINEOPTION_NOVCONFIG	"-NoVConfig"
+
+#define	GAMEDIR_TOKEN		"VProject"
 
 
 #if defined( _WIN32 ) || defined( WIN32 )
@@ -32,17 +39,21 @@ enum FSReturnCode_t
 };
 
 
+enum FSErrorMode_t
+{
+	FS_ERRORMODE_AUTO,		// Call Error() in case of an error.
+	FS_ERRORMODE_VCONFIG,	// Call Error() for errors and run vconfig when appropriate.
+	FS_ERRORMODE_NONE,		// Just return FSReturnCode values and setup the string for FileSystem_GetLastErrorString.
+};
 
-class CFSLoadModuleInfo
+
+class CFSSteamSetupInfo
 {
 public:
-	CFSLoadModuleInfo();
+	CFSSteamSetupInfo();
 
 // Inputs.
 public:
-	// Full path to the file system DLL (gotten from FileSystem_GetFileSystemDLLName).
-	const char		*m_pFileSystemDLLName;
-
 	// If this is set, then the init code will look in this directory up to the root for gameinfo.txt.
 	// It must be set for FileSystem_LoadSearchPaths to work.
 	//
@@ -65,20 +76,45 @@ public:
 	// (default: true - should be FALSE for the engine)
 	bool			m_bToolsMode;
 
-	// Passed to IFileSystem::Connect.
-	CreateInterfaceFn	m_ConnectFactory;
+	// If this is true, and m_bToolsMode is false, then it will append the path to steam.dll to the
+	// PATH environment variable. This makes it so you can run the engine under Steam without
+	// having to copy steam.dll up into your hl2.exe folder.
+	// (default: false)
+	bool			m_bSetSteamDLLPath;
 
 	// Are we loading the Steam filesystem? This should be the same value that 
 	// FileSystem_GetFileSystemDLLName gave you.
 	bool			m_bSteam;
+
+	// If this is true, then it won't look for a gameinfo.txt.
+	//
+	// (default: false)
+	bool			m_bNoGameInfo;
+
+// Outputs (if it returns FS_OK).
+public:
+	char			m_GameInfoPath[512];	// The directory that gameinfo.txt lives in.
+};	
+
+
+class CFSLoadModuleInfo	: public CFSSteamSetupInfo
+{
+public:
+	CFSLoadModuleInfo();
+
+// Inputs.
+public:
+	// Full path to the file system DLL (gotten from FileSystem_GetFileSystemDLLName).
+	const char		*m_pFileSystemDLLName;
+
+	// Passed to IFileSystem::Connect.
+	CreateInterfaceFn	m_ConnectFactory;
 
 // Outputs (if it returns FS_OK).
 public:
 	// The filesystem you got from FileSystem_LoadFileSystemModule.
 	IFileSystem		*m_pFileSystem;
 	CSysModule		*m_pModule;
-
-	char			m_GameInfoPath[512];	// The directory that gameinfo.txt lives in.
 };	
 
 
@@ -112,13 +148,16 @@ public:
 	// This specifies the directory where gameinfo.txt is. This must be set.
 	const char		*m_pDirectoryName;
 
-	// If this is set, then it will add a search path with _<language> appended to the pathname
-	// for each search path with a path ID of "game".
+	// If this is set, then any search paths with a _english will be replaced with _m_pLanguage and added before the
+	// _english path
 	// (default: null)
 	const char		*m_pLanguage;
 
 	// This is the filesystem FileSystem_LoadSearchPaths is talking to.
 	IFileSystem		*m_pFileSystem;
+
+	bool m_bMountHDContent;
+	bool m_bLowViolence;
 
 // Outputs.
 public:
@@ -127,14 +166,22 @@ public:
 };
 
 
+const char *GetVProjectCmdLineValue();
+
+
+// Call this to use a bin directory relative to VPROJECT
+void FileSystem_UseVProjectBinDir( bool bEnable );
 
 // This is used by all things that use the application framework:
-// Note that the application framework automatically takes care of steps 1 and 2 if you use CSteamApplication.
+// Note that the application framework automatically takes care of step 1 if you use CSteamApplication.
 // Step 1: Ask filesystem_init for the name of the filesystem DLL to load
 FSReturnCode_t FileSystem_GetFileSystemDLLName( char *pFileSystemDLL, int nMaxLen, bool &bSteam );
 
 // Step 2: Use filesystem framework to load/connect/init that filesystem DLL
+// -or- just set up the steam environment and get back the gameinfo.txt path
+// The second method is used by the application framework, which wants to connect/init the filesystem itself
 FSReturnCode_t FileSystem_LoadFileSystemModule( CFSLoadModuleInfo &info );
+FSReturnCode_t FileSystem_SetupSteamEnvironment( CFSSteamSetupInfo &info );
 
 // Step 3: Ask filesystem_init to set up the executable search path, and mount the steam content based on the mod gameinfo.txt file
 FSReturnCode_t FileSystem_MountContent( CFSMountContentInfo &fsInfo );
@@ -142,23 +189,29 @@ FSReturnCode_t FileSystem_MountContent( CFSMountContentInfo &fsInfo );
 // Step 4: Load the search paths out of pGameDirectory\gameinfo.txt.
 FSReturnCode_t FileSystem_LoadSearchPaths( CFSSearchPathsInit &initInfo );
 
-
-// This is automatically done during step 1, but if you want to redo all the search
+// This is automatically done during step 3, but if you want to redo all the search
 // paths (like Hammer does), you can call this to reset executable_path.
 FSReturnCode_t FileSystem_SetBasePaths( IFileSystem *pFileSystem );
 
+// Utility function to add the PLATFORM search path.
+void FileSystem_AddSearchPath_Platform( IFileSystem *pFileSystem, const char *szGameInfoPath );
 
-// If this is true, then it will automatically call Error() if it has problems.
-// Otherwise, it will return a status code and you can call FileSystem_GetLastErrorString().
-// (default: true)
-void FileSystem_SetHandleErrorsAutomatically( bool bAuto );
+// See FSErrorMode_t. If you don't specify one here, then the default is FS_ERRORMODE_VCONFIG.
+void FileSystem_SetErrorMode( FSErrorMode_t errorMode = FS_ERRORMODE_VCONFIG );
+
+bool FileSystem_GetExecutableDir( char *exedir, int exeDirLen );
+
+// Clear SteamAppUser, SteamUserPassphrase, and SteamAppId from this process's environment.
+// TODO: always do this after LoadFileSysteModule.. there's no reason it should be
+// in the environment.
+void FileSystem_ClearSteamEnvVars();
+
+// Find the steam.cfg above you for optional stuff
+FSReturnCode_t GetSteamCfgPath( char *steamCfgPath, int steamCfgPathLen );
 
 // Returns the last error.
 const char *FileSystem_GetLastErrorString();
 
 void Q_getwd( char *out, int outSize );
-
-
-
 
 #endif // FILESYSTEM_INIT_H

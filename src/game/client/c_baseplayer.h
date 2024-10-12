@@ -264,6 +264,7 @@ public:
 
 	virtual void				UpdateClientData( void );
 
+	bool						IsLerpingFOV( void ) const;
 	virtual float				GetFOV( void );	
 	int							GetDefaultFOV( void ) const;
 	virtual bool				IsZoomed( void )	{ return false; }

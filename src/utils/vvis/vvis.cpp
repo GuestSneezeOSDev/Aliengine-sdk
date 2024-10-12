@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,11 +14,15 @@
 #include "pacifier.h"
 #include "vmpi.h"
 #include "mpivis.h"
-#include "vstdlib/strtools.h"
+#include "tier1/strtools.h"
 #include "collisionutils.h"
-#include "vstdlib/icommandline.h"
+#include "tier0/icommandline.h"
 #include "vmpi_tools_shared.h"
 #include "ilaunchabledll.h"
+#include "tools_minidump.h"
+#include "loadcmdline.h"
+#include "byteswap.h"
+
 
 int			g_numportals;
 int			portalclusters;
@@ -78,7 +82,7 @@ winding_t *NewWinding (int points)
 	int			size;
 	
 	if (points > MAX_POINTS_ON_WINDING)
-		Error ("NewWinding: %i points", points);
+		Error ("NewWinding: %i points, max %d", points, MAX_POINTS_ON_WINDING);
 	
 	size = (int)(&((winding_t *)0)->points[points]);
 	w = (winding_t*)malloc (size);
@@ -100,7 +104,8 @@ void prl(leaf_t *l)
 	portal_t	*p;
 	plane_t		pl;
 	
-	for (i=0 ; i<l->numportals ; i++)
+	int count = l->portals.Count();
+	for (i=0 ; i<count ; i++)
 	{
 		p = l->portals[i];
 		pl = p->plane;
@@ -127,6 +132,16 @@ int PComp (const void *a, const void *b)
 		return -1;
 
 	return 1;
+}
+
+void BuildTracePortals( int clusterStart )
+{
+	leaf_t *leaf = &leafs[g_TraceClusterStart];
+	g_numportals = leaf->portals.Count();
+	for ( int i = 0; i < g_numportals; i++ )
+	{
+		sorted_portals[i] = leaf->portals[i];
+	}
 }
 
 void SortPortals (void)
@@ -193,11 +208,11 @@ void ClusterMerge (int clusternum)
 
 	memset (portalvector, 0, portalbytes);
 	leaf = &leafs[clusternum];
-	for (i=0 ; i<leaf->numportals ; i++)
+	for (i=0 ; i < leaf->portals.Count(); i++)
 	{
 		p = leaf->portals[i];
 		if (p->status != stat_done)
-			Error ("portal not done %d %d %d\n", i, p, portals);
+			Error ("portal not done %d %p %p\n", i, p, portals);
 		for (j=0 ; j<portallongs ; j++)
 			((long *)portalvector)[j] |= ((long *)p->portalvis)[j];
 		pnum = p - portals;
@@ -207,8 +222,12 @@ void ClusterMerge (int clusternum)
 	// convert portal bits to leaf bits
 	numvis = LeafVectorFromPortalVector (portalvector, uncompressed);
 
+#if 0
+	// func_viscluster makes this happen all the time because it allows a non-convex set of portals
+	// My analysis says this is ok, but it does make this check for errors in vis kind of useless
 	if ( CheckBit( uncompressed, clusternum ) )
 		Warning("WARNING: Cluster portals saw into cluster\n");
+#endif
 		
 	SetBit( uncompressed, clusternum );
 	numvis++;		// count the leaf itself
@@ -294,6 +313,15 @@ void CalcPortalVis (void)
 }
 
 
+void CalcVisTrace (void)
+{
+    RunThreadsOnIndividual (g_numportals*2, true, BasePortalVis);
+	BuildTracePortals( g_TraceClusterStart );
+	// NOTE: We only schedule the one-way portals out of the start cluster here
+	// so don't run g_numportals*2 in this case
+	RunThreadsOnIndividual (g_numportals, true, PortalFlow);
+}
+
 /*
 ==================
 CalcVis
@@ -332,7 +360,7 @@ void CalcVis (void)
 	}
 
 		
-	Msg ("Optimized: %d visible clusters (%.2f%%)\n", count, totalvis, count*100/totalvis);
+	Msg ("Optimized: %d visible clusters (%.2f%%)\n", count, count*100.0/totalvis);
 	Msg ("Total clusters visible: %i\n", totalvis);
 	Msg ("Average clusters visible: %i\n", totalvis / portalclusters);
 }
@@ -383,7 +411,6 @@ void LoadPortals (char *name)
 	int			leafnums[2];
 	plane_t		plane;
 
-
 	FILE *f;
 
 	// Open the portal file.
@@ -418,7 +445,7 @@ void LoadPortals (char *name)
 		fclose( f );
 
 		// Open the temp file up.
-		f = fopen( tempFile, "r" );
+		f = fopen( tempFile, "rSTD" ); // read only, sequential, temporary, delete on close
 	}
 	else
 	{
@@ -429,9 +456,9 @@ void LoadPortals (char *name)
 		Error ("LoadPortals: couldn't read %s\n",name);
 
 	if (fscanf (f,"%79s\n%i\n%i\n",magic, &portalclusters, &g_numportals) != 3)
-		Error ("LoadPortals: failed to read header");
+		Error ("LoadPortals %s: failed to read header", name);
 	if (stricmp(magic,PORTALFILE))
-		Error ("LoadPortals: not a portal file");
+		Error ("LoadPortals %s: not a portal file", name);
 
 	Msg ("%4i portalclusters\n", portalclusters);
 	Msg ("%4i numportals\n", g_numportals);
@@ -499,10 +526,7 @@ void LoadPortals (char *name)
 
 	// create forward portal
 		l = &leafs[leafnums[0]];
-		if (l->numportals == MAX_PORTALS_ON_LEAF)
-			Error ("Leaf (portal %d) with too many portals. Use vbsp -glview to compile, then glview -portal -portalhighlight X to view the problem.", i );
-		l->portals[l->numportals] = p;
-		l->numportals++;
+		l->portals.AddToTail(p);
 		
 		p->winding = w;
 		VectorSubtract (vec3_origin, plane.normal, p->plane.normal);
@@ -513,10 +537,7 @@ void LoadPortals (char *name)
 		
 	// create backwards portal
 		l = &leafs[leafnums[1]];
-		if (l->numportals == MAX_PORTALS_ON_LEAF)
-			Error ("Leaf (portal %d) with too many portals. Use vbsp -glview to compile, then glview -portal -portalhighlight X to view the problem.", i );
-		l->portals[l->numportals] = p;
-		l->numportals++;
+		l->portals.AddToTail(p);
 		
 		p->winding = NewWinding(w->numpoints);
 		p->winding->numpoints = w->numpoints;
@@ -890,22 +911,22 @@ int ParseCommandLine( int argc, char **argv )
 	int i;
 	for (i=1 ; i<argc ; i++)
 	{
-		if (!stricmp(argv[i],"-threads"))
+		if (!Q_stricmp(argv[i],"-threads"))
 		{
 			numthreads = atoi (argv[i+1]);
 			i++;
 		}
-		else if (!stricmp(argv[i], "-fast"))
+		else if (!Q_stricmp(argv[i], "-fast"))
 		{
 			Msg ("fastvis = true\n");
 			fastvis = true;
 		}
-		else if (!stricmp(argv[i], "-v") || !stricmp(argv[i], "-verbose"))
+		else if (!Q_stricmp(argv[i], "-v") || !Q_stricmp(argv[i], "-verbose"))
 		{
 			Msg ("verbose = true\n");
 			verbose = true;
 		}
-		else if( !stricmp( argv[i], "-radius_override" ) )
+		else if( !Q_stricmp( argv[i], "-radius_override" ) )
 		{
 			g_bUseRadius = true;
 			g_VisRadius = atof( argv[i+1] );
@@ -913,17 +934,43 @@ int ParseCommandLine( int argc, char **argv )
 			Msg( "Vis Radius = %4.2f\n", g_VisRadius );
 			g_VisRadius = g_VisRadius * g_VisRadius;   // so distance check can be squared
 		}
-		else if (!stricmp (argv[i],"-nosort"))
+		else if( !Q_stricmp( argv[i], "-trace" ) )
+		{
+			g_TraceClusterStart = atoi( argv[i+1] );
+			i++;
+			g_TraceClusterStop = atoi( argv[i+1] );
+			i++;
+			Msg( "Tracing vis from cluster %d to %d\n", g_TraceClusterStart, g_TraceClusterStop );
+		}
+		else if (!Q_stricmp (argv[i],"-nosort"))
 		{
 			Msg ("nosort = true\n");
 			nosort = true;
 		}
-		else if (!stricmp (argv[i],"-tmpin"))
+		else if (!Q_stricmp (argv[i],"-tmpin"))
 			strcpy (inbase, "/tmp");
-		else if( !stricmp( argv[i], "-low" ) )
+		else if( !Q_stricmp( argv[i], "-low" ) )
 		{
 			g_bLowPriority = true;
 		}
+		else if ( !Q_stricmp( argv[i], "-FullMinidumps" ) )
+		{
+			EnableFullMinidumps( true );
+		}
+		else if ( !Q_stricmp( argv[i], CMDLINEOPTION_NOVCONFIG ) )
+		{
+		}
+		else if ( !Q_stricmp( argv[i], "-vproject" ) || !Q_stricmp( argv[i], "-game" ) )
+		{
+			++i;
+		}
+		else if ( !Q_stricmp( argv[i], "-allowdebug" ) || !Q_stricmp( argv[i], "-steam" ) )
+		{
+			// nothing to do here, but don't bail on this option
+		}
+		// NOTE: the -mpi checks must come last here because they allow the previous argument 
+		// to be -mpi as well. If it game before something else like -game, then if the previous
+		// argument was -mpi and the current argument was something valid like -game, it would skip it.
 		else if ( !Q_strncasecmp( argv[i], "-mpi", 4 ) || !Q_strncasecmp( argv[i-1], "-mpi", 4 ) )
 		{
 			if ( stricmp( argv[i], "-mpi" ) == 0 )
@@ -932,14 +979,6 @@ int ParseCommandLine( int argc, char **argv )
 			// Any other args that start with -mpi are ok too.
 			if ( i == argc - 1 )
 				break;
-		}
-		else if ( !stricmp( argv[i], "-vproject" ) || !stricmp( argv[i], "-game" ) )
-		{
-			++i;
-		}
-		else if ( !stricmp( argv[i], "-allowdebug" ) || !stricmp( argv[i], "-steam" ) )
-		{
-			// nothing to do here, but don't bail on this option
 		}
 		else if (argv[i][0] == '-')
 		{
@@ -985,6 +1024,7 @@ void PrintUsage( int argc, char **argv )
 		"  -game <directory>     : Same as -vproject.\n"
 		"\n"
 		"Other options:\n"
+		"  -novconfig      : Don't bring up graphical UI on vproject errors.\n"
 		"  -radius_override: Force a vis radius, regardless of whether an\n"
 		"  -mpi_pw <pw>    : Use a password to choose a specific set of VMPI workers.\n"
 		"  -threads        : Control the number of threads vbsp uses (defaults to the #\n"
@@ -992,7 +1032,39 @@ void PrintUsage( int argc, char **argv )
 		"  -nosort         : Don't sort portals (sorting is an optimization).\n"
 		"  -tmpin          : Make portals come from \\tmp\\<mapname>.\n"
 		"  -tmpout         : Make portals come from \\tmp\\<mapname>.\n"
+		"  -trace <start cluster> <end cluster> : Writes a linefile that traces the vis from one cluster to another for debugging map vis.\n"
+		"  -FullMinidumps  : Write large minidumps on crash.\n"
+		"  -x360		   : Generate Xbox360 version of vsp\n"
+		"  -nox360		   : Disable generation Xbox360 version of vsp (default)\n"
+		"\n"
+#if 1 // Disabled for the initial SDK release with VMPI so we can get feedback from selected users.
 		);
+#else
+		"  -mpi_ListParams : Show a list of VMPI parameters.\n"
+		"\n"
+		);
+
+	// Show VMPI parameters?
+	for ( int i=1; i < argc; i++ )
+	{
+		if ( V_stricmp( argv[i], "-mpi_ListParams" ) == 0 )
+		{
+			Warning( "VMPI-specific options:\n\n" );
+
+			bool bIsSDKMode = VMPI_IsSDKMode();
+			for ( int i=k_eVMPICmdLineParam_FirstParam+1; i < k_eVMPICmdLineParam_LastParam; i++ )
+			{
+				if ( (VMPI_GetParamFlags( (EVMPICmdLineParam)i ) & VMPI_PARAM_SDK_HIDDEN) && bIsSDKMode )
+					continue;
+					
+				Warning( "[%s]\n", VMPI_GetParamString( (EVMPICmdLineParam)i ) );
+				Warning( VMPI_GetParamHelpString( (EVMPICmdLineParam)i ) );
+				Warning( "\n\n" );
+			}
+			break;
+		}
+	}
+#endif
 }
 
 
@@ -1000,6 +1072,7 @@ int RunVVis( int argc, char **argv )
 {
 	char	portalfile[1024];
 	char		source[1024];
+	char		mapFile[1024];
 	double		start, end;
 
 
@@ -1007,24 +1080,35 @@ int RunVVis( int argc, char **argv )
 
 	verbose = false;
 
+	LoadCmdLineFromFile( argc, argv, source, "vvis" );
 	int i = ParseCommandLine( argc, argv );
+
+	CmdLib_InitFileSystem( argv[ argc - 1 ] );
+
+	// The ExpandPath is just for VMPI. VMPI's file system needs the basedir in front of all filenames,
+	// so we prepend qdir here.
+
+	// XXX(johns): Somewhat preserving legacy behavior here to avoid changing tool behavior, there's no specific rhyme
+	//             or reason to this. We get just the base name we were passed, discarding any directory or extension
+	//             information. We then ExpandPath() it (see VMPI comment above), and tack on .bsp for the file access
+	//             parts.
+	V_FileBase( argv[ argc - 1 ], mapFile, sizeof( mapFile ) );
+	V_strncpy( mapFile, ExpandPath( mapFile ), sizeof( mapFile ) );
+	V_strncat( mapFile, ".bsp", sizeof( mapFile ) );
+
+	// Source is just the mapfile without an extension at this point...
+	V_strncpy( source, mapFile, sizeof( mapFile ) );
+	V_StripExtension( source, source, sizeof( source ) );
 
 	if (i != argc - 1)
 	{
 		PrintUsage( argc, argv );
+		DeleteCmdLine( argc, argv );
 		CmdLib_Exit( 1 );
 	}
 
 	start = Plat_FloatTime();
 
-
-	Q_StripExtension( argv[i], source, sizeof( source ) );
-	CmdLib_InitFileSystem( argv[i] );
-
-	// This part is just for VMPI. VMPI's file system needs the basedir in front of all filenames,
-	// so we strip off the filename and prepend qdir here.
-	Q_FileBase( source, source, sizeof( source ) );
-	strcpy( source, ExpandPath( source ) );
 
 	if (!g_bUseMPI)
 	{
@@ -1039,13 +1123,11 @@ int RunVVis( int argc, char **argv )
 	{
 		SetLowPriority();
 	}
-	
+
 	ThreadSetDefault ();
 
-	char	targetPath[1024];
-	GetPlatformMapPath( source, targetPath, 0, 1024 );
-	Msg ("reading %s\n", targetPath);
-	LoadBSPFile (targetPath);
+	Msg ("reading %s\n", mapFile);
+	LoadBSPFile (mapFile);
 	if (numnodes == 0 || numfaces == 0)
 		Error ("Empty map");
 	ParseEntities ();
@@ -1076,43 +1158,53 @@ int RunVVis( int argc, char **argv )
 		Q_StripExtension( portalfile, portalfile, sizeof( portalfile ) );
 	}
 	strcat (portalfile, ".prt");
-	
+
 	Msg ("reading %s\n", portalfile);
 	LoadPortals (portalfile);
 
-	CalcVis ();
+	// don't write out results when simply doing a trace
+	if ( g_TraceClusterStart < 0 )
+	{
+		CalcVis ();
+		CalcPAS ();
 
-	CalcPAS ();
+		// We need a mapping from cluster to leaves, since the PVS
+		// deals with clusters for both CalcVisibleFogVolumes and
+		BuildClusterTable();
 
-	// We need a mapping from cluster to leaves, since the PVS
-	// deals with clusters for both CalcVisibleFogVolumes and 
-	BuildClusterTable();
+		CalcVisibleFogVolumes();
+		CalcDistanceFromLeavesToWater();
 
-	CalcVisibleFogVolumes();
-	CalcDistanceFromLeavesToWater();
+		visdatasize = vismap_p - dvisdata;
+		Msg ("visdatasize:%i  compressed from %i\n", visdatasize, originalvismapsize*2);
 
-	visdatasize = vismap_p - dvisdata;	
-	Msg ("visdatasize:%i  compressed from %i\n", visdatasize, originalvismapsize*2);
+		Msg ("writing %s\n", mapFile);
+		WriteBSPFile (mapFile);
+	}
+	else
+	{
+		if ( g_TraceClusterStart < 0 || g_TraceClusterStart >= portalclusters || g_TraceClusterStop < 0 || g_TraceClusterStop >= portalclusters )
+		{
+			Error("Invalid cluster trace: %d to %d, valid range is 0 to %d\n", g_TraceClusterStart, g_TraceClusterStop, portalclusters-1 );
+		}
+		if ( g_bUseMPI )
+		{
+			Warning("Can't compile trace in MPI mode\n");
+		}
+		CalcVisTrace ();
+		WritePortalTrace(source);
+	}
 
-	Msg ("writing %s\n", targetPath);
-	WriteBSPFile (targetPath);	
-	
 	end = Plat_FloatTime();
-	
+
 	char str[512];
 	GetHourMinuteSecondsString( (int)( end - start ), str, sizeof( str ) );
 	Msg( "%s elapsed\n", str );
 
+	ReleasePakFileLumps();
+	DeleteCmdLine( argc, argv );
 	CmdLib_Cleanup();
 	return 0;
-}
-
-
-
-LONG __stdcall VExceptionFilter( struct _EXCEPTION_POINTERS *ExceptionInfo )
-{
-	VMPI_ExceptionFilter( ExceptionInfo->ExceptionRecord->ExceptionCode );
-	return EXCEPTION_EXECUTE_HANDLER; // (never gets here anyway)
 }
 
 
@@ -1131,21 +1223,13 @@ int main (int argc, char **argv)
 
 	VVIS_SetupMPI( argc, argv );
 
-
+	// Install an exception handler.
 	if ( g_bUseMPI && !g_bMPIMaster )
-	{
-		// VMPI workers should catch crashes and asserts and suchlike and fail gracefully instead 
-		// of pestering the person with dialogs.
-		LPTOP_LEVEL_EXCEPTION_FILTER pOldFilter = SetUnhandledExceptionFilter( VExceptionFilter );
-		int ret = RunVVis( argc, argv );
-		SetUnhandledExceptionFilter( pOldFilter );
-
-		return ret;
-	}
+		SetupToolsMinidumpHandler( VMPI_ExceptionFilter );
 	else
-	{
-		return RunVVis( argc, argv );
-	}
+		SetupDefaultToolsMinidumpHandler();
+
+	return RunVVis( argc, argv );
 }
 
 

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,7 +14,7 @@
 	{
 		if ( m_pAnimating )
 		{
-			studiohdr_t *pHdr = m_pAnimating->GetModelPtr();
+			CStudioHdr *pHdr = m_pAnimating->GetModelPtr();
 			if ( pHdr )
 			{
 				mstudiobone_t *pBone = pHdr->pBone( iBone );

@@ -1,10 +1,10 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 //=============================================================================//
 
-#include "vector.h"
+#include "mathlib/vector.h"
 #include "bspfile.h"
 
 // memdbgon must be the last include file in a .cpp file!!!

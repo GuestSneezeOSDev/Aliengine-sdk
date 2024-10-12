@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -7,12 +7,12 @@
 //=============================================================================//
 #include "vbsp.h"
 #include "UtlBuffer.h"
-#include "UtlSymbol.h"
-#include "UtlRBTree.h"
+#include "utlsymbol.h"
+#include "utlrbtree.h"
 #include "KeyValues.h"
 #include "bsplib.h"
 #include "materialpatch.h"
-#include "vstdlib/strtools.h"
+#include "tier1/strtools.h"
 
 // case insensitive
 static CUtlSymbolTable s_SymbolTable( 0, 32, true );
@@ -137,11 +137,11 @@ void CreateMaterialPatch( const char *pOriginalMaterialName, const char *pNewMat
 	}
 	
 	// Write patched .vmt into a memory buffer
-	CUtlBuffer buf( 0, 0, true );
+	CUtlBuffer buf( 0, 0, CUtlBuffer::TEXT_BUFFER );
 	kv->RecursiveSaveToFile( buf, 0 );
 
 	// Add to pak file for this .bsp
-	AddBufferToPack( pNewVMTFile, (void*)buf.Base(), buf.TellPut(), true );
+	AddBufferToPak( GetPakFile(), pNewVMTFile, (void*)buf.Base(), buf.TellPut(), true );
 
 	// Cleanup
 	kv->deleteThis();
@@ -282,12 +282,12 @@ MaterialSystemMaterial_t FindOriginalMaterial( const char *materialName, bool *p
 //-----------------------------------------------------------------------------
 // Load keyvalues from the local pack file, or from a file
 //-----------------------------------------------------------------------------
-bool LoadKeyValuesFromPackOrFile( const char *pFileName, KeyValues* pKeyValues )
+bool LoadKeyValuesFromPackOrFile( const char *pFileName, KeyValues *pKeyValues )
 {
 	CUtlBuffer buf;
-	if ( ReadFileFromPack( pFileName, true, buf ) )
+	if ( ReadFileFromPak( GetPakFile(), pFileName, true, buf ) )
 	{
-		return pKeyValues->LoadFromBuffer( pFileName, (char*)buf.Base() );
+		return pKeyValues->LoadFromBuffer( pFileName, buf );
 	}
 
 	return pKeyValues->LoadFromFile( g_pFileSystem, pFileName );
@@ -297,7 +297,7 @@ bool LoadKeyValuesFromPackOrFile( const char *pFileName, KeyValues* pKeyValues )
 //-----------------------------------------------------------------------------
 // VMT parser
 //-----------------------------------------------------------------------------
-static void InsertKeyValues( KeyValues& dst, KeyValues& src, bool bCheckForExistence )
+static void InsertKeyValues( KeyValues &dst, KeyValues& src, bool bCheckForExistence )
 {
 	KeyValues *pSrcVar = src.GetFirstSubKey();
 	while( pSrcVar )
@@ -324,7 +324,7 @@ static void InsertKeyValues( KeyValues& dst, KeyValues& src, bool bCheckForExist
 	}
 }
 
-static void ExpandPatchFile( KeyValues& keyValues )
+static void ExpandPatchFile( KeyValues &keyValues )
 {
 	int nCount = 0;
 	while( nCount < 10 && stricmp( keyValues.GetName(), "patch" ) == 0 )
@@ -369,6 +369,44 @@ static void ExpandPatchFile( KeyValues& keyValues )
 	{
 		Warning( "Infinite recursion in patch file?\n" );
 	}
+}
+
+KeyValues *LoadMaterialKeyValues( const char *pMaterialName, unsigned int nFlags )
+{
+	// Load the underlying file
+	KeyValues *kv = new KeyValues( "blah" );
+
+	char pFullMaterialName[512];
+	Q_snprintf( pFullMaterialName, 512, "materials/%s.vmt", pMaterialName );
+	if ( !LoadKeyValuesFromPackOrFile( pFullMaterialName, kv ) )
+	{
+		//		Assert( 0 );
+		kv->deleteThis();
+		return NULL;
+	}
+
+	if( nFlags & LOAD_MATERIAL_KEY_VALUES_FLAGS_EXPAND_PATCH )
+	{
+		ExpandPatchFile( *kv );
+	}
+
+	return kv;
+}
+
+void WriteMaterialKeyValuesToPak( const char *pMaterialName, KeyValues *kv )
+{
+	char pFullMaterialName[512];
+	Q_snprintf( pFullMaterialName, 512, "materials/%s.vmt", pMaterialName );
+
+	// Write patched .vmt into a memory buffer
+	CUtlBuffer buf( 0, 0, CUtlBuffer::TEXT_BUFFER );
+	kv->RecursiveSaveToFile( buf, 0 );
+
+	// Add to pak file for this .bsp
+	AddBufferToPak( GetPakFile(), pFullMaterialName, (void*)buf.Base(), buf.TellPut(), true );
+
+	// Cleanup
+	kv->deleteThis();
 }
 
 

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -20,7 +20,7 @@
 #include "cmdlib.h"
 #include "lbmlib.h"
 #include "scriplib.h"
-#include "mathlib.h"
+#include "mathlib/mathlib.h"
 #include "..\..\engine\studio.h"
 #include "studiomdl.h"
 

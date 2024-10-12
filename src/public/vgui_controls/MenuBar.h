@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,7 +13,7 @@
 #endif
 
 #include <vgui_controls/Panel.h>
-#include <UtlVector.h>
+#include <utlvector.h>
 
 namespace vgui
 {
@@ -32,6 +32,8 @@ public:
 	virtual void AddButton(MenuButton *button); // add button to end of menu list
 	virtual void AddMenu( const char *pButtonName, Menu *pMenu );
 
+	virtual void GetContentSize( int& w, int&h );
+
 protected:
 	virtual void OnKeyCodeTyped(KeyCode code);
 	virtual void OnKeyTyped(wchar_t unichar);
@@ -43,6 +45,7 @@ protected:
 
 private:
 	CUtlVector<MenuButton *> m_pMenuButtons;
+	int						m_nRightEdge;
 };
 
 } // namespace vgui

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -23,7 +23,7 @@ class CCoreDispInfo;
 // ----------------------------------------------------------------------------- //
 
 // This class provides a set of utility functions for displacements that work in the tools and the engine.
-class CDispUtilsHelper
+abstract_class CDispUtilsHelper
 {
 // Derived classes must implement these.
 public:

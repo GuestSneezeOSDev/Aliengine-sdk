@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -16,12 +16,13 @@
 class IMaterial;
 class KeyValues;
 
-class IMaterialProxy
+abstract_class IMaterialProxy
 {
 public:
 	virtual bool Init( IMaterial* pMaterial, KeyValues *pKeyValues ) = 0;
 	virtual void OnBind( void * ) = 0;
 	virtual void Release() = 0;
+	virtual IMaterial *	GetMaterial() = 0;
 
 protected:
 	// no one should call this directly

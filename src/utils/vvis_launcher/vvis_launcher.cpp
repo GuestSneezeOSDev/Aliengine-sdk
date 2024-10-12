@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -10,8 +10,8 @@
 
 #include "stdafx.h"
 #include <direct.h>
-#include "vstdlib/strtools.h"
-#include "vstdlib/icommandline.h"
+#include "tier1/strtools.h"
+#include "tier0/icommandline.h"
 #include "ilaunchabledll.h"
 
 
@@ -45,7 +45,7 @@ char* GetLastErrorString()
 int main(int argc, char* argv[])
 {
 	CommandLine()->CreateCmdLine( argc, argv );
-	const char *pDLLName = "vvis.dll";
+	const char *pDLLName = "vvis_dll.dll";
 	
 	CSysModule *pModule = Sys_LoadModule( pDLLName );
 	if ( !pModule )
@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
 		return 3;
 	}
 
-	int returnValue = pDLL->main( argc, argv );
+	pDLL->main( argc, argv );
 	Sys_UnloadModule( pModule );
 
 	return 0;

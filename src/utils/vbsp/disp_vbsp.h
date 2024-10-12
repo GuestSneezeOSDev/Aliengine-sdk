@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -34,7 +34,7 @@ void EmitDispLMAlphaAndNeighbors();
 // Setup a CCoreDispInfo given a mapdispinfo_t.
 // If pFace is non-NULL, then lightmap texture coordinates will be generated.
 void DispMapToCoreDispInfo( mapdispinfo_t *pMapDisp,
-							CCoreDispInfo *pCoreDispInfo, dface_t *pFace );
+	CCoreDispInfo *pCoreDispInfo, dface_t *pFace, int *pSwappedTexInfos );
 
 
 void DispGetFaceInfo( mapbrush_t *pBrush );

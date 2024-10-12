@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -39,7 +39,7 @@ private:
 	void CreateMakefileName( const char *projectName, CVCProjConvert::CConfiguration & config );
 	void CreateDirectoryFriendlyName( const char *dirName, char *friendlyDirName, int friendlyDirNameSize );
 	void CreateObjDirectoryFriendlyName ( char *name );
-	void FileWrite( FileHandle_t f, const char *fmt, ... );
+	void FileWrite( FileHandle_t f, PRINTF_FORMAT_STRING const char *fmt, ... );
 
 
 	CUtlDict<CUtlSymbol, int> m_BaseDirs;

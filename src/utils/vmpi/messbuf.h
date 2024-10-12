@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -28,11 +28,14 @@ class MessageBuffer {
 		int		setLen(int len);
 		int		getOffset();
 		int		setOffset(int offset);
-
-		int		write(void * p, int bytes);
-		int		update(int loc, void * p, int bytes);
+		
+		int		write(void const * p, int bytes);
+		int		update(int loc, void const * p, int bytes);
 		int		extract(int loc, void * p, int bytes);
 		int		read(void * p, int bytes);
+
+		int		WriteString( const char *pString );
+		int		ReadString( char *pOut, int bufferLength );
 
 		void	clear();
 		void	clear(int minsize);

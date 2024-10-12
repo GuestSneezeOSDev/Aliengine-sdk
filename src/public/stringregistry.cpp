@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		A registry of strings and associated ints
 //
@@ -11,6 +11,7 @@
 // $NoKeywords: $
 //=============================================================================//
 
+
 #include <stdio.h>
 #include <string.h>
 #include "stringregistry.h"
@@ -19,6 +20,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#if !defined(_STATIC_LINKED) || defined(CLIENT_DLL)
 
 //-----------------------------------------------------------------------------
 // Purpose: This class wraps the containers that do the actual work
@@ -62,9 +64,7 @@ int	CStringRegistry::GetStringID( const char *stringText )
 //-----------------------------------------------------------------------------
 char const *CStringRegistry::GetStringText( int stringID )
 {
-	int count = m_pStringList->Count();
-
-	for( unsigned short index = 0 ; index < count ; index++ )
+	for( unsigned short index = m_pStringList->First() ; index != m_pStringList->InvalidIndex(); index = m_pStringList->Next( index ) )
 	{
 		if ( (*m_pStringList)[index] == stringID )
 		{
@@ -142,3 +142,4 @@ unsigned short CStringRegistry::InvalidIndex() const
 	return m_pStringList->InvalidIndex();
 }
 
+#endif // _STATIC_LINKED && CLIENT_DLL

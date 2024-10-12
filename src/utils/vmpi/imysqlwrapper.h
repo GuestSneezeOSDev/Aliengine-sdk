@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -82,6 +82,9 @@ public:
 	// If you just inserted rows into a table with an AUTO_INCREMENT column,
 	// then this returns the (unique) value of that column.
 	virtual unsigned long	InsertID() = 0;
+
+	// Returns the last error message, if an error took place
+	virtual const char *	GetLastError() = 0;
 };
 
 

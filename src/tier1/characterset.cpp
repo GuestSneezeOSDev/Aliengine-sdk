@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -9,7 +9,8 @@
 // $Log: $
 //
 // $NoKeywords: $
-//=============================================================================//
+//=============================================================================
+
 #include <string.h>
 #include "characterset.h"
 
@@ -33,7 +34,7 @@ void CharacterSetBuild( characterset_t *pSetBuffer, const char *pszSetString )
 
 	while ( pszSetString[i] )
 	{
-		pSetBuffer->set[ pszSetString[i] ] = 1;
+		pSetBuffer->set[ (unsigned)pszSetString[i] ] = 1;
 		i++;
 	}
 

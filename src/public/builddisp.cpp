@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -12,11 +12,122 @@
 #include <malloc.h>
 #include "builddisp.h"
 #include "collisionutils.h"
-#include "vstdlib/strtools.h"
+#include "tier1/strtools.h"
 #include "tier0/dbg.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+//
+// Node Functions (friend functions)
+//
+
+//-----------------------------------------------------------------------------
+// should make this more programatic and extensible!
+//-----------------------------------------------------------------------------
+int GetNodeLevel( int index )
+{
+    // root
+    if( index == 0 )
+        return 1;
+
+    // [1...4]
+    if( index < 5 )
+        return 2;
+
+    // [5....20]
+    if( index < 21 )
+        return 3;
+
+    // [21....84]
+    if( index < 85 )
+        return 4;
+
+    // error!!!
+    return -1;
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+int GetNodeCount( int power )
+{
+    return ( ( 1 << ( power << 1 ) ) / 3 );
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+int GetNodeParent( int index )
+{
+	// ( index - 1 ) / 4
+	return ( ( index - 1 ) >> 2 );
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+int GetNodeChild( int power, int index, int direction )
+{
+    // ( index * 4 ) + direction
+    return ( ( index << 2 ) + ( direction - 3 ) );
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+int GetNodeMinNodeAtLevel( int level )
+{
+    switch( level )
+    {
+    case 1: return 0;
+    case 2: return 1;
+    case 3: return 5;
+    case 4: return 21;
+    default: return -99999;
+    }
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+void GetComponentsFromNodeIndex( int index, int *x, int *y )
+{
+	*x = 0;
+	*y = 0;
+
+	for( int shift = 0; index != 0; shift++ )
+	{
+		*x |= ( index & 1 ) << shift;
+		index >>= 1;
+
+		*y |= ( index & 1 ) << shift;
+		index >>= 1;
+	}
+}
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+int GetNodeIndexFromComponents( int x, int y )
+{
+	int index = 0;
+
+	// Interleave bits from the x and y values to create the index:
+	
+	int shift;
+	for( shift = 0; x != 0; shift += 2, x >>= 1 )
+	{
+		index |= ( x & 1 ) << shift;
+	}
+
+	for( shift = 1; y != 0; shift += 2, y >>= 1 )
+	{
+		index |= ( y & 1 ) << shift;
+	}
+
+	return index;
+}
+
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -30,7 +141,7 @@ bool CalcBarycentricCooefs( Vector const &v0, Vector const &v1, Vector const &v2
 	// get the area of the triangle
 	vCross = vSeg0.Cross( vSeg1 );
 	float totalArea = vCross.Length() * 0.5f;
-	float ooTotalArea = 1.0f / totalArea;
+	float ooTotalArea = totalArea ? 1.0f / totalArea : 0.0f;
 
 	// get the area for cooeficient 0 (pt, v1, v2)
 	vSeg0 = v1 - pt;
@@ -124,7 +235,7 @@ void CCoreDispSurface::SetNeighborData( const CDispNeighbor edgeNeighbors[4], co
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-void CCoreDispSurface::GeneratePointStartIndexFromMappingAxes( Vector const &sAxis, Vector const &tAxis )
+void CCoreDispSurface::GeneratePointStartIndexFromMappingAxes( Vector const &sAxis_, Vector const &tAxis_ )
 {
 	if( m_PointStartIndex != -1 )
 		return;
@@ -136,14 +247,14 @@ void CCoreDispSurface::GeneratePointStartIndexFromMappingAxes( Vector const &sAx
     //
     // project all points on to the v-axis first and find the minimum
     //
-	float minValue = DotProduct( tAxis, m_Points[0] );
+	float minValue = DotProduct( tAxis_, m_Points[0] );
     indices[numIndices] = 0;
     numIndices++;
 
 	int i;
     for( i = 1; i < m_PointCount; i++ )
     {
-		float value = DotProduct( tAxis, m_Points[i] );
+		float value = DotProduct( tAxis_, m_Points[i] );
 		float delta = ( value - minValue );
 		delta = FloatMakePositive( delta );
         if( delta < 0.1 )
@@ -162,12 +273,12 @@ void CCoreDispSurface::GeneratePointStartIndexFromMappingAxes( Vector const &sAx
     //
     // break ties with the u-axis projection
     //
-	minValue = DotProduct( sAxis, m_Points[indices[0]] );
+	minValue = DotProduct( sAxis_, m_Points[indices[0]] );
     offsetIndex = indices[0];
     
     for( i = 1; i < numIndices; i++ )
     {
-		float value = DotProduct( sAxis, m_Points[indices[i]] );
+		float value = DotProduct( sAxis_, m_Points[indices[i]] );
         if( ( value < minValue ) )
         {
             minValue = value;
@@ -259,7 +370,6 @@ void CCoreDispSurface::AdjustSurfPointData( void )
 	Vector tmpPoints[4];
 	Vector tmpNormals[4];
 	Vector2D tmpTexCoords[4];
-	Vector2D tmpLuxelCoords[4][4];
 	float  tmpAlphas[4];
 
 	int i;
@@ -268,11 +378,6 @@ void CCoreDispSurface::AdjustSurfPointData( void )
 		VectorCopy( m_Points[i], tmpPoints[i] );
 		VectorCopy( m_Normals[i], tmpNormals[i] );
 		Vector2DCopy( m_TexCoords[i], tmpTexCoords[i] );
-
-		for( int j = 0; j < ( NUM_BUMP_VECTS + 1 ); j++ )
-		{
-			Vector2DCopy( m_LuxelCoords[j][i], tmpLuxelCoords[j][i] );
-		}
 
 		tmpAlphas[i] = m_Alphas[i];
 	}
@@ -283,15 +388,133 @@ void CCoreDispSurface::AdjustSurfPointData( void )
 		VectorCopy( tmpNormals[(i+m_PointStartIndex)%4], m_Normals[i] );
 		Vector2DCopy( tmpTexCoords[(i+m_PointStartIndex)%4], m_TexCoords[i] );
 
-//		for( int j = 0; j < ( NUM_BUMP_VECTS + 1 ); j++ )
-//		{
-//			Vector2DCopy( tmpLuxelCoords[j][(i+m_PointStartIndex)%4], m_LuxelCoords[j][i] );
-//		}
-
 		m_Alphas[i] = tmpAlphas[i];
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CCoreDispSurface::LongestInU( const Vector &vecU, const Vector &vecV )
+{
+	Vector vecNormU = vecU;
+	Vector vecNormV = vecV;
+	VectorNormalize( vecNormU );
+	VectorNormalize( vecNormV );
+
+	float flDistU[4];
+	float flDistV[4];
+	for ( int iPoint = 0; iPoint < 4; ++iPoint )
+	{
+		flDistU[iPoint] = vecNormU.Dot( m_Points[iPoint] );
+		flDistV[iPoint] = vecNormV.Dot( m_Points[iPoint] );
+	}
+
+	float flULength = 0.0f;
+	float flVLength = 0.0f;
+	for ( int iPoint = 0; iPoint < 4; ++iPoint )
+	{
+		float flTestDist = fabs( flDistU[(iPoint+1)%4] - flDistU[iPoint] );
+		if ( flTestDist > flULength )
+		{
+			flULength = flTestDist;
+		}
+
+		flTestDist = fabs( flDistV[(iPoint+1)%4] - flDistV[iPoint] );
+		if ( flTestDist > flVLength )
+		{
+			flVLength = flTestDist;
+		}
+	}
+
+	if ( flULength < flVLength )
+	{
+		return false;
+	}
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  :  - 
+//-----------------------------------------------------------------------------
+bool CCoreDispSurface::CalcLuxelCoords( int nLuxels, bool bAdjust, const Vector &vecU, const Vector &vecV )
+{
+	// Valid value?
+	if ( nLuxels <= 0.0f )
+		return false;
+
+	// Get the start point offset.
+	int iOffset = 0;
+	if ( bAdjust )
+	{
+		iOffset = GetPointStartIndex();
+	}
+
+	// Does projecting along U or V create the longest edge?
+	bool bLongU = LongestInU( vecU, vecV );
+
+	float flLengthTemp = 0.0f;
+	float flULength = ( m_Points[(3+iOffset)%4] - m_Points[(0+iOffset)%4] ).Length();
+	flLengthTemp = ( m_Points[(2+iOffset)%4] - m_Points[(1+iOffset)%4] ).Length();
+	if ( flLengthTemp > flULength )
+	{
+		flULength = flLengthTemp;
+	}
+
+	// Find the largest edge in V.
+	float flVLength = ( m_Points[(1+iOffset)%4] - m_Points[(0+iOffset)%4] ).Length();
+	flLengthTemp = ( m_Points[(2+iOffset)%4] - m_Points[(3+iOffset)%4] ).Length();
+	if ( flLengthTemp > flVLength )
+	{
+		flVLength = flLengthTemp;
+	}
+
+	float flOOLuxelScale = 1.0f / static_cast<float>( nLuxels );
+	float flUValue = static_cast<float>( static_cast<int>( flULength * flOOLuxelScale ) + 1 );
+	if ( flUValue > MAX_DISP_LIGHTMAP_DIM_WITHOUT_BORDER )
+	{
+		flUValue = MAX_DISP_LIGHTMAP_DIM_WITHOUT_BORDER;
+	}
+
+	float flVValue = static_cast<float>( static_cast<int>( flVLength * flOOLuxelScale ) + 1 );
+	if ( flVValue > MAX_DISP_LIGHTMAP_DIM_WITHOUT_BORDER )
+	{
+		flVValue = MAX_DISP_LIGHTMAP_DIM_WITHOUT_BORDER;
+	}
+
+	// Swap if necessary.
+	bool bSwapped = false;
+	if ( bLongU )
+	{
+		if ( flVValue > flUValue )
+		{
+			bSwapped = true;
+		}
+	}
+	else
+	{
+		if ( flUValue > flVValue )
+		{
+			bSwapped = true;
+		}
+	}
+
+	m_nLuxelU = static_cast<int>( flUValue );
+	m_nLuxelV = static_cast<int>( flVValue );
+
+	// Generate luxel coordinates.
+	for( int iBump = 0; iBump < NUM_BUMP_VECTS+1; ++iBump )
+	{
+		m_LuxelCoords[iBump][(0+iOffset)%4].Init( 0.5f, 0.5f );
+		m_LuxelCoords[iBump][(1+iOffset)%4].Init( 0.5f, flVValue + 0.5 );
+		m_LuxelCoords[iBump][(2+iOffset)%4].Init( flUValue + 0.5, flVValue + 0.5 );
+		m_LuxelCoords[iBump][(3+iOffset)%4].Init( flUValue + 0.5, 0.5f );
+	}
+
+	return bSwapped;
+}
 
 //=============================================================================
 //
@@ -535,6 +758,14 @@ void CCoreDispInfo::InitDispInfo( int power, int minTess, float smoothingAngle,
 	// general displacement data
 	//
 	m_Power = power;
+
+	if ( ( minTess & 0x80000000 ) != 0 )
+	{
+		// If the high bit is set, this represents FLAGS (SURF_NOPHYSICS_COLL, etc.) flags.
+		int nFlags = minTess;
+		nFlags &= ~0x80000000;
+		GetSurface()->SetFlags( nFlags );
+	}
 
 	// Allocate + initialize verts
 	int size = GetSize();
@@ -1829,61 +2060,6 @@ bool CCoreDispInfo::CreateWithoutLOD( void )
 }
 
 
-//
-// Node Functions (friend functions)
-//
-
-//-----------------------------------------------------------------------------
-// should make this more programatic and extensible!
-//-----------------------------------------------------------------------------
-int GetNodeLevel( int index )
-{
-    // root
-    if( index == 0 )
-        return 1;
-
-    // [1...4]
-    if( index < 5 )
-        return 2;
-
-    // [5....20]
-    if( index < 21 )
-        return 3;
-
-    // [21....84]
-    if( index < 85 )
-        return 4;
-
-    // error!!!
-    return -1;
-}
-
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-int GetNodeCount( int power )
-{
-    return ( ( 1 << ( power << 1 ) ) / 3 );
-}
-
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-int GetNodeParent( int index )
-{
-	// ( index - 1 ) / 4
-	return ( ( index - 1 ) >> 2 );
-}
-
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-int GetNodeChild( int power, int index, int direction )
-{
-    // ( index * 4 ) + direction
-    return ( ( index << 2 ) + ( direction - 3 ) );
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: This function calculates the neighbor node index given the base
@@ -2033,61 +2209,6 @@ int GetNodeNeighborNodeFromNeighborSurf( int power, int index, int direction, in
     }
 }
 
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-int GetNodeMinNodeAtLevel( int level )
-{
-    switch( level )
-    {
-    case 1: return 0;
-    case 2: return 1;
-    case 3: return 5;
-    case 4: return 21;
-    default: return -99999;
-    }
-}
-
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-void GetComponentsFromNodeIndex( int index, int *x, int *y )
-{
-	*x = 0;
-	*y = 0;
-
-	for( int shift = 0; index != 0; shift++ )
-	{
-		*x |= ( index & 1 ) << shift;
-		index >>= 1;
-
-		*y |= ( index & 1 ) << shift;
-		index >>= 1;
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-int GetNodeIndexFromComponents( int x, int y )
-{
-	int index = 0;
-
-	// Interleave bits from the x and y values to create the index:
-	
-	int shift;
-	for( shift = 0; x != 0; shift += 2, x >>= 1 )
-	{
-		index |= ( x & 1 ) << shift;
-	}
-
-	for( shift = 1; y != 0; shift += 2, y >>= 1 )
-	{
-		index |= ( y & 1 ) << shift;
-	}
-
-	return index;
-}
 
 
 // Turn the optimizer back on
@@ -2954,6 +3075,14 @@ bool CCoreDispInfo::IsTriBuildable( int iTri )
 	}
 
 	return IsTriTag( iTri, COREDISPTRI_TAG_BUILDABLE );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+bool CCoreDispInfo::IsTriRemove( int iTri )						
+{ 
+	return IsTriTag( iTri, COREDISPTRI_TAG_FORCE_REMOVE_BIT );
 }
 
 //-----------------------------------------------------------------------------

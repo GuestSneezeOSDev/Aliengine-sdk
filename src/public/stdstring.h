@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -23,7 +23,9 @@
 #pragma warning(disable:4511)
 #endif
 
+#include "tier0/valve_minmax_off.h"	// GCC 4.2.2 headers screw up our min/max defs.
 #include <string>
+#include "tier0/valve_minmax_on.h"	// GCC 4.2.2 headers screw up our min/max defs.
 
 #ifdef _WIN32
 #pragma warning(pop)
@@ -82,6 +84,5 @@ inline ISaveRestoreOps *GetStdStringDataOps()
 
 #define DEFINE_STDSTRING(name) \
 	{ FIELD_CUSTOM, #name, { offsetof(classNameTypedef,name), 0 }, 1, FTYPEDESC_SAVE, NULL, GetStdStringDataOps(), NULL }
-
 
 #endif // STDSTRING_H

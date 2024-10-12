@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,11 +11,11 @@
 #include "tier0/dbg.h"
 #include "vbsp.h"
 #include "mstristrip.h"
-#include "disp_lightmap_alpha.h"
 #include "writebsp.h"
 #include "pacifier.h"
 #include "disp_ivp.h"
 #include "builddisp.h"
+#include "mathlib/vector.h"
 
 // map displacement info -- runs parallel to the dispinfos struct
 int              nummapdispinfo = 0;
@@ -34,7 +34,7 @@ void ComputeDispInfoBounds( int dispinfo, Vector& mins, Vector& maxs )
 	mapdispinfo_t *pMapDisp = &mapdispinfo[dispinfo];
 
 	CCoreDispInfo coreDispInfo;
-	DispMapToCoreDispInfo( pMapDisp, &coreDispInfo, NULL );
+	DispMapToCoreDispInfo( pMapDisp, &coreDispInfo, NULL, NULL );
 
 	GetDispBox( &coreDispInfo, box );	
 	mins = box.m_Min;
@@ -99,11 +99,11 @@ void CalculateLightmapSamplePositions( CCoreDispInfo *pCoreDispInfo, const dface
 	Vector2D lmCoords;
 	for( int y=0; y < height; y++ )
 	{
-		lmCoords.y = y;
+		lmCoords.y = y + 0.5f;
 
 		for( int x=0; x < width; x++ )
 		{
-			lmCoords.x = x;
+			lmCoords.x = x + 0.5f;
 
 			float flBarycentric[3];
 			int iTri;
@@ -144,7 +144,7 @@ int GetDispInfoEntityNum( mapdispinfo_t *pDisp )
 
 // Setup a CCoreDispInfo given a mapdispinfo_t.
 // If pFace is non-NULL, then lightmap texture coordinates will be generated.
-void DispMapToCoreDispInfo( mapdispinfo_t *pMapDisp, CCoreDispInfo *pCoreDispInfo, dface_t *pFace )
+void DispMapToCoreDispInfo( mapdispinfo_t *pMapDisp, CCoreDispInfo *pCoreDispInfo, dface_t *pFace, int *pSwappedTexInfos )
 {
 	winding_t *pWinding = pMapDisp->face.originalface->winding;
 
@@ -156,6 +156,7 @@ void DispMapToCoreDispInfo( mapdispinfo_t *pMapDisp, CCoreDispInfo *pCoreDispInf
 	CCoreDispSurface *pSurf = pCoreDispInfo->GetSurface();
 
 	texinfo_t *pTexInfo = &texinfo[ pMapDisp->face.texinfo ];
+	Assert( pTexInfo != NULL );
 
 	// init material contents
 	pMapDisp->contents = pMapDisp->face.contents;
@@ -167,7 +168,6 @@ void DispMapToCoreDispInfo( mapdispinfo_t *pMapDisp, CCoreDispInfo *pCoreDispInf
 	pSurf->SetContents( pMapDisp->contents );
 
 	// Calculate the lightmap coordinates.
-	Vector2D lmCoords[4] = {Vector2D(0,0),Vector2D(0,1),Vector2D(1,0),Vector2D(1,1)};
 	Vector2D tCoords[4] = {Vector2D(0,0),Vector2D(0,1),Vector2D(1,0),Vector2D(1,1)};
 	if( pFace )
 	{
@@ -176,13 +176,6 @@ void DispMapToCoreDispInfo( mapdispinfo_t *pMapDisp, CCoreDispInfo *pCoreDispInf
 		Vector pt[4];
 		for( int i=0; i < 4; i++ )
 			pt[i] = pWinding->p[i];
-
-		CalcTextureCoordsAtPoints( 
-			pTexInfo->lightmapVecsLuxelsPerWorldUnits,
-			pFace->m_LightmapTextureMinsInLuxels,
-			pt,
-			4,
-			lmCoords );
 
 		int zeroOffset[2] = {0,0};
 		CalcTextureCoordsAtPoints( 
@@ -201,54 +194,57 @@ void DispMapToCoreDispInfo( mapdispinfo_t *pMapDisp, CCoreDispInfo *pCoreDispInf
 	{
 		// position
 		pSurf->SetPoint( i, pWinding->p[i] );
-		for( int j = 0; j < ( NUM_BUMP_VECTS + 1 ); ++j )
-		{
-			pSurf->SetLuxelCoord( j, i, lmCoords[i] );
-		}
 		pSurf->SetTexCoord( i, tCoords[i] );
 	}
 	
-	//
 	// reset surface given start info
-	//
 	pSurf->SetPointStart( pMapDisp->startPosition );
 	pSurf->FindSurfPointStartIndex();
 	pSurf->AdjustSurfPointData();
 
-	//
-	// adjust face lightmap data - this will be done a bit more accurately
-	// when the common code get written, for now it works!!! (GDC, E3)
-	//
-	Vector points[4];
-	for( int ndxPt = 0; ndxPt < 4; ndxPt++ )
-	{
-		points[ndxPt] = pSurf->GetPoint( ndxPt );
-	}
-	Vector edgeU = points[3] - points[0];
-	Vector edgeV = points[1] - points[0];
-	bool bUMajor = ( edgeU.Length() > edgeV.Length() );
+	// Set the luxel coordinates on the base displacement surface.
+	Vector vecTmp( pTexInfo->lightmapVecsLuxelsPerWorldUnits[0][0],
+				   pTexInfo->lightmapVecsLuxelsPerWorldUnits[0][1],
+				   pTexInfo->lightmapVecsLuxelsPerWorldUnits[0][2] );
+	int nLuxelsPerWorldUnit = static_cast<int>( 1.0f / VectorLength( vecTmp ) );
+	Vector vecU( pTexInfo->lightmapVecsLuxelsPerWorldUnits[0][0],
+				 pTexInfo->lightmapVecsLuxelsPerWorldUnits[0][1],
+				 pTexInfo->lightmapVecsLuxelsPerWorldUnits[0][2] );
+	Vector vecV( pTexInfo->lightmapVecsLuxelsPerWorldUnits[1][0],
+				 pTexInfo->lightmapVecsLuxelsPerWorldUnits[1][1],
+				 pTexInfo->lightmapVecsLuxelsPerWorldUnits[1][2] );
+	bool bSwap = pSurf->CalcLuxelCoords( nLuxelsPerWorldUnit, false, vecU, vecV );
 
-	if( pFace )
+	// Set the face m_LightmapExtents
+	if ( pFace )
 	{
-		int lightmapWidth = pFace->m_LightmapTextureSizeInLuxels[0];
-		int lightmapHeight = pFace->m_LightmapTextureSizeInLuxels[1];
-		if ( ( bUMajor && ( lightmapHeight > lightmapWidth ) ) || 
-			 ( !bUMajor && ( lightmapWidth > lightmapHeight ) ) )
+		pFace->m_LightmapTextureSizeInLuxels[0] = pSurf->GetLuxelU();
+		pFace->m_LightmapTextureSizeInLuxels[1] = pSurf->GetLuxelV();
+		if ( bSwap )
 		{
-			pFace->m_LightmapTextureSizeInLuxels[0] = lightmapHeight;
-			pFace->m_LightmapTextureSizeInLuxels[1] = lightmapWidth;
+			if ( pSwappedTexInfos[ pMapDisp->face.texinfo ] < 0 )
+			{
+				// Create a new texinfo to hold the swapped data.
+				// We must do this because other surfaces may want the non-swapped data
+				// This fixes a lighting bug in d2_prison_08 where many non-displacement surfaces
+				// were pitch black, in addition to bugs in other maps I bet.
 
-			lightmapWidth = lightmapHeight;
-			lightmapHeight = pFace->m_LightmapTextureSizeInLuxels[1];
+				// NOTE: Copy here because adding a texinfo could realloc.
+				texinfo_t temp = *pTexInfo;
+				memcpy( temp.lightmapVecsLuxelsPerWorldUnits[0], pTexInfo->lightmapVecsLuxelsPerWorldUnits[1], 4 * sizeof(float) );
+				memcpy( temp.lightmapVecsLuxelsPerWorldUnits[1], pTexInfo->lightmapVecsLuxelsPerWorldUnits[0], 4 * sizeof(float) );
+				temp.lightmapVecsLuxelsPerWorldUnits[1][0] *= -1.0f;
+				temp.lightmapVecsLuxelsPerWorldUnits[1][1] *= -1.0f;
+				temp.lightmapVecsLuxelsPerWorldUnits[1][2] *= -1.0f;
+				temp.lightmapVecsLuxelsPerWorldUnits[1][3] *= -1.0f;
+				pSwappedTexInfos[ pMapDisp->face.texinfo ] = texinfo.AddToTail( temp );
+			}
+			pMapDisp->face.texinfo = pSwappedTexInfos[ pMapDisp->face.texinfo ];
 		}
 
-		for ( int ndxBump = 0; ndxBump < ( NUM_BUMP_VECTS + 1 ); ndxBump++ )
-		{
-			pSurf->SetLuxelCoord( ndxBump, 0, Vector2D( 0.0f, 0.0f ) );
-			pSurf->SetLuxelCoord( ndxBump, 1, Vector2D( 0.0f, ( float )lightmapHeight ) );
-			pSurf->SetLuxelCoord( ndxBump, 2, Vector2D( ( float )lightmapWidth, ( float )lightmapHeight ) );
-			pSurf->SetLuxelCoord( ndxBump, 3, Vector2D( ( float )lightmapWidth, 0.0f ) );
-		}
+		// NOTE: This is here to help future-proof code, since there are codepaths where
+		// pTexInfo can be made invalid (texinfo.AddToTail above).
+		pTexInfo = NULL;
 	}
 
 	// Setup the displacement vectors and offsets.
@@ -325,9 +321,13 @@ void EmitInitialDispInfos( void )
 		// save power, minimum tesselation, and smoothing angle
 		//
 		pDisp->power = pMapDisp->power;
-		pDisp->minTess = pMapDisp->minTess;
+		
+		// If the high bit is set - this is FLAGS!
+		pDisp->minTess = pMapDisp->flags;
+		pDisp->minTess |= 0x80000000;
+//		pDisp->minTess = pMapDisp->minTess;
 		pDisp->smoothingAngle = pMapDisp->smoothingAngle;
-		pDisp->m_iMapFace = -2;
+		pDisp->m_iMapFace = (unsigned short)-2;
 
 		// get surface contents
 		pDisp->contents = pMapDisp->face.contents;
@@ -464,7 +464,7 @@ void SnapRemainingVertsToSurface( CCoreDispInfo *pCoreDisp, ddispinfo_t *pDispIn
 	}
 	
 	// Now, for each vert not touched, snap its position to the main surface.
-	for ( y=0; y < pCoreDisp->GetHeight(); y++ )
+	for ( int y=0; y < pCoreDisp->GetHeight(); y++ )
 	{
 		for ( int x=0; x < pCoreDisp->GetWidth(); x++ )
 		{
@@ -522,9 +522,6 @@ void EmitDispLMAlphaAndNeighbors()
 
 	Msg( "Finding displacement neighbors...\n" );
 
-	// Do lightmap alpha.
-    g_DispLightmapAlpha.RemoveAll();
-
 	// Build the CCoreDispInfos.
 	CUtlVector<dface_t*> faces;
 
@@ -550,6 +547,9 @@ void EmitDispLMAlphaAndNeighbors()
 
 	faces.SetSize( nummapdispinfo );
 
+	int nMemSize = texinfo.Count() * sizeof(int);
+	int *pSwappedTexInfos = (int*)stackalloc( nMemSize );
+	memset( pSwappedTexInfos, 0xFF, nMemSize );
 	for( i = 0; i < numfaces; i++ )
 	{
         dface_t *pFace = &dfaces[i];
@@ -565,11 +565,11 @@ void EmitDispLMAlphaAndNeighbors()
 
 		// Get a CCoreDispInfo. All we need is the triangles and lightmap texture coordinates.
 		CCoreDispInfo *pCoreDispInfo = g_CoreDispInfos[pFace->dispinfo];
-		DispMapToCoreDispInfo( pMapDisp, pCoreDispInfo, pFace );
+		DispMapToCoreDispInfo( pMapDisp, pCoreDispInfo, pFace, pSwappedTexInfos );
 		
 		faces[pFace->dispinfo] = pFace;
 	}
-
+	stackfree( pSwappedTexInfos );
 	
 	// Generate and export neighbor data.
 	ExportNeighborData( g_CoreDispInfos.Base(), g_dispinfo.Base(), nummapdispinfo );
@@ -604,25 +604,11 @@ void EmitDispLMAlphaAndNeighbors()
         dface_t *pFace = faces[i];
 
 		Assert( pFace->dispinfo == i );
-		mapdispinfo_t *pMapDisp = &mapdispinfo[pFace->dispinfo];
 		ddispinfo_t *pDisp = &g_dispinfo[pFace->dispinfo];
 
-		CCoreDispInfo *pCoreDispInfo = g_CoreDispInfos[i];
-
 		// Allocate space for the alpha values.
-		pDisp->m_iLightmapAlphaStart = g_DispLightmapAlpha.Count();
-		int nLuxelsToAdd = (pFace->m_LightmapTextureSizeInLuxels[0]+1) * (pFace->m_LightmapTextureSizeInLuxels[1]+1);
-		g_DispLightmapAlpha.AddMultipleToTail( nLuxelsToAdd );
-
-		DispUpdateLightmapAlpha( 
-			g_CoreDispInfos.Base(),
-			i,
-			(float)dispCount     / g_dispinfo.Count(),
-			(float)(dispCount+1) / g_dispinfo.Count(),
-			pDisp, 
-			pFace->m_LightmapTextureSizeInLuxels[0],
-			pFace->m_LightmapTextureSizeInLuxels[1] );
-	
+		pDisp->m_iLightmapAlphaStart = 0; // not used anymore
+		
 		++dispCount;
 	}
 
@@ -640,8 +626,8 @@ void DispGetFaceInfo( mapbrush_t *pBrush )
 	// we don't support displacement on entities at the moment!!
 	if( pBrush->entitynum != 0 )
 	{
-		char* pszEntityName = ValueForKey( &entities[pBrush->entitynum], "classname" );
-		Error( "Error: displacement found on a(n) %s entity - not supported\n", pszEntityName );
+		char* pszEntityName = ValueForKey( &g_LoadingMap->entities[pBrush->entitynum], "classname" );
+		Error( "Error: displacement found on a(n) %s entity - not supported (entity %d, brush %d)\n", pszEntityName, pBrush->entitynum, pBrush->brushnum );
 	}
 
 	for( i = 0; i < pBrush->numsides; i++ )
@@ -651,8 +637,7 @@ void DispGetFaceInfo( mapbrush_t *pBrush )
 		{
 			// error checking!!
 			if( pSide->winding->numpoints != 4 )
-				Error( "Trying to create a non-quad displacement!\n" );
-
+				Error( "Trying to create a non-quad displacement! (entity %d, brush %d)\n", pBrush->entitynum, pBrush->brushnum );
 			pSide->pMapDisp->face.originalface = pSide;
 			pSide->pMapDisp->face.texinfo = pSide->texinfo;
 			pSide->pMapDisp->face.dispinfo = -1;

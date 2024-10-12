@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -6,8 +6,10 @@
 //
 //=============================================================================//
 
+#if !defined(_STATIC_LINKED) || defined(_SHARED_LIB)
+
 #include "iscratchpad3d.h"
-#include "mathlib.h"
+#include "mathlib/mathlib.h"
 #include "ScratchPadUtils.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -139,11 +141,11 @@ void CScratchPadGraph::UpdateTicksAndStuff( float flTime, float flValue )
 		// Extend the lines attached to the time labels.
 		for ( int i=0; i < m_nTimeLabelsDrawn; i++ )
 		{
-			float flTime = m_flTimeOrigin + m_nTimeLabelsDrawn * m_flTimeLabelEveryNSeconds;
+			float flTimeLabel = m_flTimeOrigin + m_nTimeLabelsDrawn * m_flTimeLabelEveryNSeconds;
 
 			m_pPad->DrawLine(
-				CSPVert((const Vector&) GetSamplePosition( flTime, m_flHighestValue )),
-				CSPVert((const Vector&) GetSamplePosition( flTime, flValue ) )	
+				CSPVert((const Vector&) GetSamplePosition( flTimeLabel, m_flHighestValue )),
+				CSPVert((const Vector&) GetSamplePosition( flTimeLabel, flValue ) )
 				);
 		}
 
@@ -156,21 +158,21 @@ void CScratchPadGraph::UpdateTicksAndStuff( float flTime, float flValue )
 	{
 		CTextParams params;
 		
-		float flTime = m_flTimeOrigin + m_nTimeLabelsDrawn * m_flTimeLabelEveryNSeconds;
+		float flTimeLabel = m_flTimeOrigin + m_nTimeLabelsDrawn * m_flTimeLabelEveryNSeconds;
 
 		params.m_bSolidBackground = true;
-		params.m_vPos = GetSamplePosition( flTime, m_flValueOrigin-5 );
+		params.m_vPos = GetSamplePosition( flTimeLabel, m_flValueOrigin-5 );
 		params.m_bTwoSided = true;
 		
 		char str[512];
-		Q_snprintf( str, sizeof( str ), "time: %.2f", flTime );
+		Q_snprintf( str, sizeof( str ), "time: %.2f", flTimeLabel );
 		m_pPad->DrawText( str, params );
 
 
 		// Now draw the vertical line for the value..
 		m_pPad->DrawLine(
-			CSPVert(  (const Vector&)GetSamplePosition( flTime, m_flValueOrigin ) ),
-			CSPVert( (const Vector&)GetSamplePosition( flTime, m_flHighestValue ) )
+			CSPVert(  (const Vector&)GetSamplePosition( flTimeLabel, m_flValueOrigin ) ),
+			CSPVert( (const Vector&)GetSamplePosition( flTimeLabel, m_flHighestValue ) )
 			);
 		
 
@@ -370,4 +372,96 @@ void ScratchPad_DrawArrowSimple(
 		4,
 		4 );
 }
+
+
+void ScratchPad_DrawSphere(
+	IScratchPad3D *pPad,
+	const Vector &vCenter,
+	float flRadius,
+	const Vector &vColor,
+	int nSubDivs )
+{
+	CUtlVector<Vector> prevPoints;
+	prevPoints.SetSize( nSubDivs );
+	
+	// For each vertical slice.. (the top and bottom ones are just a single point).
+	for ( int iSlice=0; iSlice < nSubDivs; iSlice++ )
+	{
+		float flHalfSliceAngle = M_PI * (float)iSlice / (nSubDivs - 1);
+
+		if ( iSlice == 0 )
+		{
+			prevPoints[0] = vCenter + Vector( 0, 0, flRadius );
+			for ( int z=1; z < prevPoints.Count(); z++ )
+				prevPoints[z] = prevPoints[0];
+		}
+		else
+		{
+			for ( int iSubPt=0; iSubPt < nSubDivs; iSubPt++ )
+			{
+				float flHalfAngle = M_PI * (float)iSubPt / (nSubDivs - 1);
+				float flAngle = flHalfAngle * 2;
+				
+				Vector pt;
+				if ( iSlice == (nSubDivs - 1) )
+				{
+					pt = vCenter - Vector( 0, 0, flRadius );
+				}
+				else
+				{
+					pt.x = cos( flAngle ) * sin( flHalfSliceAngle );
+					pt.y = sin( flAngle ) * sin( flHalfSliceAngle );
+					pt.z = cos( flHalfSliceAngle );
+					
+					pt *= flRadius;
+					pt += vCenter;
+				}
+				
+				pPad->DrawLine( CSPVert( pt, vColor ), CSPVert( prevPoints[iSubPt], vColor ) );
+				prevPoints[iSubPt] = pt;
+			}
+			
+			if ( iSlice != (nSubDivs - 1) )
+			{
+				for ( int i=0; i < nSubDivs; i++ )
+					pPad->DrawLine( CSPVert( prevPoints[i], vColor ), CSPVert( prevPoints[(i+1)%nSubDivs], vColor ) );
+			}
+		}
+	}
+}
+
+
+void ScratchPad_DrawAABB(
+	IScratchPad3D *pPad,
+	const Vector &vMins,
+	const Vector &vMaxs,
+	const Vector &vColor )
+{
+	int vertOrder[4][2] = {{0,0},{1,0},{1,1},{0,1}};
+	const Vector *vecs[2] = {&vMins, &vMaxs};
+	
+	Vector vTop, vBottom, vPrevTop, vPrevBottom;
+	vTop.z = vPrevTop.z = vMaxs.z;
+	vBottom.z = vPrevBottom.z = vMins.z;
+
+	vPrevTop.x = vPrevBottom.x = vecs[vertOrder[3][0]]->x;
+	vPrevTop.y = vPrevBottom.y = vecs[vertOrder[3][1]]->y;
+	
+	for ( int i=0; i < 4; i++ )
+	{
+		vTop.x = vBottom.x = vecs[vertOrder[i][0]]->x;
+		vTop.y = vBottom.y = vecs[vertOrder[i][1]]->y;
+
+		// Draw the top line.
+		pPad->DrawLine( CSPVert( vPrevTop, vColor ), CSPVert( vTop, vColor ) );
+		pPad->DrawLine( CSPVert( vPrevBottom, vColor ), CSPVert( vBottom, vColor ) );
+		pPad->DrawLine( CSPVert( vTop, vColor ), CSPVert( vBottom, vColor ) );
+		
+		vPrevTop = vTop;
+		vPrevBottom = vBottom;
+	}
+}
+
+
+#endif // !_STATIC_LINKED || _SHARED_LIB
 

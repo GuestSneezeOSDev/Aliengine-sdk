@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -48,5 +48,13 @@ MaterialSystemMaterial_t FindOriginalMaterial( const char *materialName, bool *p
 
 bool DoesMaterialHaveKeyValuePair( const char *pMaterialName, const char *pKeyName, const char *pSearchValue );
 bool DoesMaterialHaveKey( const char *pMaterialName, const char *pKeyName );
+
+enum LoadMaterialKeyValuesFlags_t
+{
+	LOAD_MATERIAL_KEY_VALUES_FLAGS_EXPAND_PATCH = 1,
+};
+
+KeyValues *LoadMaterialKeyValues( const char *pMaterialName, unsigned int nFlags );
+void WriteMaterialKeyValuesToPak( const char *pMaterialName, KeyValues *kv );
 
 #endif // MATERIALPATCH_H

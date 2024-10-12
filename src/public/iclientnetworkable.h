@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,11 +13,11 @@
 
 
 #include "iclientunknown.h"
+#include "tier1/bitbuf.h"
 
 
 class IClientEntity;
 class ClientClass;
-class bf_read;
 
 
 enum ShouldTransmitState_t
@@ -41,7 +41,7 @@ enum DataUpdateType_t
 								// since it changes a bunch of existing code
 };
 
-class IClientNetworkable
+abstract_class IClientNetworkable
 {
 public:
 	// Gets at the containing class...
@@ -95,6 +95,12 @@ public:
 	// Get the base pointer to the networked data that GetClientClass->m_pRecvTable starts at.
 	// (This is usually just the "this" pointer).
 	virtual void*			GetDataTableBasePtr() = 0;
+
+	// Tells the entity that it's about to be destroyed due to the client receiving
+	// an uncompressed update that's caused it to destroy all entities & recreate them.
+	virtual void			SetDestroyedOnRecreateEntities( void ) = 0;
+
+	virtual void			OnDataUnchangedInPVS() = 0;
 };
 
 

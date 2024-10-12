@@ -965,7 +965,7 @@ public:
 	int				GetTeamNumber( void ) const;		// Get the Team number of the team this entity is on
 	virtual void	ChangeTeam( int iTeamNum );			// Assign this entity to a team.
 	bool			IsInTeam( CTeam *pTeam ) const;		// Returns true if this entity's in the specified team
-	bool			InSameTeam( CBaseEntity *pEntity ) const;	// Returns true if the specified entity is on the same team as this one
+	bool			InSameTeam( const CBaseEntity *pEntity ) const;	// Returns true if the specified entity is on the same team as this one
 	bool			IsInAnyTeam( void ) const;			// Returns true if this entity is in any team
 	const char		*TeamID( void ) const;				// Returns the name of the team this entity is on.
 
@@ -1802,6 +1802,16 @@ public:
 	}
 
 	virtual bool ShouldBlockNav() const { return true; }
+
+	virtual bool ShouldForceTransmitsForTeam( int iTeam ) { return false; }
+
+	void 			SetTruceValidForEnt( bool bTruceValidForEnt ) { m_bTruceValidForEnt = bTruceValidForEnt; }
+	virtual bool	IsTruceValidForEnt( void ) const { return m_bTruceValidForEnt; }
+
+private:
+	CThreadFastMutex m_CalcAbsolutePositionMutex;
+
+	bool	m_bTruceValidForEnt;
 };
 
 // Send tables exposed in this module.

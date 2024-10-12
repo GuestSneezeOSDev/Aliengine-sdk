@@ -97,7 +97,6 @@
 #include "steamworks_gamestats.h"
 #include "tf/tf_gc_server.h"
 #include "tf_gamerules.h"
-#include "tf_lobby.h"
 #include "player_vs_environment/tf_population_manager.h"
 #include "workshop/maps_workshop.h"
 
@@ -596,7 +595,7 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 		return false;
 	if ( (enginesound = (IEngineSound *)appSystemFactory(IENGINESOUND_SERVER_INTERFACE_VERSION, NULL)) == NULL )
 		return false;
-	if ( (partition = (ISpatialPartition *)appSystemFactory(INTERFACEVERSION_SPATIALPARTITION, NULL)) == NULL )
+	if ( (::partition = (ISpatialPartition *)appSystemFactory(INTERFACEVERSION_SPATIALPARTITION, NULL)) == NULL )
 		return false;
 	if ( (modelinfo = (IVModelInfo *)appSystemFactory(VMODELINFO_SERVER_INTERFACE_VERSION, NULL)) == NULL )
 		return false;
@@ -1908,18 +1907,19 @@ const char *CServerGameDLL::GetServerBrowserGameData()
 #ifdef TF_DLL
 	sResult.Format( "tf_mm_trusted:%d,tf_mm_servermode:%d", tf_mm_trusted.GetInt(), tf_mm_servermode.GetInt() );
 
-	CTFLobby *pLobby = GTFGCClientSystem()->GetLobby();
-	if ( pLobby == NULL )
+	CMatchInfo *pMatch = GTFGCClientSystem()->GetMatch();
+	if ( !pMatch )
 	{
 		sResult.Append( ",lobby:0" );
 	}
 	else
 	{
-		sResult.Append( CFmtStr( ",lobby:%016llx", pLobby->GetGroupID() ) );
+		sResult.Append( CFmtStr( ",lobby:%016llx", pMatch->m_nLobbyID ) );
 	}
 	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
 	{
-		sResult.Append( CFmtStr( ",mannup:%d", ( pLobby && pLobby->GetPlayingForBraggingRights() ) ? 1 : 0  ) );
+		bool bMannup = pMatch && pMatch->m_eMatchGroup == k_nMatchGroup_MvM_MannUp;
+		sResult.Append( CFmtStr( ",mannup:%d", (int)bMannup ) );
 	}
 #endif
 

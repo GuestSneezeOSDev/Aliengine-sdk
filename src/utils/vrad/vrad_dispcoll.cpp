@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -24,15 +24,13 @@ static FileHandle_t pDispFile = FILESYSTEM_INVALID_HANDLE;
 CVRADDispColl::CVRADDispColl()
 {
 	m_iParent = -1;
-	m_nPointOffset = -1;
 
 	m_flSampleRadius2 = 0.0f;
 	m_flPatchSampleRadius2 = 0.0f;
 
-	m_vecSampleBBox[0].Init();
-	m_vecSampleBBox[1].Init();
+	m_flSampleWidth = 0.0f;
+	m_flSampleHeight = 0.0f;
 
-	m_aVNodes.Purge();
 	m_aLuxelCoords.Purge();
 	m_aVertNormals.Purge();
 }
@@ -41,7 +39,6 @@ CVRADDispColl::CVRADDispColl()
 //-----------------------------------------------------------------------------
 CVRADDispColl::~CVRADDispColl()
 {
-	m_aVNodes.Purge();
 	m_aLuxelCoords.Purge();
 	m_aVertNormals.Purge();
 }
@@ -55,20 +52,12 @@ bool CVRADDispColl::Create( CCoreDispInfo *pDisp )
 		return false;
 
 	// Allocate VRad specific memory.
-	m_aVNodes.SetSize( Nodes_CalcCount( m_nPower ) );
 	m_aLuxelCoords.SetSize( GetSize() );
 	m_aVertNormals.SetSize( GetSize() );
 
 	// VRad specific base surface data.
 	CCoreDispSurface *pSurf = pDisp->GetSurface();
 	m_iParent = pSurf->GetHandle();
-	m_nPointOffset = pSurf->GetPointStartIndex();
-
-	int nPointCount = GetParentPointCount();
-	for( int iPoint = 0; iPoint < nPointCount; ++iPoint )
-	{
-		pSurf->GetPointNormal( iPoint, m_vecSurfPointNormals[iPoint] );
-	}
 
 	// VRad specific displacement surface data.
 	for ( int iVert = 0; iVert < m_aVerts.Count(); ++iVert )
@@ -80,15 +69,11 @@ bool CVRADDispColl::Create( CCoreDispInfo *pDisp )
 	// Re-calculate the lightmap size (in uv) so that the luxels give
 	// a better world-space uniform approx. due to the non-linear nature
 	// of the displacement surface in uv-space
-	dface_t *pFace = &dfaces[m_iParent];
+	dface_t *pFace = &g_pFaces[m_iParent];
 	if( pFace )
 	{
 		CalcSampleRadius2AndBox( pFace );	
 	}
-
-	// Create the vrad specific node data - build for radiosity transfer,
-	// Don't create for direct lighting only!	
-	BuildVNodes();
 
 	return true;
 }
@@ -98,39 +83,40 @@ bool CVRADDispColl::Create( CCoreDispInfo *pDisp )
 //-----------------------------------------------------------------------------
 void CVRADDispColl::CalcSampleRadius2AndBox( dface_t *pFace )
 {
-	Vector boxMin, boxMax;
-	GetSurfaceMinMax( boxMin, boxMax );
+	// Get the luxel sample size.
+	texinfo_t *pTexInfo = &texinfo[pFace->texinfo];
+	Assert ( pTexInfo );
+	if ( !pTexInfo )
+		return;
 
-	Vector vecFaceNormal;
-	int nAxis0, nAxis1;
-	GetParentFaceNormal( vecFaceNormal );
-	GetMinorAxes( vecFaceNormal, nAxis0, nAxis1 );
-
-	float flWidth = boxMax[nAxis0] - boxMin[nAxis0];
-	float flHeight = boxMax[nAxis1] - boxMin[nAxis1];
-	flWidth /= pFace->m_LightmapTextureSizeInLuxels[0];
-	flHeight /= pFace->m_LightmapTextureSizeInLuxels[1];
+	// Todo: Width = Height now, should change all the code to look at one value.
+	Vector vecTmp( pTexInfo->lightmapVecsLuxelsPerWorldUnits[0][0],
+		pTexInfo->lightmapVecsLuxelsPerWorldUnits[0][1],
+		pTexInfo->lightmapVecsLuxelsPerWorldUnits[0][2] );
+	float flWidth = 1.0f / VectorLength( vecTmp );
+	float flHeight = flWidth;
+	
+	// Save off the sample width and height.
+	m_flSampleWidth = flWidth;
+	m_flSampleHeight = flHeight;
 
 	// Calculate the sample radius squared.
-	float flSampleRadius = sqrt( ( ( flWidth*flWidth) + ( flHeight*flHeight) ) ) * RADIALDIST2; 
+	float flSampleRadius = sqrt( ( ( flWidth * flWidth ) + ( flHeight * flHeight ) ) ) * 2.2f;//RADIALDIST2; 
 	if ( flSampleRadius > g_flMaxDispSampleSize )
 	{
 		flSampleRadius = g_flMaxDispSampleSize;
 	}
 	m_flSampleRadius2 = flSampleRadius * flSampleRadius;
 
-	// maxchop - see vrad.h
-	float flPatchSampleRadius = sqrt( ( maxchop*maxchop ) + ( maxchop*maxchop ) ) * RADIALDIST2;
-	m_flPatchSampleRadius2 = flPatchSampleRadius * flPatchSampleRadius;
-
-	// Calculate the sampling bounding box.
-	m_vecSampleBBox[0] = boxMin;
-	m_vecSampleBBox[1] = boxMax;
-	for( int iAxis = 0; iAxis < 3; ++iAxis )
+	// Calculate the patch radius - the max sample edge length * the number of luxels per edge "chop."
+	float flSampleSize = max( m_flSampleWidth, m_flSampleHeight );
+	float flPatchSampleRadius = flSampleSize * dispchop * 2.2f;
+	if ( flPatchSampleRadius > g_MaxDispPatchRadius )
 	{
-		m_vecSampleBBox[0][iAxis] -= SAMPLE_BBOX_SLOP;
-		m_vecSampleBBox[1][iAxis] += SAMPLE_BBOX_SLOP;
+		flPatchSampleRadius = g_MaxDispPatchRadius;
+		Warning( "Patch Sample Radius Clamped!\n" );
 	}
+	m_flPatchSampleRadius2 = flPatchSampleRadius * flPatchSampleRadius;
 }
 
 //-----------------------------------------------------------------------------
@@ -177,99 +163,6 @@ void CVRADDispColl::GetMinorAxes( Vector const &vecNormal, int &nAxis0, int &nAx
 			nAxis0 = 0;
 			nAxis1 = 2;
 		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-void CVRADDispColl::BuildVNodes( void )
-{
-	// Get leaf indices (last level in tree)
-	int iStart = Nodes_CalcCount( m_nPower - 1 );
-	int iEnd = Nodes_CalcCount( m_nPower );
-
-	int flWidth = GetWidth();
-
-	for ( int iNode = iStart; iNode < iEnd; ++iNode )
-	{
-		// Get the current node
-		CDispCollAABBNode *pNode = &m_aNodes[iNode];
-		VNode_t *pVNode = &m_aVNodes[iNode];
-
-		if ( !pNode )
-			continue;
-
-		// Cache locally the triangle verts and normals.
-		Vector vecTriVerts[2][3];
-		Vector vecTriVertNormals[2][3];
-		for ( int iTri = 0; iTri < 2; ++iTri )	
-		{
-			for ( int iVert = 0; iVert < 3; iVert++ )
-			{
-				vecTriVerts[iTri][iVert] = m_aVerts[m_aTris[pNode->m_iTris[iTri]].GetVert(iVert)];
-				vecTriVertNormals[iTri][iVert] = m_aVertNormals[m_aTris[pNode->m_iTris[iTri]].GetVert(iVert)];
-			}
-		}
-		
-		// Get the surface area of the triangles in the node.
-		pVNode->patchArea = 0.0f;
-		for ( iTri = 0; iTri < 2; ++iTri )
-		{
-			Vector vecEdges[2], vecCross;			
-			VectorSubtract( vecTriVerts[iTri][1], vecTriVerts[iTri][0], vecEdges[0] );
-			VectorSubtract( vecTriVerts[iTri][2], vecTriVerts[iTri][0], vecEdges[1] );
-			CrossProduct( vecEdges[0], vecEdges[1], vecCross );
-			pVNode->patchArea += 0.5f * VectorLength( vecCross );
-		}			
-
-		// Get the patch origin (along the diagonal!).
-		Vector vecEdgePoints[2];
-		int nEdgePointCount = 0;
-		int iEdges[2];
-
-		for ( int iVert = 0; iVert < 3; ++iVert )
-		{
-			for ( int iVert2 = 0; iVert2 < 3; ++iVert2 )
-			{
-				if ( m_aTris[pNode->m_iTris[0]].GetVert( iVert ) == m_aTris[pNode->m_iTris[1]].GetVert( iVert2 ) )
-				{
-					iEdges[nEdgePointCount] = m_aTris[pNode->m_iTris[0]].GetVert( iVert );
-					vecEdgePoints[nEdgePointCount] = vecTriVerts[0][iVert];
-					nEdgePointCount++;
-					break;
-				}
-			}
-		}
-		if ( nEdgePointCount != 2 )
-			continue;
-
-		pVNode->patchOrigin = ( vecEdgePoints[0] + vecEdgePoints[1] ) * 0.5f;
-		
-		Vector2D vecUV0, vecUV1;
-		float flScale = 1.0f / ( float )( flWidth - 1 );
-		vecUV0.x = ( iEdges[0] % flWidth ) * flScale;
-		vecUV0.y = ( iEdges[0] / flWidth ) * flScale;		
-		vecUV1.x = ( iEdges[1] % flWidth ) * flScale;
-		vecUV1.y = ( iEdges[1] / flWidth ) * flScale;
-		
-		pVNode->patchOriginUV = ( vecUV0 + vecUV1 ) * 0.5f;
-				
-		// Get the averaged patch normal.
-		pVNode->patchNormal.Init();
-		for( iVert = 0; iVert < 3; ++iVert )
-		{
-			VectorAdd( pVNode->patchNormal, vecTriVertNormals[0][iVert], pVNode->patchNormal );
-			
-			if( ( vecTriVerts[1][iVert] != vecTriVerts[0][0] ) && ( vecTriVerts[1][iVert] != vecTriVerts[0][1] ) && ( vecTriVerts[1][iVert] != vecTriVerts[0][2] ) )
-			{
-				VectorAdd( pVNode->patchNormal, vecTriVertNormals[1][iVert], pVNode->patchNormal );
-			}
-		}
-		VectorNormalize( pVNode->patchNormal );
-		
-		// Copy the bounds.
-		pVNode->patchBounds[0] = pNode->m_vecBox[0];
-		pVNode->patchBounds[1] = pNode->m_vecBox[1];
 	}
 }
 
@@ -486,348 +379,702 @@ void CVRADDispColl::DispUVToSurfNormal( Vector2D const &dispUV, Vector &vecNorma
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: 
+// Output : float
 //-----------------------------------------------------------------------------
-void CVRADDispColl::ClosestBaseFaceData( Vector const &vecWorldPoint, Vector &vecPoint, 
-										 Vector &vecNormal )
+float CVRADDispColl::CreateParentPatches( void )
 {
-	float flMinDist = FLT_MAX;
-	int iMin = -1;
-	for ( int iPoint = 0; iPoint < VRAD_QUAD_SIZE; ++iPoint )
+	// Save the total surface area of the displacement.
+	float flTotalArea = 0.0f;
+
+	// Get the number of displacement subdivisions.
+	int nInterval = GetWidth();
+
+	Vector vecPoints[4];
+	vecPoints[0].Init( m_aVerts[0].x, m_aVerts[0].y, m_aVerts[0].z );
+	vecPoints[1].Init( m_aVerts[(nInterval*(nInterval-1))].x, m_aVerts[(nInterval*(nInterval-1))].y, m_aVerts[(nInterval*(nInterval-1))].z );
+	vecPoints[2].Init( m_aVerts[((nInterval*nInterval)-1)].x, m_aVerts[((nInterval*nInterval)-1)].y, m_aVerts[((nInterval*nInterval)-1)].z );
+	vecPoints[3].Init( m_aVerts[(nInterval-1)].x, m_aVerts[(nInterval-1)].y, m_aVerts[(nInterval-1)].z );
+
+	// Create and initialize the patch.
+	int iPatch = g_Patches.AddToTail();
+	if ( iPatch == g_Patches.InvalidIndex() )
+		return flTotalArea;
+
+	// Keep track of the area of the patches.
+	float flArea = 0.0f;
+	if ( !InitParentPatch( iPatch, vecPoints, flArea ) )
 	{
-		float flDist = ( vecWorldPoint - m_vecSurfPoints[iPoint] ).Length();
-		if( flDist < flMinDist )
-		{
-			flMinDist = flDist;
-			iMin = iPoint;
-		}
+		g_Patches.Remove( iPatch );
+		flArea = 0.0f;
 	}
 
-	int nWidth = GetWidth();
-	int nHeight = GetHeight();
-
-	switch( iMin )
-	{
-	case 0: { iMin = 0; break; }
-	case 1: { iMin = ( nHeight - 1 ) * nWidth; break; }
-	case 2: { iMin = ( nHeight * nWidth ) - 1; break; }
-	case 3: { iMin = nWidth - 1; break; }
-	default: { return; }
-	}
-
-	GetVert( iMin, vecPoint );
-	GetVertNormal( iMin, vecNormal );
+	// Return the displacement area.
+	return flArea;
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : iParentPatch - 
+//			nLevel - 
 //-----------------------------------------------------------------------------
-void CVRADDispColl::InitPatch( int iPatch, int iParentPatch, bool bFirst )
+void CVRADDispColl::CreateChildPatchesFromRoot( int iParentPatch, int *pChildPatch )
 {
-	// Get the current patch
-	patch_t *pPatch = &patches[iPatch];
-	if ( pPatch )
+	// Initialize the child patch indices.
+	pChildPatch[0] = g_Patches.InvalidIndex();
+	pChildPatch[1] = g_Patches.InvalidIndex();
+
+	// Get the number of displacement subdivisions.
+	int nInterval = GetWidth();
+
+	// Get the parent patch.
+	CPatch *pParentPatch = &g_Patches[iParentPatch];
+	if ( !pParentPatch )
+		return;
+
+	// Split along the longest edge.
+	Vector vecEdges[4];
+	vecEdges[0] = pParentPatch->winding->p[1] - pParentPatch->winding->p[0];
+	vecEdges[1] = pParentPatch->winding->p[2] - pParentPatch->winding->p[1];
+	vecEdges[2] = pParentPatch->winding->p[3] - pParentPatch->winding->p[2];
+	vecEdges[3] = pParentPatch->winding->p[3] - pParentPatch->winding->p[0];
+
+	// Should the patch be subdivided - check the area.
+	float flMaxLength  = max( m_flSampleWidth, m_flSampleHeight );
+	float flMinEdgeLength = flMaxLength * dispchop;
+
+	// Find the longest edge.
+	float flEdgeLength = 0.0f;
+	int iLongEdge = -1;
+	for ( int iEdge = 0; iEdge < 4; ++iEdge )
 	{
-		// Clear the structure
-		memset( pPatch, 0, sizeof( patch_t ) );
-
-		// Initialize.
-		pPatch->child1 = patches.InvalidIndex();
-		pPatch->child2 = patches.InvalidIndex();
-		pPatch->parent = iParentPatch;
-		pPatch->ndxNextParent = patches.InvalidIndex();
-		pPatch->ndxNextClusterChild = patches.InvalidIndex();
-		pPatch->scale[0] = pPatch->scale[1] = 1.0f;
-		pPatch->chop = 64;
-		pPatch->sky = false;
-		pPatch->winding = NULL;
-		pPatch->plane = NULL;
-		pPatch->origin.Init();
-		pPatch->normal.Init();
-		pPatch->area = 0.0f;
-
-		// Get the parent patch if it exists.
-		if ( iParentPatch != patches.InvalidIndex() )
+		float flLength = vecEdges[iEdge].Length();
+		if ( flEdgeLength < flLength )
 		{
-			patch_t *pParentPatch = &patches[iParentPatch];
+			flEdgeLength = vecEdges[iEdge].Length();
+			iLongEdge = iEdge;
+		}
+	}
 
-			if( bFirst )
+	// Small enough already, return.
+	if ( flEdgeLength < flMinEdgeLength )
+		return;
+
+	// Test area as well so we don't allow slivers.
+	float flMinArea = ( dispchop * flMaxLength ) * ( dispchop * flMaxLength );
+	Vector vecNormal = vecEdges[3].Cross( vecEdges[0] );
+	float flTestArea = VectorNormalize( vecNormal );
+	if ( flTestArea < flMinArea )
+		return;
+
+	// Get the points for the first triangle.
+	int iPoints[3];
+	Vector vecPoints[3];
+	float flArea;
+
+	iPoints[0] = ( nInterval * nInterval ) - 1;
+	iPoints[1] = 0;
+	iPoints[2] = nInterval * ( nInterval - 1 );
+	for ( int iPoint = 0; iPoint < 3; ++iPoint )
+	{
+		VectorCopy( m_aVerts[iPoints[iPoint]], vecPoints[iPoint] );
+	}
+
+	// Create and initialize the patch.
+	pChildPatch[0] = g_Patches.AddToTail();
+	if ( pChildPatch[0] == g_Patches.InvalidIndex() )
+		return;
+
+	if ( !InitPatch( pChildPatch[0], iParentPatch, 0, vecPoints, iPoints, flArea ) )
+	{
+		g_Patches.Remove( pChildPatch[0] );
+		pChildPatch[0] = g_Patches.InvalidIndex();
+		return;
+	}
+
+	// Get the points for the second triangle.
+	iPoints[0] = 0;
+	iPoints[1] = ( nInterval * nInterval ) - 1;
+	iPoints[2] = nInterval - 1;
+	for ( int iPoint = 0; iPoint < 3; ++iPoint )
+	{
+		VectorCopy( m_aVerts[iPoints[iPoint]], vecPoints[iPoint] );
+	}
+
+	// Create and initialize the patch.
+	pChildPatch[1] = g_Patches.AddToTail();
+	if ( pChildPatch[1] == g_Patches.InvalidIndex() )
+	{
+		g_Patches.Remove( pChildPatch[0] );
+		pChildPatch[0] = g_Patches.InvalidIndex();
+		return;
+	}
+
+	if ( !InitPatch( pChildPatch[1], iParentPatch, 1, vecPoints, iPoints, flArea ) )
+	{
+		g_Patches.Remove( pChildPatch[0] );
+		pChildPatch[0] = g_Patches.InvalidIndex();
+		g_Patches.Remove( pChildPatch[1] );
+		pChildPatch[1] = g_Patches.InvalidIndex();
+		return;
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : flMinArea - 
+// Output : float
+//-----------------------------------------------------------------------------
+void CVRADDispColl::CreateChildPatches( int iParentPatch, int nLevel )
+{
+	// Get the parent patch.
+	CPatch *pParentPatch = &g_Patches[iParentPatch];
+	if ( !pParentPatch )
+		return;
+
+	// The root face is a quad - special case.
+	if ( pParentPatch->winding->numpoints == 4 )
+	{
+		int iChildPatch[2];
+		CreateChildPatchesFromRoot( iParentPatch, iChildPatch );
+		if ( iChildPatch[0] != g_Patches.InvalidIndex() && iChildPatch[1] != g_Patches.InvalidIndex() )
+		{
+			CreateChildPatches( iChildPatch[0], 0 );
+			CreateChildPatches( iChildPatch[1], 0 );
+		}
+		return;
+	}
+
+	// Calculate the the area of the patch (triangle!).
+	Assert( pParentPatch->winding->numpoints == 3 );
+	if ( pParentPatch->winding->numpoints != 3 )
+		return;
+
+	// Should the patch be subdivided - check the area.
+	float flMaxLength  = max( m_flSampleWidth, m_flSampleHeight );
+	float flMinEdgeLength = flMaxLength * dispchop;
+
+	// Split along the longest edge.
+	Vector vecEdges[3];
+	vecEdges[0] = pParentPatch->winding->p[1] - pParentPatch->winding->p[0];
+	vecEdges[1] = pParentPatch->winding->p[2] - pParentPatch->winding->p[0];
+	vecEdges[2] = pParentPatch->winding->p[2] - pParentPatch->winding->p[1];
+
+	// Find the longest edge.
+	float flEdgeLength = 0.0f;
+	int iLongEdge = -1;
+	for ( int iEdge = 0; iEdge < 3; ++iEdge )
+	{
+		if ( flEdgeLength < vecEdges[iEdge].Length() )
+		{
+			flEdgeLength = vecEdges[iEdge].Length();
+			iLongEdge = iEdge;
+		}
+	}
+
+	// Small enough already, return.
+	if ( flEdgeLength < flMinEdgeLength )
+		return;
+
+	// Test area as well so we don't allow slivers.
+	float flMinArea = ( dispchop * flMaxLength ) * ( dispchop * flMaxLength ) * 0.5f;
+	Vector vecNormal = vecEdges[1].Cross( vecEdges[0] );
+	float flTestArea = VectorNormalize( vecNormal );
+	flTestArea *= 0.5f;
+	if ( flTestArea < flMinArea )
+		return;
+
+	// Check to see if any more displacement verts exist - go to subdivision if not.
+	if ( nLevel >= ( m_nPower * 2 ) )
+	{
+		CreateChildPatchesSub( iParentPatch );
+		return;
+	}
+
+	int nChildIndices[2][3];
+	int nNewIndex = ( pParentPatch->indices[1] + pParentPatch->indices[0] ) / 2;
+	nChildIndices[0][0] = pParentPatch->indices[2];
+	nChildIndices[0][1] = pParentPatch->indices[0];
+	nChildIndices[0][2] = nNewIndex;
+
+	nChildIndices[1][0] = pParentPatch->indices[1];
+	nChildIndices[1][1] = pParentPatch->indices[2];
+	nChildIndices[1][2] = nNewIndex;
+
+	Vector vecChildPoints[2][3];
+	for ( int iTri = 0; iTri < 2; ++iTri )
+	{
+		for ( int iPoint = 0; iPoint < 3; ++iPoint )
+		{
+			VectorCopy( m_aVerts[nChildIndices[iTri][iPoint]], vecChildPoints[iTri][iPoint] );
+		}
+	}
+
+	// Create and initialize the children patches.
+	int iChildPatch[2] = { -1, -1 };
+	for ( int iChild = 0; iChild < 2; ++iChild )
+	{
+		iChildPatch[iChild] = g_Patches.AddToTail();
+
+		float flArea = 0.0f;
+		if ( !InitPatch( iChildPatch[iChild], iParentPatch, iChild, vecChildPoints[iChild], nChildIndices[iChild], flArea ) )
+		{
+			if ( iChild == 0 )
 			{
-				pParentPatch->child1 = iPatch;
+				pParentPatch->child1 = g_Patches.InvalidIndex();
+				g_Patches.Remove( iChildPatch[iChild] );
+				break;
 			}
 			else
 			{
-				pParentPatch->child2 = iPatch;
+				pParentPatch->child1 = g_Patches.InvalidIndex();
+				pParentPatch->child2 = g_Patches.InvalidIndex();
+				g_Patches.Remove( iChildPatch[iChild] );
+				g_Patches.Remove( iChildPatch[0] );
 			}
+		}
+	}
+	
+	// Continue creating children patches.
+	int nNewLevel = ++nLevel;
+	CreateChildPatches( iChildPatch[0], nNewLevel );
+	CreateChildPatches( iChildPatch[1], nNewLevel );
+}
 
-			// Get data from parent.
-			pPatch->faceNumber = pParentPatch->faceNumber;
-			pPatch->face_mins = pParentPatch->face_mins;
-			pPatch->face_maxs = pParentPatch->face_maxs;
-			pPatch->reflectivity = pParentPatch->reflectivity;
-			pPatch->normalMajorAxis = pParentPatch->normalMajorAxis;
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : flMinArea - 
+// Output : float
+//-----------------------------------------------------------------------------
+void CVRADDispColl::CreateChildPatchesSub( int iParentPatch )
+{
+	// Get the parent patch.
+	CPatch *pParentPatch = &g_Patches[iParentPatch];
+	if ( !pParentPatch )
+		return;
+
+	// Calculate the the area of the patch (triangle!).
+	Assert( pParentPatch->winding->numpoints == 3 );
+	if ( pParentPatch->winding->numpoints != 3 )
+		return;
+
+	// Should the patch be subdivided - check the area.
+	float flMaxLength  = max( m_flSampleWidth, m_flSampleHeight );
+	float flMinEdgeLength = flMaxLength * dispchop;
+
+	// Split along the longest edge.
+	Vector vecEdges[3];
+	vecEdges[0] = pParentPatch->winding->p[1] - pParentPatch->winding->p[0];
+	vecEdges[1] = pParentPatch->winding->p[2] - pParentPatch->winding->p[1];
+	vecEdges[2] = pParentPatch->winding->p[0] - pParentPatch->winding->p[2];
+
+	// Find the longest edge.
+	float flEdgeLength = 0.0f;
+	int iLongEdge = -1;
+	for ( int iEdge = 0; iEdge < 3; ++iEdge )
+	{
+		if ( flEdgeLength < vecEdges[iEdge].Length() )
+		{
+			flEdgeLength = vecEdges[iEdge].Length();
+			iLongEdge = iEdge;
+		}
+	}
+
+	// Small enough already, return.
+	if ( flEdgeLength < flMinEdgeLength )
+		return;
+
+	// Test area as well so we don't allow slivers.
+	float flMinArea = ( dispchop * flMaxLength ) * ( dispchop * flMaxLength ) * 0.5f;
+	Vector vecNormal = vecEdges[1].Cross( vecEdges[0] );
+	float flTestArea = VectorNormalize( vecNormal );
+	flTestArea *= 0.5f;
+	if ( flTestArea < flMinArea )
+		return;
+
+	// Create children patchs - 2 of them.
+	Vector vecChildPoints[2][3];
+	switch ( iLongEdge )
+	{
+	case 0:
+		{
+			vecChildPoints[0][0] = pParentPatch->winding->p[0];
+			vecChildPoints[0][1] = ( pParentPatch->winding->p[0] + pParentPatch->winding->p[1] ) * 0.5f;
+			vecChildPoints[0][2] = pParentPatch->winding->p[2];
+
+			vecChildPoints[1][0] = ( pParentPatch->winding->p[0] + pParentPatch->winding->p[1] ) * 0.5f;
+			vecChildPoints[1][1] = pParentPatch->winding->p[1];
+			vecChildPoints[1][2] = pParentPatch->winding->p[2];
+			break;
+		}
+	case 1:
+		{
+			vecChildPoints[0][0] = pParentPatch->winding->p[0];
+			vecChildPoints[0][1] = pParentPatch->winding->p[1];
+			vecChildPoints[0][2] = ( pParentPatch->winding->p[1] + pParentPatch->winding->p[2] ) * 0.5f;
+
+			vecChildPoints[1][0] = ( pParentPatch->winding->p[1] + pParentPatch->winding->p[2] ) * 0.5f;
+			vecChildPoints[1][1] = pParentPatch->winding->p[2];
+			vecChildPoints[1][2] = pParentPatch->winding->p[0];
+			break;
+		}
+	case 2:
+		{
+			vecChildPoints[0][0] = pParentPatch->winding->p[0];
+			vecChildPoints[0][1] = pParentPatch->winding->p[1];
+			vecChildPoints[0][2] = ( pParentPatch->winding->p[0] + pParentPatch->winding->p[2] ) * 0.5f;
+
+			vecChildPoints[1][0] = ( pParentPatch->winding->p[0] + pParentPatch->winding->p[2] ) * 0.5f;
+			vecChildPoints[1][1] = pParentPatch->winding->p[1];
+			vecChildPoints[1][2] = pParentPatch->winding->p[2];
+			break;
+		}
+	}
+
+
+	// Create and initialize the children patches.
+	int iChildPatch[2] = { 0, 0 };
+	int nChildIndices[3] = { -1, -1, -1 };
+	for ( int iChild = 0; iChild < 2; ++iChild )
+	{
+		iChildPatch[iChild] = g_Patches.AddToTail();
+
+		float flArea = 0.0f;
+		if ( !InitPatch( iChildPatch[iChild], iParentPatch, iChild, vecChildPoints[iChild], nChildIndices, flArea ) )
+		{
+			if ( iChild == 0 )
+			{
+				pParentPatch->child1 = g_Patches.InvalidIndex();
+				g_Patches.Remove( iChildPatch[iChild] );
+				break;
+			}
+			else
+			{
+				pParentPatch->child1 = g_Patches.InvalidIndex();
+				pParentPatch->child2 = g_Patches.InvalidIndex();
+				g_Patches.Remove( iChildPatch[iChild] );
+				g_Patches.Remove( iChildPatch[0] );
+			}
+		}
+	}
+	
+	// Continue creating children patches.
+	CreateChildPatchesSub( iChildPatch[0] );
+	CreateChildPatchesSub( iChildPatch[1] );
+}
+
+int	PlaneTypeForNormal (Vector& normal)
+{
+	vec_t	ax, ay, az;
+
+	// NOTE: should these have an epsilon around 1.0?		
+	if (normal[0] == 1.0 || normal[0] == -1.0)
+		return PLANE_X;
+	if (normal[1] == 1.0 || normal[1] == -1.0)
+		return PLANE_Y;
+	if (normal[2] == 1.0 || normal[2] == -1.0)
+		return PLANE_Z;
+
+	ax = fabs(normal[0]);
+	ay = fabs(normal[1]);
+	az = fabs(normal[2]);
+
+	if (ax >= ay && ax >= az)
+		return PLANE_ANYX;
+	if (ay >= ax && ay >= az)
+		return PLANE_ANYY;
+	return PLANE_ANYZ;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : iPatch - 
+//			iParentPatch - 
+//			iChild - 
+//			*pPoints - 
+//			*pIndices - 
+//			&flArea - 
+// Output : Returns true on success, false on failure.
+//-----------------------------------------------------------------------------
+bool CVRADDispColl::InitParentPatch( int iPatch, Vector *pPoints, float &flArea )
+{
+	// Get the current patch.
+	CPatch *pPatch = &g_Patches[iPatch];
+	if ( !pPatch )
+		return false;
+
+	// Clear the patch data.
+	memset( pPatch, 0, sizeof( CPatch ) );
+
+	// This is a parent.
+	pPatch->ndxNext = g_FacePatches.Element( GetParentIndex() );
+	g_FacePatches[GetParentIndex()] = iPatch;
+	pPatch->faceNumber = GetParentIndex();
+
+	// Initialize parent and children indices.
+	pPatch->child1 = g_Patches.InvalidIndex();
+	pPatch->child2 = g_Patches.InvalidIndex();
+	pPatch->parent = g_Patches.InvalidIndex();
+	pPatch->ndxNextClusterChild = g_Patches.InvalidIndex();
+	pPatch->ndxNextParent = g_Patches.InvalidIndex();
+
+	Vector vecEdges[2];
+	vecEdges[0] = pPoints[1] - pPoints[0];
+	vecEdges[1] = pPoints[3] - pPoints[0];
+
+	// Calculate the triangle normal and area.
+	Vector vecNormal = vecEdges[1].Cross( vecEdges[0] );
+	flArea = VectorNormalize( vecNormal );
+
+	// Initialize the patch scale.
+	pPatch->scale[0] = pPatch->scale[1] = 1.0f;
+
+	// Set the patch chop - minchop (that is what the minimum area is based on).
+	pPatch->chop = dispchop;
+
+	// Displacements are not sky!
+	pPatch->sky = false;
+
+	// Copy the winding.
+	Vector vecCenter( 0.0f, 0.0f, 0.0f );
+	pPatch->winding = AllocWinding( 4 );
+	pPatch->winding->numpoints = 4;
+	for ( int iPoint = 0; iPoint < 4; ++iPoint )
+	{
+		VectorCopy( pPoints[iPoint], pPatch->winding->p[iPoint] );
+		VectorAdd( pPoints[iPoint], vecCenter, vecCenter );
+	}
+
+	// Set the origin and normal.
+	VectorScale( vecCenter, ( 1.0f / 4.0f ), vecCenter );
+	VectorCopy( vecCenter, pPatch->origin );
+	VectorCopy( vecNormal, pPatch->normal );
+
+	// Create the plane.
+	pPatch->plane = new dplane_t;
+	if ( !pPatch->plane )
+		return false;
+
+	VectorCopy( vecNormal, pPatch->plane->normal );
+	pPatch->plane->dist = vecNormal.Dot( pPoints[0] );
+	pPatch->plane->type = PlaneTypeForNormal( pPatch->plane->normal );
+	pPatch->planeDist = pPatch->plane->dist;
+
+	// Set the area.
+	pPatch->area = flArea;
+
+	// Calculate the mins/maxs.
+	Vector vecMin( FLT_MAX, FLT_MAX, FLT_MAX );
+	Vector vecMax( FLT_MIN, FLT_MIN, FLT_MIN );
+	for ( int iPoint = 0; iPoint < 4; ++iPoint )
+	{
+		for ( int iAxis = 0; iAxis < 3; ++iAxis )
+		{
+			vecMin[iAxis] = min( vecMin[iAxis], pPoints[iPoint][iAxis] );
+			vecMax[iAxis] = max( vecMax[iAxis], pPoints[iPoint][iAxis] );
+		}
+	}
+
+	VectorCopy( vecMin, pPatch->mins );
+	VectorCopy( vecMax, pPatch->maxs );
+	VectorCopy( vecMin, pPatch->face_mins );
+	VectorCopy( vecMax, pPatch->face_maxs );
+
+	// Check for bumpmap.
+	dface_t *pFace = dfaces + pPatch->faceNumber;
+	texinfo_t *pTexInfo = &texinfo[pFace->texinfo];
+	pPatch->needsBumpmap = pTexInfo->flags & SURF_BUMPLIGHT ? true : false;
+
+	// Misc...
+	pPatch->m_IterationKey = 0;
+
+	// Calculate the base light, area, and reflectivity.
+	BaseLightForFace( &g_pFaces[pPatch->faceNumber], pPatch->baselight, &pPatch->basearea, pPatch->reflectivity );
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+// Input  : *pPatch - 
+//			*pPoints - 
+//			&vecNormal - 
+//			flArea - 
+//-----------------------------------------------------------------------------
+bool CVRADDispColl::InitPatch( int iPatch, int iParentPatch, int iChild, Vector *pPoints, int *pIndices, float &flArea )
+{
+	// Get the current patch.
+	CPatch *pPatch = &g_Patches[iPatch];
+	if ( !pPatch )
+		return false;
+
+	// Clear the patch data.
+	memset( pPatch, 0, sizeof( CPatch ) );
+
+	// Setup the parent if we are not the parent.
+	CPatch *pParentPatch = NULL;
+	if ( iParentPatch != g_Patches.InvalidIndex() )
+	{
+		// Get the parent patch.
+		pParentPatch = &g_Patches[iParentPatch];
+		if ( !pParentPatch )
+			return false;
+	}
+
+	// Attach the face to the correct lists.
+	if ( !pParentPatch )
+	{
+		// This is a parent.
+		pPatch->ndxNext = g_FacePatches.Element( GetParentIndex() );
+		g_FacePatches[GetParentIndex()] = iPatch;
+		pPatch->faceNumber = GetParentIndex();
+	}
+	else
+	{
+		pPatch->ndxNext = g_Patches.InvalidIndex();
+		pPatch->faceNumber = pParentPatch->faceNumber;
+
+		// Attach to the parent patch.
+		if ( iChild == 0 )
+		{
+			pParentPatch->child1 = iPatch;
 		}
 		else
 		{
-			// Set next pointers (add to lists)
-			pPatch->ndxNext = facePatches.Element( m_iParent );
-			facePatches[m_iParent] = iPatch;
-
-			// Used data (for displacement surfaces)
-			pPatch->faceNumber = m_iParent;
-
-			// Set face mins/maxs -- calculated later (this is the face patch)
-			pPatch->face_mins.Init( 99999.0f, 99999.0f, 99999.0f );
-			pPatch->face_maxs.Init( -99999.0f, -99999.0f, -99999.0f );
+			pParentPatch->child2 = iPatch;
 		}
 	}
-}
 
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-bool CVRADDispColl::MakeParentPatch( int iPatch )
-{
-#if 0
-	// Debugging!
-	if ( !pDispFile )
+	// Initialize parent and children indices.
+	pPatch->child1 = g_Patches.InvalidIndex();
+	pPatch->child2 = g_Patches.InvalidIndex();
+	pPatch->ndxNextClusterChild = g_Patches.InvalidIndex();
+	pPatch->ndxNextParent = g_Patches.InvalidIndex();
+	pPatch->parent = iParentPatch;
+
+	// Get triangle edges.
+	Vector vecEdges[3];
+	vecEdges[0] = pPoints[1] - pPoints[0];
+	vecEdges[1] = pPoints[2] - pPoints[0];
+	vecEdges[2] = pPoints[2] - pPoints[1];
+
+	// Find the longest edge.
+//	float flEdgeLength = 0.0f;
+//	for ( int iEdge = 0; iEdge < 3; ++iEdge )
+//	{
+//		if ( flEdgeLength < vecEdges[iEdge].Length() )
+//		{
+//			flEdgeLength = vecEdges[iEdge].Length();
+//		}
+//	}
+
+	// Calculate the triangle normal and area.
+	Vector vecNormal = vecEdges[1].Cross( vecEdges[0] );
+	flArea = VectorNormalize( vecNormal );
+	flArea *= 0.5f;
+
+	// Initialize the patch scale.
+	pPatch->scale[0] = pPatch->scale[1] = 1.0f;
+
+	// Set the patch chop - minchop (that is what the minimum area is based on).
+	pPatch->chop = dispchop;
+
+	// Displacements are not sky!
+	pPatch->sky = false;
+
+	// Copy the winding.
+	Vector vecCenter( 0.0f, 0.0f, 0.0f );
+	pPatch->winding = AllocWinding( 3 );
+	pPatch->winding->numpoints = 3;
+	for ( int iPoint = 0; iPoint < 3; ++iPoint )
 	{
-		pDispFile = g_pFileSystem->Open( "vraddisp.txt", "w" );
-	}
-#endif
+		VectorCopy( pPoints[iPoint], pPatch->winding->p[iPoint] );
+		VectorAdd( pPoints[iPoint], vecCenter, vecCenter );
 
-	// Get the current patch
-	patch_t *pPatch = &patches[iPatch];
-	if ( pPatch )
-	{
-		int iStart = Nodes_CalcCount( m_nPower - 1 );
-		int iEnd = Nodes_CalcCount( m_nPower );
-
-		for ( int iNode = iStart; iNode < iEnd; ++iNode )
-		{
-			VNode_t *pVNode = &m_aVNodes[iNode];
-			if ( pVNode )
-			{
-				VectorAdd( pPatch->normal, pVNode->patchNormal, pPatch->normal );
-				pPatch->area += pVNode->patchArea;
-				
-				for ( int iAxis = 0; iAxis < 3; ++iAxis )
-				{
-					if( pPatch->face_mins[iAxis] > pVNode->patchBounds[0][iAxis] )
-					{
-						pPatch->face_mins[iAxis] = pVNode->patchBounds[0][iAxis];
-					}
-					
-					if( pPatch->face_maxs[iAxis] < pVNode->patchBounds[1][iAxis] )
-					{
-						pPatch->face_maxs[iAxis] = pVNode->patchBounds[1][iAxis];
-					}
-				}
-			}
-		}
-	
-#if 0
-		// Debugging!
-		g_pFileSystem->FPrintf( pDispFile, "Parent Patch %d\n", iPatch );
-		g_pFileSystem->FPrintf( pDispFile, "	Area: %lf\n", pPatch->area );
-#endif
-
-		// Set the patch bounds to face bounds (as this is the face patch)
-		pPatch->mins = pPatch->face_mins;
-		pPatch->maxs = pPatch->face_maxs;
-
-		VectorNormalize( pPatch->normal );
-		DispUVToSurfPoint( Vector2D( 0.5f, 0.5f ), pPatch->origin, 0.0f );		
-
-		// Fill in the patch plane into given the normal and origin (have to alloc one - lame!)
-		pPatch->plane = new dplane_t;
-		if ( pPatch->plane )
-		{
-			pPatch->plane->normal = pPatch->normal;
-			pPatch->plane->dist = pPatch->normal.Dot( pPatch->origin );
-		}
-
-		// Copy the patch origin to face_centroids for main patch
-		VectorCopy( pPatch->origin, face_centroids[m_iParent] );
-		VectorAdd( pPatch->origin, pPatch->normal, pPatch->origin );
-
-		// Approximate patch winding - used for debugging!
-		pPatch->winding = AllocWinding( 4 );
-		if ( pPatch->winding )
-		{
-			pPatch->winding->numpoints = 4;
-			for ( int iPoint = 0; iPoint < 4; ++iPoint )
-			{
-				GetParentPoint( iPoint, pPatch->winding->p[iPoint] );
-			}
-		}
-
-		// Get base face normal (stab direction is base face normal)
-		Vector vecFaceNormal;
-		GetParentFaceNormal( vecFaceNormal );
-		int nMajorAxis = 0;
-		float flMajorValue = vecFaceNormal[0];
-		if( vecFaceNormal[1] > flMajorValue ) { nMajorAxis = 1; flMajorValue = vecFaceNormal[1]; }
-		if( vecFaceNormal[2] > flMajorValue ) { nMajorAxis = 2; }
-		pPatch->normalMajorAxis = nMajorAxis;
-
-		// get the base light for the face
-		BaseLightForFace( &dfaces[m_iParent], pPatch->baselight, &pPatch->basearea, pPatch->reflectivity );
-
-		return true;
+		pPatch->indices[iPoint] = static_cast<short>( pIndices[iPoint] );
 	}
 
-	return false;
-}
+	// Set the origin and normal.
+	VectorScale( vecCenter, ( 1.0f / 3.0f ), vecCenter );
+	VectorCopy( vecCenter, pPatch->origin );
+	VectorCopy( vecNormal, pPatch->normal );
 
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-bool CVRADDispColl::MakeChildPatch( int iPatch )
-{
-	int	vNodeCount = 0;
-	int	iVNodes[256];
-
-	// Find all the nodes that reside behind all of the planes
-	GetNodesInPatch( iPatch, iVNodes, vNodeCount );
-	if( vNodeCount <= 0 )
+	// Create the plane.
+	pPatch->plane = new dplane_t;
+	if ( !pPatch->plane )
 		return false;
 
-	// Accumulate data into current patch
-	Vector2D uv( 0.0f, 0.0f );
-	Vector2D uvBounds[2];
-	uvBounds[0].Init( FLT_MAX, FLT_MAX );
-	uvBounds[1].Init( -FLT_MAX, -FLT_MAX );
+	VectorCopy( vecNormal, pPatch->plane->normal );
+	pPatch->plane->dist = vecNormal.Dot( pPoints[0] );
+	pPatch->plane->type = PlaneTypeForNormal( pPatch->plane->normal );
+	pPatch->planeDist = pPatch->plane->dist;
 
-	patch_t *pPatch = &patches.Element( iPatch );
-	if ( pPatch )
+	// Set the area.
+	pPatch->area = flArea;
+
+	// Calculate the mins/maxs.
+	Vector vecMin( FLT_MAX, FLT_MAX, FLT_MAX );
+	Vector vecMax( FLT_MIN, FLT_MIN, FLT_MIN );
+	for ( int iPoint = 0; iPoint < 3; ++iPoint )
 	{
-		for ( int iNode = 0; iNode < vNodeCount; iNode++ )
+		for ( int iAxis = 0; iAxis < 3; ++iAxis )
 		{
-			VNode_t *pVNode = &m_aVNodes[iVNodes[iNode]];
-			if ( pVNode )
-			{
-				VectorAdd( pPatch->normal, pVNode->patchNormal, pPatch->normal );
-				pPatch->area += pVNode->patchArea;
-				Vector2DAdd( uv, pVNode->patchOriginUV, uv );
-
-				if ( uvBounds[0].x > pVNode->patchOriginUV.x ) { uvBounds[0].x = pVNode->patchOriginUV.x; }
-				if ( uvBounds[0].y > pVNode->patchOriginUV.y ) { uvBounds[0].y = pVNode->patchOriginUV.y; }
-
-				if ( uvBounds[1].x < pVNode->patchOriginUV.x ) { uvBounds[1].x = pVNode->patchOriginUV.x; }
-				if ( uvBounds[1].y < pVNode->patchOriginUV.y ) { uvBounds[1].y = pVNode->patchOriginUV.y; }
-			}
+			vecMin[iAxis] = min( vecMin[iAxis], pPoints[iPoint][iAxis] );
+			vecMax[iAxis] = max( vecMax[iAxis], pPoints[iPoint][iAxis] );
 		}
-
-		VectorNormalize( pPatch->normal );
-
-		uv /= vNodeCount;
-		DispUVToSurfPoint( uv, pPatch->origin, 1.0f );		
-
-		for ( int i = 0; i < 2; i++ )
-		{
-			uvBounds[0][i] -= 0.05f;
-			uvBounds[1][i] += 0.05f;
-		}
-
-		// Approximate patch winding - used for debugging!
-		pPatch->winding = AllocWinding( 4 );
-		if ( pPatch->winding )
-		{
-			pPatch->winding->numpoints = 4;
-			DispUVToSurfPoint( uvBounds[0], pPatch->winding->p[0], 0.0f );
-			DispUVToSurfPoint( Vector2D( uvBounds[0].x, uvBounds[1].y ), pPatch->winding->p[1], 0.0f );
-			DispUVToSurfPoint( uvBounds[1], pPatch->winding->p[2], 0.0f );
-			DispUVToSurfPoint( Vector2D( uvBounds[1].x, uvBounds[0].y ), pPatch->winding->p[3], 0.0f );
-		}
-
-		// Get the parent patch
-		patch_t *pParentPatch = &patches.Element( pPatch->parent );
-		if( pParentPatch )
-		{
-			// make sure the area is down by at least a little above half the
-			// parent's area we will test at 30% (so we don't spin forever on 
-			// weird patch center sampling problems
-			float deltaArea = pParentPatch->area - pPatch->area;
-			if( deltaArea < ( pParentPatch->area * 0.3 ) )
-				return false;
-		}
-
-#if 0
-		// debugging!
-		g_pFileSystem->FPrintf( pDispFile, "Child Patch %d\n", iPatch );
-		g_pFileSystem->FPrintf( pDispFile, "	Parent %d\n", pPatch->parent );
-		g_pFileSystem->FPrintf( pDispFile, "	Area: %lf\n", pPatch->area );
-#endif
-
-		return true;
 	}
 
-	return false;
-}
+	VectorCopy( vecMin, pPatch->mins );
+	VectorCopy( vecMax, pPatch->maxs );
 
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-bool CVRADDispColl::MakePatch( int iPatch )
-{
-	patch_t *pPatch = &patches.Element( iPatch );
-	if( !pPatch )
-		return false;
-
-	// Special case: the parent patch accumulates from all the child nodes
-	if( pPatch->parent == patches.InvalidIndex() )
+	if ( !pParentPatch )
 	{
-		return MakeParentPatch( iPatch );
+		VectorCopy( vecMin, pPatch->face_mins );
+		VectorCopy( vecMax, pPatch->face_maxs );
 	}
-	// or, accumulate the data from the child nodes that reside behind the defined planes
 	else
 	{
-		return MakeChildPatch( iPatch );
+		VectorCopy( pParentPatch->face_mins, pPatch->face_mins );
+		VectorCopy( pParentPatch->face_maxs, pPatch->face_maxs );
 	}
+
+	// Check for bumpmap.
+	dface_t *pFace = dfaces + pPatch->faceNumber;
+	texinfo_t *pTexInfo = &texinfo[pFace->texinfo];
+	pPatch->needsBumpmap = pTexInfo->flags & SURF_BUMPLIGHT ? true : false;
+
+	// Misc...
+	pPatch->m_IterationKey = 0;
+
+	// Get the base light for the face.
+	if ( !pParentPatch )
+	{
+		BaseLightForFace( &g_pFaces[pPatch->faceNumber], pPatch->baselight, &pPatch->basearea, pPatch->reflectivity );
+	}
+	else
+	{
+		VectorCopy( pParentPatch->baselight, pPatch->baselight );
+		pPatch->basearea = pParentPatch->basearea;
+		pPatch->reflectivity = pParentPatch->reflectivity;
+	}
+
+	return true;
 }
 
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-void CVRADDispColl::GetNodesInPatch( int iPatch, int *pVNodes, int &vNodeCount )
+void CVRADDispColl::AddPolysForRayTrace( void )
 {
-	// Get the current patch
-	patch_t *pPatch = &patches.Element( iPatch );
-	if ( !pPatch )
+	if ( !( m_nContents & MASK_OPAQUE ) )
 		return;
 
-	// Get leaf indices (last level in tree)
-	int iStart = Nodes_CalcCount( m_nPower - 1 );
-	int iEnd = Nodes_CalcCount( m_nPower );
-
-	for ( int iNode = iStart; iNode < iEnd; ++iNode )
+	for ( int ndxTri = 0; ndxTri < m_aTris.Size(); ndxTri++ )
 	{
-		VNode_t *pVNode = &m_aVNodes[iNode];
-		if( !pVNode )
-			continue;
+		CDispCollTri *tri = m_aTris.Base() + ndxTri;
+		int v[3];
+		for ( int ndxv = 0; ndxv < 3; ndxv++ )
+			v[ndxv] = tri->GetVert(ndxv);
 
-		bool bInside = true;
-		for ( int iAxis = 0; iAxis < 3 && bInside; ++iAxis )
-		{
-			for ( int iSide = -1; iSide < 2; iSide += 2 )
-			{
-				float flDist;
-				if( iSide == -1 )
-				{
-					flDist = -pVNode->patchOrigin[iAxis] + pPatch->mins[iAxis];
-				}
-				else
-				{
-					flDist = pVNode->patchOrigin[iAxis] - pPatch->maxs[iAxis];
-				}
-
-				if( flDist > 0.0f )
-				{
-					bInside = false;
-					break;
-				}
-			}
-		}
-
-		if( bInside )
-		{
-			pVNodes[vNodeCount] = iNode;
-			vNodeCount++;
-		}
+		Vector fullCoverage;
+		fullCoverage.x = 1.0f;
+		g_RtEnv.AddTriangle( TRACE_ID_OPAQUE, m_aVerts[v[0]], m_aVerts[v[1]], m_aVerts[v[2]], fullCoverage );
 	}
 }

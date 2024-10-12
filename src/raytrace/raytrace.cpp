@@ -423,7 +423,7 @@ void RayTracingEnvironment::Trace4Rays(const FourRays &rays, fltx4 TMin, fltx4 T
 				MulSIMD(
 					SubSIMD(ReplicateX4(CurNode->SplittingPlaneValue),
 							   rays.origin[split_plane_number]),OneOverRayDir[split_plane_number]);
-			fltx4 active=CmpLeSIMD(TMin,TMax);			// mask of which rays are active
+			active=CmpLeSIMD(TMin,TMax);			// mask of which rays are active
 
 			// now, decide how to traverse children. can either do front,back, or do front and push
 			// back.

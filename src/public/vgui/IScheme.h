@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -13,9 +13,10 @@
 #endif
 
 #include <vgui/VGUI.h>
-#include "interface.h"
+#include "tier1/interface.h"
 
 class Color;
+class KeyValues;
 
 namespace vgui
 {
@@ -47,6 +48,21 @@ public:
 
 	// colors
 	virtual Color GetColor(const char *colorName, Color defaultColor) = 0;
+	
+	// Get the number of borders
+	virtual int GetBorderCount() const = 0;
+
+	// Get the border at the given index
+	virtual IBorder *GetBorderAtIndex( int iIndex ) = 0;
+
+	// Get the number of fonts
+	virtual int GetFontCount() const = 0;
+
+	// Get the font at the given index
+	virtual HFont GetFontAtIndex( int iIndex ) = 0;	
+
+	// Get color data
+	virtual const KeyValues *GetColorData() const = 0;
 };
 
 
@@ -87,8 +103,19 @@ public:
 
 	// gets the proportional coordinates for doing screen-size independant panel layouts
 	// use these for font, image and panel size scaling (they all use the pixel height of the display for scaling)
-	virtual int GetProportionalScaledValue(int normalizedValue) = 0;
+	virtual int GetProportionalScaledValue( int normalizedValue) = 0;
 	virtual int GetProportionalNormalizedValue(int scaledValue) = 0;
+
+	// loads a scheme from a file
+	// first scheme loaded becomes the default scheme, and all subsequent loaded scheme are derivitives of that
+	virtual HScheme LoadSchemeFromFileEx( VPANEL sizingPanel, const char *fileName, const char *tag) = 0;
+	// gets the proportional coordinates for doing screen-size independant panel layouts
+	// use these for font, image and panel size scaling (they all use the pixel height of the display for scaling)
+	virtual int GetProportionalScaledValueEx( HScheme scheme, int normalizedValue ) = 0;
+	virtual int GetProportionalNormalizedValueEx( HScheme scheme, int scaledValue ) = 0;
+
+	// Returns true if image evicted, false otherwise
+	virtual bool DeleteImage( const char *pImageName ) = 0;
 };
 
 #define VGUI_SCHEME_INTERFACE_VERSION "VGUI_Scheme010"

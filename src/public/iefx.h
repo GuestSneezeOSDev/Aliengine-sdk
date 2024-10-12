@@ -1,10 +1,10 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //
-//=============================================================================//
+//===========================================================================//
 
 #if !defined( IEFX_H )
 #define IEFX_H
@@ -13,7 +13,7 @@
 #endif
 
 #include "interface.h"
-#include "vector.h"
+#include "mathlib/vector.h"
 
 struct model_t;
 struct dlight_t;
@@ -24,7 +24,7 @@ class IMaterial;
 //-----------------------------------------------------------------------------
 // Purpose: Exposes effects api to client .dll
 //-----------------------------------------------------------------------------
-class IVEfx
+abstract_class IVEfx
 {
 public:
 	// Retrieve decal texture index from decal by name
@@ -52,6 +52,12 @@ public:
 
 	// Get a list of the currently-active dynamic lights.
 	virtual int CL_GetActiveDLights( dlight_t *pList[MAX_DLIGHTS] ) = 0;
+
+	// Retrieve decal texture name from decal by index
+	virtual	const char *Draw_DecalNameFromIndex( int nIndex ) = 0;
+
+	// Given an elight key, find it. Does not search ordinary dlights. May return NULL.
+	virtual dlight_t   *GetElightByKey( int key ) = 0;
 };
 
 #define VENGINE_EFFECTS_INTERFACE_VERSION "VEngineEffects001"

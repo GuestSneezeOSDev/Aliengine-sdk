@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -15,7 +15,9 @@ class CPhysCollide;
 
 struct vcollide_t
 {
-	int		solidCount;
+	unsigned short solidCount : 15;
+	unsigned short isPacked : 1;
+	unsigned short descSize;
 	// VPhysicsSolids
 	CPhysCollide	**solids;
 	char			*pKeyValues;

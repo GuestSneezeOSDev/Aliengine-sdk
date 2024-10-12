@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -30,12 +30,13 @@ public:
     void SetURL(const char *pszURL);
 
 protected:
-	virtual void Paint();
 	virtual void OnMousePressed(MouseCode code);
 	virtual void ApplySettings( KeyValues *inResourceData );
 	virtual void GetSettings( KeyValues *outResourceData );
 	virtual void ApplySchemeSettings(IScheme *pScheme);
 	virtual const char *GetDescription( void );
+
+	const char *GetURL( void ) { return m_pszURL; }
 
 private:
     char    *m_pszURL;

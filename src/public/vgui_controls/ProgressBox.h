@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -46,6 +46,9 @@ public:
 
 	// updates progress bar, range [0, 1]
 	virtual void SetProgress(float progress);
+
+	// sets the info text
+	virtual void SetText(const char *text);
 
 	// toggles visibility of the close box.
 	virtual void SetCancelButtonVisible(bool state);

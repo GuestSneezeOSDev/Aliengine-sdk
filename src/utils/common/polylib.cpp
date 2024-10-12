@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -8,7 +8,7 @@
 //=============================================================================//
 
 #include "cmdlib.h"
-#include "mathlib.h"
+#include "mathlib/mathlib.h"
 #include "polylib.h"
 #include "worldsize.h"
 #include "threads.h"
@@ -221,6 +221,8 @@ vec_t WindingAreaAndBalancePoint( winding_t *w, Vector &center )
 	vec_t	total;
 
 	VectorCopy (vec3_origin, center);
+	if ( !w )
+		return 0.0f;
 
 	total = 0;
 	for (i=2 ; i<w->numpoints ; i++)

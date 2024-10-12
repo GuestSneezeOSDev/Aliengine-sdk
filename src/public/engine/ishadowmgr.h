@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,7 +14,7 @@
 #endif
 
 #include "interface.h"
-#include "vmatrix.h"
+#include "mathlib/vmatrix.h"
 
 
 //-----------------------------------------------------------------------------
@@ -26,6 +26,8 @@ class Vector;
 class Vector2D;
 struct model_t;
 typedef unsigned short ModelInstanceHandle_t;
+class IClientRenderable;
+class ITexture;
 
 // change this when the new version is incompatable with the old
 #define ENGINE_SHADOWMGR_INTERFACE_VERSION	"VEngineShadowMgr002"
@@ -68,10 +70,10 @@ enum
 //-----------------------------------------------------------------------------
 enum ShadowCreateFlags_t
 {
-	SHADOW_CACHE_VERTS = ( 1 << 0 ),
-	SHADOW_FLASHLIGHT = ( 1 << 1 ),
+	SHADOW_CACHE_VERTS =  ( 1 << 0 ),
+	SHADOW_FLASHLIGHT =   ( 1 << 1 ),
 
-	SHADOW_LAST_FLAG = SHADOW_FLASHLIGHT
+	SHADOW_LAST_FLAG = SHADOW_FLASHLIGHT,
 };
 
 
@@ -98,7 +100,7 @@ struct FlashlightState_t;
 //-----------------------------------------------------------------------------
 // The engine's interface to the shadow manager
 //-----------------------------------------------------------------------------
-class IShadowMgr
+abstract_class IShadowMgr
 {
 public:
 	// Create, destroy shadows (see ShadowCreateFlags_t for creationFlags)
@@ -131,11 +133,12 @@ public:
 	// the shadow size measured in the space of the shadow matrix; the
 	// shadow goes from +/- size.x/2 along the x axis of the shadow matrix
 	// and +/- size.y/2 along the y axis of the shadow matrix.
-	virtual void ProjectShadow( ShadowHandle_t handle, const Vector& origin,
-		const Vector& projectionDir, const VMatrix &worldToShadow, const Vector2D &size,
-		float maxDistance, float falloffOffset, float falloffAmount, const Vector &vecCasterOrigin ) = 0;
+	virtual void ProjectShadow( ShadowHandle_t handle, const Vector &origin, 
+		const Vector& projectionDir, const VMatrix& worldToShadow, const Vector2D& size,
+		int nLeafCount, const int *pLeafList,
+		float maxHeight, float falloffOffset, float falloffAmount, const Vector &vecCasterOrigin ) = 0;
 
-	virtual void ProjectFlashlight( ShadowHandle_t handle, const VMatrix &worldToShadow ) = 0;
+	virtual void ProjectFlashlight( ShadowHandle_t handle, const VMatrix &worldToShadow, int nLeafCount, const int *pLeafList ) = 0;
 
 	// Gets at information about a particular shadow
 	virtual const ShadowInfo_t &GetInfo( ShadowHandle_t handle ) = 0;
@@ -169,6 +172,17 @@ public:
 
 	// Update the state for a flashlight.
 	virtual void UpdateFlashlightState( ShadowHandle_t shadowHandle, const FlashlightState_t &lightState ) = 0;
+
+	virtual void DrawFlashlightDepthTexture( ) = 0;
+
+	virtual void AddFlashlightRenderable( ShadowHandle_t shadow, IClientRenderable *pRenderable ) = 0;
+	virtual ShadowHandle_t CreateShadowEx( IMaterial* pMaterial, IMaterial* pModelMaterial, void* pBindProxy, int creationFlags ) = 0;
+
+	virtual void SetFlashlightDepthTexture( ShadowHandle_t shadowHandle, ITexture *pFlashlightDepthTexture, unsigned char ucShadowStencilBit ) = 0;
+
+	virtual const FlashlightState_t &GetFlashlightState( ShadowHandle_t handle ) = 0;
+
+	virtual void SetFlashlightRenderState( ShadowHandle_t handle ) = 0;
 };
 
 

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -69,7 +69,7 @@ int CHardwareMatrixState::FindLocalLRUIndex( void )
 {
 	int oldestLRUCounter = INT_MAX;
 	int i;
-	int oldestID;
+	int oldestID = 0;
 
 	for( i = 0; i < m_NumMatrices; i++ )
 	{

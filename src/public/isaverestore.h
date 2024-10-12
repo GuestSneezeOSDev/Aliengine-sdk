@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -10,7 +10,7 @@
 
 #include "string_t.h"
 #include "datamap.h"
-#include "vmatrix.h"
+#include "mathlib/vmatrix.h"
 
 #if defined( _WIN32 )
 #pragma once
@@ -57,7 +57,7 @@ const int SIZE_BLOCK_NAME_BUF = 31 + 1;
 
 //-------------------------------------
 
-class ISaveRestoreBlockHandler
+abstract_class ISaveRestoreBlockHandler
 {
 public:
 	virtual const char *GetBlockName() = 0;
@@ -75,7 +75,7 @@ public:
 
 //-------------------------------------
 
-class ISaveRestoreBlockSet : public ISaveRestoreBlockHandler
+abstract_class ISaveRestoreBlockSet : public ISaveRestoreBlockHandler
 {
 public:
 	virtual void AddBlockHandler( ISaveRestoreBlockHandler *pHandler ) = 0;
@@ -87,7 +87,7 @@ extern ISaveRestoreBlockSet *g_pGameSaveRestoreBlockSet;
 
 //-------------------------------------
 
-class CDefSaveRestoreBlockHandler : public ISaveRestoreBlockHandler
+abstract_class CDefSaveRestoreBlockHandler : public ISaveRestoreBlockHandler
 {
 	virtual const char *GetBlockName() = 0;
 
@@ -108,7 +108,7 @@ class CDefSaveRestoreBlockHandler : public ISaveRestoreBlockHandler
 //
 //-----------------------------------------------------------------------------
 
-class ISave
+abstract_class ISave
 {
 public:
 
@@ -116,6 +116,9 @@ public:
 	// Logging
 	virtual void	StartLogging( const char *pszLogName ) = 0;
 	virtual void	EndLogging( void ) = 0;
+
+	//---------------------------------
+	virtual bool	IsAsync() = 0;
 
 	//---------------------------------
 
@@ -152,6 +155,7 @@ public:
 	
 	virtual void	WriteShort( const short *value, int count = 1 ) = 0;
 	virtual void	WriteInt( const int *value, int count = 1 ) = 0;		// Save an int
+	inline void		WriteInt( const unsigned *value, int count = 1 ) { WriteInt( (int *)value, count );	}
 	virtual void	WriteBool( const bool *value, int count = 1 ) = 0;		// Save a bool
 	virtual void	WriteFloat( const float *value, int count = 1 ) = 0;	// Save a float
 	virtual void	WriteData( const char *pdata, int size ) = 0;		// Save a binary data block
@@ -184,7 +188,7 @@ public:
 	virtual void	WriteTick( const char *pname, const int *value, int count = 1 ) = 0;	// Save a tick (timevalue)
 	virtual void	WritePositionVector( const char *pname, const Vector &value ) = 0;		// Offset for landmark if necessary
 	virtual void	WritePositionVector( const char *pname, const Vector *value, int count = 1 ) = 0;	// array of pos vectors
-	virtual void	WriteFunction( datamap_t *pMap, const char *pname, const int *value, int count = 1 ) = 0; // Save a function pointer
+	virtual void	WriteFunction( datamap_t *pMap, const char *pname, inputfunc_t **value, int count = 1 ) = 0; // Save a function pointer
 
 	virtual void	WriteTime( const float *value, int count = 1 ) = 0;	// Save a float (timevalue)
 	virtual void	WriteTick( const int *value, int count = 1 ) = 0;	// Save a tick (timevalue)
@@ -213,7 +217,7 @@ protected:
 //
 //-----------------------------------------------------------------------------
 
-class IRestore
+abstract_class IRestore
 {
 public:
 
@@ -261,6 +265,7 @@ public:
 	virtual short	ReadShort( void ) = 0;
 	virtual int		ReadShort( short *pValue, int count = 1, int nBytesAvailable = 0 ) = 0;
 	virtual int		ReadInt( int *pValue, int count = 1, int nBytesAvailable = 0 ) = 0;
+	inline  int		ReadInt( unsigned *pValue, int count = 1, int nBytesAvailable = 0 ) { return ReadInt( (int *)pValue, count, nBytesAvailable ); }
 	virtual int		ReadInt( void ) = 0;
 	virtual int		ReadBool( bool *pValue, int count = 1, int nBytesAvailable = 0 ) = 0;
 	virtual int		ReadFloat( float *pValue, int count = 1, int nBytesAvailable = 0 ) = 0;
@@ -280,7 +285,7 @@ public:
 	virtual int		ReadTick( int *pValue, int count = 1, int nBytesAvailable = 0 ) = 0;
 	virtual int		ReadPositionVector( Vector *pValue ) = 0;
 	virtual int		ReadPositionVector( Vector *pValue, int count = 1, int nBytesAvailable = 0 ) = 0;
-	virtual int		ReadFunction( datamap_t *pMap, void **pValue, int count = 1, int nBytesAvailable = 0) = 0;
+	virtual int		ReadFunction( datamap_t *pMap, inputfunc_t **pValue, int count = 1, int nBytesAvailable = 0) = 0;
 	
 	virtual int		ReadEntityPtr( CBaseEntity **ppEntity, int count = 1, int nBytesAvailable = 0 ) = 0;
 	virtual int		ReadEdictPtr( edict_t **ppEdict, int count = 1, int nBytesAvailable = 0 ) = 0;
@@ -316,7 +321,7 @@ struct SaveRestoreFieldInfo_t
 	typedescription_t *pTypeDesc;
 };
 
-class ISaveRestoreOps
+abstract_class ISaveRestoreOps
 {
 public:
 	// save data type interface

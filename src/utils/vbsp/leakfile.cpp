@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -7,6 +7,7 @@
 //=============================================================================//
 
 #include "vbsp.h"
+#include "color.h"
 
 /*
 ==============================================================================
@@ -53,14 +54,13 @@ void LeakFile (tree_t *tree)
 	node = &tree->outside_node;
 	while (node->occupied > 1)
 	{
-		int			next;
-		portal_t	*p, *nextportal;
-		node_t		*nextnode;
-		int			s;
+		portal_t	*nextportal = NULL;
+		node_t		*nextnode = NULL;
+		int			s = 0;
 
 		// find the best portal exit
-		next = node->occupied;
-		for (p=node->portals ; p ; p = p->next[!s])
+		int next = node->occupied;
+		for (portal_t *p=node->portals ; p ; p = p->next[!s])
 		{
 			s = (p->nodes[0] == node);
 			if (p->nodes[s]->occupied
@@ -88,7 +88,8 @@ void LeakFile (tree_t *tree)
 
 	// Emit a leak warning.
 	const char *cl = ValueForKey (node->occupant, "classname");
-	Warning("Entity %s (%.2f %.2f %.2f) leaked!\n", cl, origin[0], origin[1], origin[2] );
+	Color red(255,0,0,255);
+	ColorSpewMessage( SPEW_MESSAGE, &red, "Entity %s (%.2f %.2f %.2f) leaked!\n", cl, origin[0], origin[1], origin[2] );
 }
 
 void AreaportalLeakFile( tree_t *tree, portal_t *pStartPortal, portal_t *pEndPortal, node_t *pStart )
@@ -123,14 +124,13 @@ void AreaportalLeakFile( tree_t *tree, portal_t *pStartPortal, portal_t *pEndPor
 	node = pStart;
 	while (node->occupied >= 1)
 	{
-		int			next;
-		portal_t	*p, *nextportal;
+		portal_t	*nextportal = NULL;
 		node_t		*nextnode = NULL;
-		int			s;
+		int			s = 0;
 
 		// find the best portal exit
-		next = node->occupied;
-		for (p=node->portals ; p ; p = p->next[!s])
+		int next = node->occupied;
+		for (portal_t *p=node->portals ; p ; p = p->next[!s])
 		{
 			s = (p->nodes[0] == node);
 			if (p->nodes[s]->occupied
@@ -163,4 +163,6 @@ void AreaportalLeakFile( tree_t *tree, portal_t *pStartPortal, portal_t *pEndPor
 
 	fclose (linefile);
 	Warning( "Wrote %s\n", filename );
+	Color red(255,0,0,255);
+	ColorSpewMessage( SPEW_MESSAGE, &red, "Areaportal leak ! File: %s ", filename );
 }

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -15,7 +15,8 @@
 #define RADIAL_H
 #pragma once
 
-#include "bumpvects.h"
+#include "mathlib/bumpvects.h"
+#include "mathlib/ssemath.h"
 #include "lightmap.h"
 
 #define RADIALDIST2	2 // (1.25*1.25+1.25*1.25)
@@ -39,12 +40,15 @@ typedef struct radial_s
 	lightinfo_t l;
 	int w, h;
 	float weight[SINGLEMAP];
-	Vector light[NUM_BUMP_VECTS + 1][SINGLEMAP];
+	LightingValue_t light[NUM_BUMP_VECTS + 1][SINGLEMAP];
 } radial_t;
 
 
 void WorldToLuxelSpace( lightinfo_t const *l, Vector const &world, Vector2D &coord );
 void LuxelSpaceToWorld( lightinfo_t const *l, float s, float t, Vector &world );
+
+void WorldToLuxelSpace( lightinfo_t const *l, FourVectors const &world, FourVectors &coord );
+void LuxelSpaceToWorld( lightinfo_t const *l, fltx4 s, fltx4 t, FourVectors &world );
 
 void AddDirectToRadial( radial_t *rad, 
 				  Vector const &pnt, 

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -10,6 +10,8 @@
 //
 // $NoKeywords: $
 //=============================================================================//
+
+#if !defined(_STATIC_LINKED) || defined(_SHARED_LIB)
 
 #include "crtmemdebug.h"
 #ifdef USECRTMEMDEBUG
@@ -38,3 +40,5 @@ void InitCRTMemDebug( void )
 	_CRTDBG_DELAY_FREE_MEM_DF );
 #endif
 }
+
+#endif // !_STATIC_LINKED || _SHARED_LIB

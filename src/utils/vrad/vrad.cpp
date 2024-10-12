@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -11,14 +11,18 @@
 #include "vrad.h"
 #include "physdll.h"
 #include "lightmap.h"
-#include "vstdlib/strtools.h"
+#include "tier1/strtools.h"
 #include "vmpi.h"
 #include "macro_texture.h"
 #include "vmpi_tools_shared.h"
 #include "leaf_ambient_lighting.h"
+#include "tools_minidump.h"
+#include "loadcmdline.h"
+#include "byteswap.h"
 
-#define ALLOWOPTIONS (0 || _DEBUG)
+#define ALLOWDEBUGOPTIONS (0 || _DEBUG)
 
+static FileHandle_t pFpTrans = NULL;
 
 /*
 
@@ -29,16 +33,8 @@ every surface must be divided into at least two patches each axis
 
 */
 
-//patch_t		patches[MAX_PATCHES];
-//unsigned		num_patches;
-//patch_t		*face_patches[MAX_MAP_FACES];
-//patch_t		*face_parents[MAX_MAP_FACES];
-//patch_t		*cluster_children[MAX_MAP_CLUSTERS];
-//Vector		emitlight[MAX_PATCHES];
-//Vector		addlight[MAX_PATCHES];
-
-CUtlVector<patch_t>		patches;			
-CUtlVector<int>			facePatches;		// constains all patches, children first
+CUtlVector<CPatch>		g_Patches;			
+CUtlVector<int>			g_FacePatches;		// contains all patches, children first
 CUtlVector<int>			faceParents;		// contains only root patches, use next parent to iterate
 CUtlVector<int>			clusterChildren;
 CUtlVector<Vector>		emitlight;
@@ -54,13 +50,18 @@ int			fakeplanes;
 
 unsigned	numbounce = 100; // 25; /* Originally this was 8 */
 
-float		maxchop = 64;
-float		minchop = 64;
-qboolean	dumppatches;
+float		maxchop = 4; // coarsest allowed number of luxel widths for a patch
+float		minchop = 4; // "-chop" tightest number of luxel widths for a patch, used on edges
+float		dispchop = 8.0f;	// number of luxel widths for a patch
+float		g_MaxDispPatchRadius = 1500.0f;			// Maximum radius allowed for displacement patches
+qboolean	g_bDumpPatches;
 bool	    bDumpNormals = false;
+bool		g_bDumpRtEnv = false;
 bool		bRed2Black = true;
+bool		g_bFastAmbient = false;
+bool        g_bNoSkyRecurse = false;
+bool		g_bDumpPropLightmaps = false;
 
-int			TestLine (Vector& start, Vector& stop);
 
 int			junk;
 
@@ -70,7 +71,8 @@ float		lightscale = 1.0;
 float		dlight_threshold = 0.1;  // was DIRECT_LIGHT constant
 
 char		source[MAX_PATH] = "";
-char		platformPath[MAX_PATH] = "";
+
+char		level_name[MAX_PATH] = "";	// map filename, without extension or path info
 
 char		global_lights[MAX_PATH] = "";
 char		designer_lights[MAX_PATH] = "";
@@ -82,6 +84,15 @@ char		incrementfile[_MAX_PATH] = "";
 IIncremental *g_pIncremental = 0;
 bool		g_bInterrupt = false;	// Wsed with background lighting in WC. Tells VRAD
 									// to stop lighting.
+float g_SunAngularExtent=0.0;
+
+float g_flSkySampleScale = 1.0;
+
+bool g_bLargeDispSampleRadius = false;
+
+bool g_bOnlyStaticProps = false;
+bool g_bShowStaticPropNormals = false;
+
 
 float		gamma = 0.5;
 float		indirect_sun = 1.0;
@@ -104,10 +115,22 @@ qboolean	g_bLowPriority = false;
 qboolean	g_bLogHashData = false;
 bool		g_bNoDetailLighting = false;
 double		g_flStartTime;
+bool		g_bStaticPropLighting = false;
+bool        g_bStaticPropPolys = false;
+bool        g_bTextureShadows = false;
+bool        g_bDisablePropSelfShadowing = false;
+
 
 CUtlVector<byte> g_FacesVisibleToLights;
 
+RayTracingEnvironment g_RtEnv;
 
+dface_t *g_pFaces=0;
+
+// this is a list of material names used on static props which shouldn't cast shadows.  a
+// sequential search is used since we allow substring matches. its not time critical, and this
+// functionality is a stopgap until vrad starts reading .vmt files.
+CUtlVector<char const *> g_NonShadowCastingMaterialStrings;
 /*
 ===================================================================
 
@@ -166,67 +189,105 @@ ReadLightFile
 */
 void ReadLightFile (char *filename)
 {
-	char	scan[128];
-	short	argCnt;
-	int		j, file_texlights = 0;
+	char	buf[1024];
+	int file_texlights = 0;
 
 	FileHandle_t f = g_pFileSystem->Open( filename, "r" );
 	if (!f)
-		Error ("ERROR: Couldn't open texlight file %s", filename);
-	else
-		Msg("[Reading texlights from '%s']\n", filename);
-
-	while ( CmdLib_FGets(scan, sizeof(scan), f) )
 	{
-		char	szTexlight[256];
-		Vector	value;
-		if (num_texlights == MAX_TEXLIGHTS)
-			Error ("MAX_TEXLIGHTS");
+		Warning("Warning: Couldn't open texlight file %s.\n", filename);
+		return;
+	}
 
-		argCnt = sscanf (scan, "%s ",szTexlight );
-		
-		if( argCnt != 1 )
+	Msg("[Reading texlights from '%s']\n", filename);
+	while ( CmdLib_FGets( buf, sizeof( buf ), f ) )
+	{
+		// check ldr/hdr
+		char * scan = buf;
+		if ( !strnicmp( "hdr:", scan, 4) )
 		{
-			if (strlen( scan ) > 4)
-				Msg("ignoring bad texlight '%s' in %s", scan, filename );
-			continue;
-		}
-
-		LightForString( scan + strlen( szTexlight ) + 1, value );
-
-		for( j=0; j<num_texlights; j++ )
-		{
-			if ( strcmp( texlights[j].name, szTexlight ) == 0 )
+			scan += 4;
+			if ( ! g_bHDR )
 			{
-				if ( strcmp(texlights[j].filename, filename ) == 0 )
-				{
-					Msg( "ERROR\a: Duplication of '%s' in file '%s'!\n",
-							texlights[j].name, texlights[j].filename );
-				} 
-				else if ( texlights[j].value[0] != value[0]
-				  || texlights[j].value[1] != value[1]
-				  || texlights[j].value[2] != value[2] )
-				{
-					Warning("Warning: Overriding '%s' from '%s' with '%s'!\n", 
-							texlights[j].name, texlights[j].filename, filename );
-				}
-				else
-				{
-					Warning("Warning: Redundant '%s' def in '%s' AND '%s'!\n", 
-							texlights[j].name, texlights[j].filename, filename );
-				}
-				break;
+				continue;
 			}
 		}
-		strcpy( texlights[j].name, szTexlight );
-		VectorCopy( value, texlights[j].value );
-		texlights[j].filename = filename;
-		file_texlights++;
+		if ( !strnicmp( "ldr:", scan, 4) )
+		{
+			scan += 4;
+			if (  g_bHDR )
+			{
+				continue;
+			}
+		}
 
-		num_texlights = max( num_texlights, j+1 );
-	}		
-	
-	qprintf ("[%i texlights parsed from '%s']\n\n", file_texlights, filename);
+		scan += strspn( scan, " \t" );
+		char NoShadName[1024];
+		if ( sscanf(scan,"noshadow %s",NoShadName)==1)
+		{
+			char * dot = strchr( NoShadName, '.' );
+			if ( dot )										// if they specify .vmt, kill it
+				* dot = 0;
+			//printf("add %s as a non shadow casting material\n",NoShadName);
+			g_NonShadowCastingMaterialStrings.AddToTail( strdup( NoShadName ));
+		}
+		else if ( sscanf( scan, "forcetextureshadow %s", NoShadName ) == 1 )
+		{
+			//printf("add %s as a non shadow casting material\n",NoShadName);
+			ForceTextureShadowsOnModel( NoShadName );
+		}
+		else
+		{
+			char szTexlight[256];
+			Vector value;
+			if ( num_texlights == MAX_TEXLIGHTS )
+				Error ("Too many texlights, max = %d", MAX_TEXLIGHTS);
+
+			int argCnt = sscanf (scan, "%s ",szTexlight );
+
+			if( argCnt != 1 )
+			{
+				if ( strlen( scan ) > 4 )
+					Msg( "ignoring bad texlight '%s' in %s", scan, filename );
+				continue;
+			}
+
+			LightForString( scan + strlen( szTexlight ) + 1, value );
+
+			int j = 0;
+			for( j; j < num_texlights; j ++ )
+			{
+				if ( strcmp( texlights[j].name, szTexlight ) == 0 )
+				{
+					if ( strcmp( texlights[j].filename, filename ) == 0 )
+					{
+						Msg( "ERROR\a: Duplication of '%s' in file '%s'!\n",
+							 texlights[j].name, texlights[j].filename );
+					}
+					else if ( texlights[j].value[0] != value[0]
+							  || texlights[j].value[1] != value[1]
+							  || texlights[j].value[2] != value[2] )
+					{
+						Warning( "Warning: Overriding '%s' from '%s' with '%s'!\n",
+								texlights[j].name, texlights[j].filename, filename );
+					}
+					else
+					{
+						Warning( "Warning: Redundant '%s' def in '%s' AND '%s'!\n",
+								 texlights[j].name, texlights[j].filename, filename );
+					}
+					break;
+				}
+			}
+			strcpy( texlights[j].name, szTexlight );
+			VectorCopy( value, texlights[j].value );
+			texlights[j].filename = filename;
+			file_texlights ++;
+			
+			num_texlights = max( num_texlights, j + 1 );
+		}
+	}
+	qprintf ( "[%i texlights parsed from '%s']\n\n", file_texlights, filename);
 	g_pFileSystem->Close( f );
 }
 
@@ -241,6 +302,43 @@ void LightForTexture( const char *name, Vector& result )
 	int		i;
 
 	result[ 0 ] = result[ 1 ] = result[ 2 ] = 0;
+
+	char baseFilename[ MAX_PATH ];
+
+	if ( Q_strncmp( "maps/", name, 5 ) == 0 )
+	{
+		// this might be a patch texture for cubemaps.  try to parse out the original filename.
+		if ( Q_strncmp( level_name, name + 5, Q_strlen( level_name ) ) == 0 )
+		{
+			const char *base = name + 5 + Q_strlen( level_name );
+			if ( *base == '/' )
+			{
+				++base; // step past the path separator
+
+				// now we've gotten rid of the 'maps/level_name/' part, so we're left with
+				// 'originalName_%d_%d_%d'.
+				strcpy( baseFilename, base );
+				bool foundSeparators = true;
+				for ( int i=0; i<3; ++i )
+				{
+					char *underscore = Q_strrchr( baseFilename, '_' );
+					if ( underscore && *underscore )
+					{
+						*underscore = '\0';
+					}
+					else
+					{
+						foundSeparators = false;
+					}
+				}
+
+				if ( foundSeparators )
+				{
+					name = baseFilename;
+				}
+			}
+		}
+	}
 
 	for (i=0 ; i<num_texlights ; i++)
 	{
@@ -403,9 +501,9 @@ MakePatchForFace
 float	totalarea;
 void MakePatchForFace (int fn, winding_t *w)
 {
-	dface_t     *f = dfaces + fn;
+	dface_t     *f = g_pFaces + fn;
 	float	    area;
-	patch_t		*patch;
+	CPatch		*patch;
 	Vector		centroid(0,0,0);
 	int			i, j;
 	texinfo_t	*tx;
@@ -434,27 +532,27 @@ void MakePatchForFace (int fn, winding_t *w)
 	totalarea += area;
 
 	// get a patch
-	int ndxPatch = patches.AddToTail();
-	patch = &patches[ndxPatch];
-	memset( patch, 0, sizeof( patch_t ) );
-	patch->ndxNext = patches.InvalidIndex();
-	patch->ndxNextParent = patches.InvalidIndex();
-	patch->ndxNextClusterChild = patches.InvalidIndex();
-	patch->child1 = patches.InvalidIndex();
-	patch->child2 = patches.InvalidIndex();
-	patch->parent = patches.InvalidIndex();
+	int ndxPatch = g_Patches.AddToTail();
+	patch = &g_Patches[ndxPatch];
+	memset( patch, 0, sizeof( CPatch ) );
+	patch->ndxNext = g_Patches.InvalidIndex();
+	patch->ndxNextParent = g_Patches.InvalidIndex();
+	patch->ndxNextClusterChild = g_Patches.InvalidIndex();
+	patch->child1 = g_Patches.InvalidIndex();
+	patch->child2 = g_Patches.InvalidIndex();
+	patch->parent = g_Patches.InvalidIndex();
 	patch->needsBumpmap = tx->flags & SURF_BUMPLIGHT ? true : false;
 
 	// link and save patch data
-	patch->ndxNext = facePatches.Element( fn );
-	facePatches[fn] = ndxPatch;
-//	patch->next = face_patches[fn];
-//	face_patches[fn] = patch;
+	patch->ndxNext = g_FacePatches.Element( fn );
+	g_FacePatches[fn] = ndxPatch;
+//	patch->next = face_g_Patches[fn];
+//	face_g_Patches[fn] = patch;
 
 	// compute a separate scale for chop - since the patch "scale" is the texture scale
 	// we want textures with higher resolution lighting to be chopped up more
 	float chopscale[2];
-	chopscale[0] = chopscale[1] = 1.0f;
+	chopscale[0] = chopscale[1] = 16.0f;
     if ( texscale )
     {
         // Compute the texture "scale" in s,t
@@ -472,9 +570,9 @@ void MakePatchForFace (int fn, winding_t *w)
 					tx->lightmapVecsLuxelsPerWorldUnits[i][j];
 			}
             patch->scale[i] = sqrt( patch->scale[i] );
-			chopscale[i] = sqrt( chopscale[i] ) * 16.0f;
+			chopscale[i] = sqrt( chopscale[i] );
         }
-    }
+	}
     else
 	{
 		patch->scale[0] = patch->scale[1] = 1.0f;
@@ -485,11 +583,9 @@ void MakePatchForFace (int fn, winding_t *w)
 	patch->sky = IsSky( f );
 
 	// chop scaled up lightmaps coarser
-	patch->chop = maxchop / ((chopscale[0]+chopscale[1])/2);
-	if (patch->chop < maxchop)
-	{
-		patch->chop = maxchop;
-	}
+	patch->luxscale = ((chopscale[0]+chopscale[1])/2);
+	patch->chop = maxchop;
+
 
 #ifdef STATIC_FOG
     patch->fog = FALSE;
@@ -524,7 +620,6 @@ void MakePatchForFace (int fn, winding_t *w)
 	VectorSubtract( patch->origin, face_offset[fn], face_centroids[fn] ); 
 
 	VectorCopy( patch->plane->normal, patch->normal );
-	VectorAdd (patch->origin, patch->normal, patch->origin);
 
 	WindingBounds (w, patch->face_mins, patch->face_maxs);
 	VectorCopy( patch->face_mins, patch->mins );
@@ -535,14 +630,14 @@ void MakePatchForFace (int fn, winding_t *w)
 	// Chop all texlights very fine.
 	if ( !VectorCompare( patch->baselight, vec3_origin ) )
 	{
-		patch->chop = do_extra ? minchop / 2 : minchop;
+		// patch->chop = do_extra ? maxchop / 2 : maxchop;
 		tx->flags |= SURF_LIGHT;
 	}
 
 	// get rid of do extra functionality on displacement surfaces
 	if( ValidDispFace( f ) )
 	{
-		patch->chop = minchop;
+		patch->chop = maxchop;
 	}
 
 	// FIXME: If we wanted to add a dependency from vrad to the material system,
@@ -620,7 +715,7 @@ void MakePatches (void)
 			fn = mod->firstface + j;
 			face_entity[fn] = ent;
 			VectorCopy (origin, face_offset[fn]);
-			f = &dfaces[fn];
+			f = &g_pFaces[fn];
 			if( f->dispinfo == -1 )
 			{
 	            w = WindingFromFace (f, origin );
@@ -652,9 +747,9 @@ SUBDIVIDE
 //-----------------------------------------------------------------------------
 // Purpose: does this surface take/emit light
 //-----------------------------------------------------------------------------
-bool PreventSubdivision( patch_t *patch )
+bool PreventSubdivision( CPatch *patch )
 {
-	dface_t *f = dfaces + patch->faceNumber;
+	dface_t *f = g_pFaces + patch->faceNumber;
 	texinfo_t *tx = &texinfo[f->texinfo];
 
 	if (tx->flags & SURF_NOCHOP)
@@ -672,46 +767,52 @@ bool PreventSubdivision( patch_t *patch )
 //-----------------------------------------------------------------------------
 int CreateChildPatch( int nParentIndex, winding_t *pWinding, float flArea, const Vector &vecCenter )
 {
-	int nChildIndex = patches.AddToTail();
+	int nChildIndex = g_Patches.AddToTail();
 
-	patch_t *child = &patches[nChildIndex];
-	patch_t *parent = &patches[nParentIndex];
+	CPatch *child = &g_Patches[nChildIndex];
+	CPatch *parent = &g_Patches[nParentIndex];
 
 	// copy all elements of parent patch to children
 	*child = *parent;
 
 	// Set up links
-	child->ndxNext = patches.InvalidIndex();
-	child->ndxNextParent = patches.InvalidIndex();
-	child->ndxNextClusterChild = patches.InvalidIndex();
-	child->child1 = patches.InvalidIndex();
-	child->child2 = patches.InvalidIndex();
+	child->ndxNext = g_Patches.InvalidIndex();
+	child->ndxNextParent = g_Patches.InvalidIndex();
+	child->ndxNextClusterChild = g_Patches.InvalidIndex();
+	child->child1 = g_Patches.InvalidIndex();
+	child->child2 = g_Patches.InvalidIndex();
 	child->parent = nParentIndex;
+	child->m_IterationKey = 0;
 
 	child->winding = pWinding;
 	child->area = flArea;
 
 	VectorCopy( vecCenter, child->origin );
-	if ( ValidDispFace( dfaces + child->faceNumber ) )
+	if ( ValidDispFace( g_pFaces + child->faceNumber ) )
 	{
 		// shouldn't get here anymore!!
 		Msg( "SubdividePatch: Error - Should not be here!\n" );
 		StaticDispMgr()->GetDispSurfNormal( child->faceNumber, child->origin, child->normal, true );
-		child->origin += child->normal;
 	}
 	else
 	{
 		GetPhongNormal( child->faceNumber, child->origin, child->normal );
-		child->origin += child->plane->normal;
 	}
 
 	child->planeDist = child->plane->dist;
 	WindingBounds(child->winding, child->mins, child->maxs);
 
-	// Subdivide patch even more if on the edge of the face; this is a hack!
+	if ( !VectorCompare( child->baselight, vec3_origin ) )
+	{
+		// don't check edges on surf lights
+		return nChildIndex;
+	}
+
+	// Subdivide patch towards minchop if on the edge of the face
 	Vector total;
-	VectorSubtract (child->maxs, child->mins, total);
-	if ( (total[0] < child->chop) && (total[1] < child->chop) && (total[2] < child->chop) )
+	VectorSubtract( child->maxs, child->mins, total );
+	VectorScale( total, child->luxscale, total );
+	if ( child->chop > minchop && (total[0] < child->chop) && (total[1] < child->chop) && (total[2] < child->chop) )
 	{
 		for ( int i=0; i<3; ++i )
 		{
@@ -742,7 +843,7 @@ void SubdividePatch( int ndxPatch )
 	bool	bSubdivide = false;
 
 	// get the current patch
-	patch_t *patch = &patches.Element( ndxPatch );
+	CPatch *patch = &g_Patches.Element( ndxPatch );
 	if ( !patch )
 		return;
 
@@ -755,6 +856,7 @@ void SubdividePatch( int ndxPatch )
 
 	// subdivide along the widest axis
 	VectorSubtract (patch->maxs, patch->mins, total);
+	VectorScale( total, patch->luxscale, total );
 	for (i=0 ; i<3 ; i++)
 	{
 		if ( total[i] > widest )
@@ -763,7 +865,7 @@ void SubdividePatch( int ndxPatch )
 			widest = total[i];
 		}
 
-		if ( (total[i] > patch->chop) && (total[i] > minchop) )
+		if ( (total[i] >= patch->chop) && (total[i] >= minchop) )
 		{
 			bSubdivide = true;
 		}
@@ -772,12 +874,12 @@ void SubdividePatch( int ndxPatch )
 	if ((!bSubdivide) && widest_axis != -1)
 	{
 		// make more square
-		if (total[widest_axis] > total[(widest_axis + 1) % 3] * 3 && total[widest_axis] > total[(widest_axis + 2) % 3] * 3)
+		if (total[widest_axis] > total[(widest_axis + 1) % 3] * 2 && total[widest_axis] > total[(widest_axis + 2) % 3] * 2)
 		{
 			if (patch->chop > minchop)
 			{
 				bSubdivide = true;
-				patch->chop = patch->chop / 2;
+				patch->chop = max( minchop, patch->chop / 2 );
 			}
 		}
 	}
@@ -807,7 +909,7 @@ void SubdividePatch( int ndxPatch )
 	int ndxChild2Patch = CreateChildPatch( ndxPatch, o2, area2, center2 );
 
 	// FIXME: This could go into CreateChildPatch if child1, child2 were stored in the patch as child[0], child[1]
-	patch = &patches.Element( ndxPatch );
+	patch = &g_Patches.Element( ndxPatch );
 	patch->child1 = ndxChild1Patch;
 	patch->child2 = ndxChild2Patch;		
 
@@ -828,28 +930,28 @@ void SubdividePatches (void)
 	if (numbounce == 0)
 		return;
 
-	unsigned int uiPatchCount = patches.Size();
+	unsigned int uiPatchCount = g_Patches.Size();
 	qprintf ("%i patches before subdivision\n", uiPatchCount);
 
 	for (i = 0; i < uiPatchCount; i++)
 	{
-		patch_t *pCur = &patches.Element( i );
+		CPatch *pCur = &g_Patches.Element( i );
 		pCur->planeDist = pCur->plane->dist;
 
 		pCur->ndxNextParent = faceParents.Element( pCur->faceNumber );
-		faceParents[pCur->faceNumber] = pCur - patches.Base();
+		faceParents[pCur->faceNumber] = pCur - g_Patches.Base();
 	}
 
 	for (i=0 ; i< uiPatchCount; i++)
 	{
-		patch_t *patch = &patches.Element( i );
+		CPatch *patch = &g_Patches.Element( i );
 		patch->parent = -1;
 		if ( PreventSubdivision(patch) )
 			continue;
 
 		if (!do_fast)
 		{
-			if( dfaces[patch->faceNumber].dispinfo == -1 )
+			if( g_pFaces[patch->faceNumber].dispinfo == -1 )
 			{
 				SubdividePatch( i );
 			}
@@ -863,21 +965,21 @@ void SubdividePatches (void)
 	// fixup next pointers
 	for (i = 0; i < (unsigned)numfaces; i++)
 	{
-		facePatches[i] = facePatches.InvalidIndex();
+		g_FacePatches[i] = g_FacePatches.InvalidIndex();
 	}
 
-	uiPatchCount = patches.Size();
+	uiPatchCount = g_Patches.Size();
 	for (i = 0; i < uiPatchCount; i++)
 	{
-		patch_t *pCur = &patches.Element( i );
-		pCur->ndxNext = facePatches.Element( pCur->faceNumber );
-		facePatches[pCur->faceNumber] = pCur - patches.Base();
+		CPatch *pCur = &g_Patches.Element( i );
+		pCur->ndxNext = g_FacePatches.Element( pCur->faceNumber );
+		g_FacePatches[pCur->faceNumber] = pCur - g_Patches.Base();
 
 #if 0
-		patch_t *prev;
-		prev = face_patches[patches[i].faceNumber];
-		patches[i].next = prev;
-		face_patches[patches[i].faceNumber] = &patches[i];
+		CPatch *prev;
+		prev = face_g_Patches[g_Patches[i].faceNumber];
+		g_Patches[i].next = prev;
+		face_g_Patches[g_Patches[i].faceNumber] = &g_Patches[i];
 #endif
 	}
 
@@ -891,19 +993,19 @@ void SubdividePatches (void)
 	// to sort per polygon.
 	for ( i = 0; i < uiPatchCount; i++ )
 	{
-		patches[i].clusterNumber = ClusterFromPoint( patches[i].origin );
+		g_Patches[i].clusterNumber = ClusterFromPoint( g_Patches[i].origin );
 
 		//
 		// test for point in solid space (can happen with detail and displacement surfaces)
 		//
-		if( patches[i].clusterNumber == -1 )
+		if( g_Patches[i].clusterNumber == -1 )
 		{
-			for( int j = 0; j < patches[i].winding->numpoints; j++ )
+			for( int j = 0; j < g_Patches[i].winding->numpoints; j++ )
 			{
-				int clusterNumber = ClusterFromPoint( patches[i].winding->p[j] );
+				int clusterNumber = ClusterFromPoint( g_Patches[i].winding->p[j] );
 				if( clusterNumber != -1 )
 				{
-					patches[i].clusterNumber = clusterNumber;
+					g_Patches[i].clusterNumber = clusterNumber;
 					break;
 				}
 			}
@@ -917,23 +1019,23 @@ void SubdividePatches (void)
 		i = uiPatchCount - num - 1;
 
 		// skip patches with children
-		patch_t *pCur = &patches.Element( i );
-		if( pCur->child1 == patches.InvalidIndex() )
+		CPatch *pCur = &g_Patches.Element( i );
+		if( pCur->child1 == g_Patches.InvalidIndex() )
 		{
 			if( pCur->clusterNumber != - 1 )
 			{
 				pCur->ndxNextClusterChild = clusterChildren.Element( pCur->clusterNumber );
-				clusterChildren[pCur->clusterNumber] = pCur - patches.Base();
+				clusterChildren[pCur->clusterNumber] = pCur - g_Patches.Base();
 			}
 		}
 
 #if 0
-		if (patches[i].child1 == patches.InvalidIndex() )
+		if (g_Patches[i].child1 == g_Patches.InvalidIndex() )
 		{
-			if( patches[i].clusterNumber != -1 )
+			if( g_Patches[i].clusterNumber != -1 )
 			{
-				patches[i].nextclusterchild = cluster_children[patches[i].clusterNumber];
-				cluster_children[patches[i].clusterNumber] = &patches[i];
+				g_Patches[i].nextclusterchild = cluster_children[g_Patches[i].clusterNumber];
+				cluster_children[g_Patches[i].clusterNumber] = &g_Patches[i];
 			}
 		}
 #endif
@@ -957,36 +1059,93 @@ int	total_transfer;
 int max_transfer;
 
 
+//-----------------------------------------------------------------------------
+// Purpose: Computes the form factor from a polygon patch to a differential patch
+//          using formula 81 of Philip Dutre's Global Illumination Compendium,
+//          phil@graphics.cornell.edu, http://www.graphics.cornell.edu/~phil/GI/
+//-----------------------------------------------------------------------------
+float FormFactorPolyToDiff ( CPatch *pPolygon, CPatch* pDifferential )
+{
+	winding_t *pWinding = pPolygon->winding;
+
+	float flFormFactor = 0.0f;
+
+	for ( int iPoint = 0; iPoint < pWinding->numpoints; iPoint++ )
+	{
+		int iNextPoint = ( iPoint < pWinding->numpoints - 1 ) ? iPoint + 1 : 0;
+
+		Vector vGammaVector, vVector1, vVector2;
+		VectorSubtract( pWinding->p[ iPoint ],		pDifferential->origin, vVector1 );
+		VectorSubtract( pWinding->p[ iNextPoint ],	pDifferential->origin, vVector2 );
+		VectorNormalize( vVector1 );
+		VectorNormalize( vVector2 );
+		CrossProduct( vVector1, vVector2, vGammaVector );
+		float flSinAlpha = VectorNormalize( vGammaVector );
+		if (flSinAlpha < -1.0f || flSinAlpha > 1.0f)
+			return 0.0f;
+		vGammaVector *= asin( flSinAlpha );
+
+		flFormFactor += DotProduct( vGammaVector, pDifferential->normal );
+	}
+
+	flFormFactor *= ( 0.5f / pPolygon->area ); // divide by pi later, multiply by area later
+
+	return flFormFactor;
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Computes the form factor from a differential element to a differential
+//          element.  This is okay when the distance between patches is 5 times
+//          greater than patch size.  Lecture slides by Pat Hanrahan,
+//          http://graphics.stanford.edu/courses/cs348b-00/lectures/lecture17/radiosity.2.pdf
+//-----------------------------------------------------------------------------
+float FormFactorDiffToDiff ( CPatch *pDiff1, CPatch* pDiff2 )
+{
+	Vector vDelta;
+	VectorSubtract( pDiff1->origin, pDiff2->origin, vDelta );
+	float flLength = VectorNormalize( vDelta );
+
+	return -DotProduct( vDelta, pDiff1->normal ) * DotProduct( vDelta, pDiff2->normal ) / ( flLength * flLength );
+}
+
+
+
 void MakeTransfer( int ndxPatch1, int ndxPatch2, transfer_t *all_transfers )
-//void MakeTransfer (patch_t *patch, patch_t *patch2, transfer_t *all_transfers )
+//void MakeTransfer (CPatch *patch, CPatch *patch2, transfer_t *all_transfers )
 {
 	Vector	delta;
-	vec_t	dist, scale;
+	vec_t	scale;
 	float	trans;
 	transfer_t *transfer;
 
 	//
 	// get patches
 	//
-	if( ndxPatch1 == patches.InvalidIndex() || ndxPatch2 == patches.InvalidIndex() )
+	if( ndxPatch1 == g_Patches.InvalidIndex() || ndxPatch2 == g_Patches.InvalidIndex() )
 		return;
 
-	patch_t *patch = &patches.Element( ndxPatch1 );
-	patch_t *patch2 = &patches.Element( ndxPatch2 );
+	CPatch *pPatch1 = &g_Patches.Element( ndxPatch1 );
+	CPatch *pPatch2 = &g_Patches.Element( ndxPatch2 );
+
+	if (IsSky( &g_pFaces[ pPatch2->faceNumber ] ) )
+		return;
 
 	// overflow check!
-	transfer = &all_transfers[patch->numtransfers];
-
-	// calculate transferemnce
-	VectorSubtract (patch2->origin, patch->origin, delta);
-	dist = VectorNormalize (delta);
-	scale = -DotProduct (delta, patch2->normal);
-	
-	// bumpmapped patches will recompute this in the function that integrates the transfers
-	if ( !patch->needsBumpmap )
+	if ( pPatch1->numtransfers >= MAX_PATCHES)
 	{
-		scale *= DotProduct (delta, patch->normal);
+		return;
 	}
+
+	// hack for patch areas that area <= 0 (degenerate)
+	if ( pPatch2->area <= 0)
+	{
+		return;
+	}
+
+	transfer = &all_transfers[pPatch1->numtransfers];
+
+	scale = FormFactorDiffToDiff( pPatch2, pPatch1 );
 
 	// patch normals may be > 90 due to smoothing groups
 	if (scale <= 0)
@@ -995,29 +1154,48 @@ void MakeTransfer( int ndxPatch1, int ndxPatch2, transfer_t *all_transfers )
 		return;
 	}
 
-	trans = (patch2->area*scale);
+	// Test 5 times rule
+	Vector vDelta;
+	VectorSubtract( pPatch1->origin, pPatch2->origin, vDelta );
+	float flThreshold = ( M_PI * 0.04 ) * DotProduct( vDelta, vDelta );
 
-	// hack for patch areas that area <= 0 (degenerate)
-	if (trans <= 0)
+	if (flThreshold < pPatch2->area)
 	{
-		//Msg("trans <= 0 : %f %f %f\n", trans, patch2->area, scale );
-		return;
+		scale = FormFactorPolyToDiff( pPatch2, pPatch1 );
+		if (scale <= 0.0)
+			return;
 	}
 
-	trans = trans / (dist*dist);
+	trans = (pPatch2->area*scale);
 
 	if (trans <= TRANSFER_EPSILON)
 	{
-		//Msg("trans2 <= 0\n");
 		return;
 	}
 
-	transfer->patch = patch2 - patches.Base();
+	transfer->patch = pPatch2 - g_Patches.Base();
 
 	// FIXME: why is this not trans?
-	transfer->transfer = (patch2->area*scale) / (dist*dist);
+	transfer->transfer = trans;
 
-	patch->numtransfers++;
+#if 0
+	// DEBUG! Dump patches and transfer connection for displacements.  This creates a lot of data, so only
+	// use it when you really want it - that is why it is #if-ed out.
+	if ( g_bDumpPatches )
+	{
+		if ( !pFpTrans )
+		{
+			pFpTrans = g_pFileSystem->Open( "trans.txt", "w" );
+		}
+		Vector light = pPatch1->totallight.light[0] + pPatch1->directlight;
+		WriteWinding( pFpTrans, pPatch1->winding, light );
+		light = pPatch2->totallight.light[0] + pPatch2->directlight;
+		WriteWinding( pFpTrans, pPatch2->winding, light );
+		WriteLine( pFpTrans, pPatch1->origin, pPatch2->origin, Vector( 255, 0, 255 ) );
+	}
+#endif
+
+	pPatch1->numtransfers++;
 }
 
 
@@ -1028,9 +1206,9 @@ void MakeScales ( int ndxPatch, transfer_t *all_transfers )
 	transfer_t	*t, *t2;
 	total = 0;
 
-	if( ndxPatch == patches.InvalidIndex() )
+	if( ndxPatch == g_Patches.InvalidIndex() )
 		return;
-	patch_t *patch = &patches.Element( ndxPatch );
+	CPatch *patch = &g_Patches.Element( ndxPatch );
 
 	// copy the transfers out
 	if (patch->numtransfers)
@@ -1083,29 +1261,28 @@ void MakeScales ( int ndxPatch, transfer_t *all_transfers )
 	ThreadUnlock ();
 }
 
-
 /*
 =============
 WriteWorld
 =============
 */
-void WriteWorld (char *name)
+void WriteWorld (char *name, int iBump)
 {
 	unsigned	j;
 	FileHandle_t out;
-	patch_t		*patch;
+	CPatch		*patch;
 
 	out = g_pFileSystem->Open( name, "w" );
 	if (!out)
 		Error ("Couldn't open %s", name);
 
-	unsigned int uiPatchCount = patches.Size();
+	unsigned int uiPatchCount = g_Patches.Size();
 	for (j=0; j<uiPatchCount; j++)
 	{
-		patch = &patches.Element( j );
+		patch = &g_Patches.Element( j );
 
 		// skip parent patches
-		if (patch->child1 != patches.InvalidIndex() )
+		if (patch->child1 != g_Patches.InvalidIndex() )
 			continue;
 
 		if( patch->clusterNumber == -1 )
@@ -1117,14 +1294,45 @@ void WriteWorld (char *name)
 		}
 		else
 		{
-			Vector light = patch->totallight.light[0] + patch->directlight;
+			Vector light = patch->totallight.light[iBump] + patch->directlight;
 			WriteWinding( out, patch->winding, light );
+			if( bDumpNormals )
+			{
+				WriteNormal( out, patch->origin, patch->plane->normal, 15.0f, patch->plane->normal * 255.0f );
+			}
 		}
 	}
 
 	g_pFileSystem->Close( out );
 }
 
+void WriteRTEnv (char *name)
+{
+	FileHandle_t out;
+
+	out = g_pFileSystem->Open( name, "w" );
+	if (!out)
+		Error ("Couldn't open %s", name);
+
+	winding_t *triw = AllocWinding( 3 );
+	triw->numpoints = 3;
+
+	for( int i = 0; i < g_RtEnv.OptimizedTriangleList.Size(); i++ )
+	{
+		triw->p[0] = g_RtEnv.OptimizedTriangleList[i].Vertex( 0);
+		triw->p[1] = g_RtEnv.OptimizedTriangleList[i].Vertex( 1);
+		triw->p[2] = g_RtEnv.OptimizedTriangleList[i].Vertex( 2);
+		int id = g_RtEnv.OptimizedTriangleList[i].m_Data.m_GeometryData.m_nTriangleID;
+		Vector color(0, 0, 0);
+		if (id & TRACE_ID_OPAQUE) color.Init(0, 255, 0);
+		if (id & TRACE_ID_SKY) color.Init(0, 0, 255);
+		if (id & TRACE_ID_STATICPROP) color.Init(255, 0, 0);
+		WriteWinding(out, triw, color);
+	}
+	FreeWinding(triw);
+
+	g_pFileSystem->Close( out );
+}
 
 void WriteWinding (FileHandle_t out, winding_t *w, Vector& color )
 {
@@ -1158,6 +1366,39 @@ void WriteNormal( FileHandle_t out, Vector const &nPos, Vector const &nDir,
 		color.x / 256, color.y / 256, color.z / 256 );
 }
 
+void WriteLine( FileHandle_t out, const Vector &vecPos1, const Vector &vecPos2, const Vector &color )
+{
+	CmdLib_FPrintf( out, "2\n" );
+	CmdLib_FPrintf( out, "%5.2f %5.2f %5.2f %5.3f %5.3f %5.3f\n", 
+		vecPos1.x, vecPos1.y, vecPos1.z,
+		color.x / 256, color.y / 256, color.z / 256 );
+	CmdLib_FPrintf( out, "%5.2f %5.2f %5.2f %5.3f %5.3f %5.3f\n", 
+		vecPos2.x, vecPos2.y, vecPos2.z,
+		color.x / 256, color.y / 256, color.z / 256 );
+}
+
+void WriteTrace( const char *pFileName, const FourRays &rays, const RayTracingResult& result )
+{
+	FileHandle_t out;
+
+	out = g_pFileSystem->Open( pFileName, "a" );
+	if (!out)
+		Error ("Couldn't open %s", pFileName);
+
+	// Draws rays
+	for ( int i = 0; i < 4; ++i )
+	{
+		Vector vecOrigin = rays.origin.Vec(i);
+		Vector vecEnd = rays.direction.Vec(i);
+		VectorNormalize( vecEnd );
+		vecEnd *= SubFloat( result.HitDistance, i );
+		vecEnd += vecOrigin;
+		WriteLine( out, vecOrigin, vecEnd, Vector( 256, 0, 0 ) );
+		WriteNormal( out, vecEnd, result.surface_normal.Vec(i), 10.0f, Vector( 256, 265, 0 ) );
+	}
+
+	g_pFileSystem->Close( out );
+}
 
 
 /*
@@ -1172,22 +1413,22 @@ CollectLight
 void CollectLight( Vector& total )
 {
 	int i, j;
-	patch_t	*patch;
+	CPatch	*patch;
 
 	VectorFill( total, 0 );
 
 	// process patches in reverse order so that children are processed before their parents
-	unsigned int uiPatchCount = patches.Size();
+	unsigned int uiPatchCount = g_Patches.Size();
 	for( i = uiPatchCount - 1; i >= 0; i-- )
 	{
-		patch = &patches.Element( i );
+		patch = &g_Patches.Element( i );
 		int normalCount = patch->needsBumpmap ? NUM_BUMP_VECTS+1 : 1;
 		// sky's never collect light, it is just dropped
 		if (patch->sky)
 		{
 			VectorFill( emitlight[ i ], 0 );
 		}
-		else if ( patch->child1 == patches.InvalidIndex() )
+		else if ( patch->child1 == g_Patches.InvalidIndex() )
 		{
 			// This is a leaf node.
 			for ( j = 0; j < normalCount; j++ )
@@ -1202,11 +1443,11 @@ void CollectLight( Vector& total )
 			// This is an interior node.
 			// Pull received light from children.
 			float s1, s2;
-			patch_t *child1;
-			patch_t *child2;
+			CPatch *child1;
+			CPatch *child2;
 
-			child1 = &patches[patch->child1];
-			child2 = &patches[patch->child2];
+			child1 = &g_Patches[patch->child1];
+			child2 = &g_Patches[patch->child2];
 
 			// BUG: This doesn't do anything?
 			if ((int)patch->area != (int)(child1->area + child2->area))
@@ -1249,12 +1490,54 @@ Get light from other patches
 extern void GetBumpNormals( const float* sVect, const float* tVect, const Vector& flatNormal, 
 					 const Vector& phongNormal, Vector bumpNormals[NUM_BUMP_VECTS] );
 
+
+void PreGetBumpNormalsForDisp( texinfo_t *pTexinfo, Vector &vecU, Vector &vecV, Vector &vecNormal )
+{
+	Vector vecTexU( pTexinfo->textureVecsTexelsPerWorldUnits[0][0], pTexinfo->textureVecsTexelsPerWorldUnits[0][1], pTexinfo->textureVecsTexelsPerWorldUnits[0][2] );
+	Vector vecTexV( pTexinfo->textureVecsTexelsPerWorldUnits[1][0], pTexinfo->textureVecsTexelsPerWorldUnits[1][1], pTexinfo->textureVecsTexelsPerWorldUnits[1][2] );
+	Vector vecLightU( pTexinfo->lightmapVecsLuxelsPerWorldUnits[0][0], pTexinfo->lightmapVecsLuxelsPerWorldUnits[0][1], pTexinfo->lightmapVecsLuxelsPerWorldUnits[0][2] );
+	Vector vecLightV( pTexinfo->lightmapVecsLuxelsPerWorldUnits[1][0], pTexinfo->lightmapVecsLuxelsPerWorldUnits[1][1], pTexinfo->lightmapVecsLuxelsPerWorldUnits[1][2] );
+
+	VectorNormalize( vecTexU );
+	VectorNormalize( vecTexV );
+	VectorNormalize( vecLightU );
+	VectorNormalize( vecLightV );
+
+	bool bDoConversion = false;
+	if ( fabs( vecTexU.Dot( vecLightU ) ) < 0.999f )
+	{
+		bDoConversion = true;
+	}
+
+	if ( fabs( vecTexV.Dot( vecLightV ) ) < 0.999f )
+	{
+		bDoConversion = true;
+	}
+
+	if ( bDoConversion )
+	{
+		matrix3x4_t matTex( vecTexU, vecTexV, vecNormal, vec3_origin );
+		matrix3x4_t matLight( vecLightU, vecLightV, vecNormal, vec3_origin );
+		matrix3x4_t matTmp;
+		ConcatTransforms ( matLight, matTex, matTmp );
+		MatrixGetColumn( matTmp, 0, vecU );
+		MatrixGetColumn( matTmp, 1, vecV );
+		MatrixGetColumn( matTmp, 2, vecNormal );
+
+		Assert( fabs( vecTexU.Dot( vecTexV ) ) <= 0.001f );
+		return;
+	}
+
+	vecU = vecTexU;
+	vecV = vecTexV;
+}
+
 void GatherLight (int threadnum, void *pUserData)
 {
 	int			i, j, k;
 	transfer_t	*trans;
 	int			num;
-	patch_t		*patch;
+	CPatch		*patch;
 	Vector		sum, v;
 
 	while (1)
@@ -1263,7 +1546,7 @@ void GatherLight (int threadnum, void *pUserData)
 		if (j == -1)
 			break;
 
-		patch = &patches[j];
+		patch = &g_Patches[j];
 
 		trans = patch->transfers;
 		num = patch->numtransfers;
@@ -1273,13 +1556,32 @@ void GatherLight (int threadnum, void *pUserData)
 			Vector bumpSum[NUM_BUMP_VECTS+1];
 			Vector normals[NUM_BUMP_VECTS+1];
 
-   			GetPhongNormal( patch->faceNumber, patch->origin, normals[0] );
+			// Disps
+			bool bDisp = ( g_pFaces[patch->faceNumber].dispinfo != -1 ); 
+			if ( bDisp )
+			{
+				normals[0] = patch->normal;
+				texinfo_t *pTexinfo = &texinfo[g_pFaces[patch->faceNumber].texinfo];
+				Vector vecTexU, vecTexV;
+				PreGetBumpNormalsForDisp( pTexinfo, vecTexU, vecTexV, normals[0] );
 
-			texinfo_t *pTexinfo = &texinfo[dfaces[patch->faceNumber].texinfo];
-			// use facenormal along with the smooth normal to build the three bump map vectors
-			GetBumpNormals( pTexinfo->textureVecsTexelsPerWorldUnits[0], 
-				pTexinfo->textureVecsTexelsPerWorldUnits[1], patch->normal, 
-				normals[0], &normals[1] );
+				// use facenormal along with the smooth normal to build the three bump map vectors
+				GetBumpNormals( vecTexU, vecTexV, normals[0], normals[0], &normals[1] ); 
+			}
+			else
+			{
+				GetPhongNormal( patch->faceNumber, patch->origin, normals[0] );
+
+				texinfo_t *pTexinfo = &texinfo[g_pFaces[patch->faceNumber].texinfo];
+				// use facenormal along with the smooth normal to build the three bump map vectors
+				GetBumpNormals( pTexinfo->textureVecsTexelsPerWorldUnits[0], 
+					pTexinfo->textureVecsTexelsPerWorldUnits[1], patch->normal, 
+					normals[0], &normals[1] );
+			}
+
+			// force the base lightmap to use the flat normal instead of the phong normal
+			// FIXME: why does the patch not use the phong normal?
+			normals[0] = patch->normal;
 
 			for ( i = 0; i < NUM_BUMP_VECTS+1; i++ )
 			{
@@ -1289,16 +1591,19 @@ void GatherLight (int threadnum, void *pUserData)
 			float dot;
 			for (k=0 ; k<num ; k++, trans++)
 			{
-				patch_t *patch2 = &patches[trans->patch];
+				CPatch *patch2 = &g_Patches[trans->patch];
 
-				// get bump normals
+				// get vector to other patch
 				VectorSubtract (patch2->origin, patch->origin, delta);
 				VectorNormalize (delta);
+				// find light emitted from other patch
 				for(i=0; i<3; i++)
 				{
 					v[i] = emitlight[trans->patch][i] * patch2->reflectivity[i];
 				}
-				VectorScale( v, trans->transfer, v );
+				// remove normal already factored into transfer steradian
+				float scale = 1.0f / DotProduct (delta, patch->normal);
+				VectorScale( v, trans->transfer * scale, v );
 				
 				Vector bumpTransfer;
 				for ( i = 0; i < NUM_BUMP_VECTS+1; i++ )
@@ -1306,7 +1611,7 @@ void GatherLight (int threadnum, void *pUserData)
 					dot = DotProduct( delta, normals[i] );
 					if ( dot <= 0 )
 					{
-						Assert( i > 0 ); // if this hits, then the transfer shouldn't be here.  It doesn't face the flat normal of this face!
+//						Assert( i > 0 ); // if this hits, then the transfer shouldn't be here.  It doesn't face the flat normal of this face!
 						continue;
 					}
 					bumpTransfer = v * dot;
@@ -1325,7 +1630,7 @@ void GatherLight (int threadnum, void *pUserData)
 			{
 				for(i=0; i<3; i++)
 				{
-					v[i] = emitlight[trans->patch][i] * patches[trans->patch].reflectivity[i];
+					v[i] = emitlight[trans->patch][i] * g_Patches[trans->patch].reflectivity[i];
 				}
 				VectorScale( v, trans->transfer, v );
 				VectorAdd( sum, v, sum );
@@ -1352,20 +1657,20 @@ void BounceLight (void)
 	char		name[64];
 	qboolean	bouncing = numbounce > 0;
 
-	unsigned int uiPatchCount = patches.Size();
+	unsigned int uiPatchCount = g_Patches.Size();
 	for (i=0 ; i<uiPatchCount; i++)
 	{
 		// totallight has a copy of the direct lighting.  Move it to the emitted light and zero it out (to integrate bounces only)
-		VectorCopy( patches[i].totallight.light[0], emitlight[i] );
+		VectorCopy( g_Patches[i].totallight.light[0], emitlight[i] );
 
 		// NOTE: This means that only the bounced light is integrated into totallight!
-		VectorFill( patches[i].totallight.light[0], 0 );
+		VectorFill( g_Patches[i].totallight.light[0], 0 );
 	}
 
 #if 0
 	FileHandle_t dFp = g_pFileSystem->Open( "lightemit.txt", "w" );
 
-	unsigned int uiPatchCount = patches.Size();
+	unsigned int uiPatchCount = g_Patches.Size();
 	for (i=0 ; i<uiPatchCount; i++)
 	{
 		CmdLib_FPrintf( dFp, "Emit %d: %f %f %f\n", i, emitlight[i].x, emitlight[i].y, emitlight[i].z );
@@ -1377,19 +1682,19 @@ void BounceLight (void)
 	{
 		Vector total;
 
-		VectorSubtract (patches[i].maxs, patches[i].mins, total);
-		Msg("%4d %4d %4d %4d (%d) %.0f", i, patches[i].parent, patches[i].child1, patches[i].child2, patches[i].samples, patches[i].area );
+		VectorSubtract (g_Patches[i].maxs, g_Patches[i].mins, total);
+		Msg("%4d %4d %4d %4d (%d) %.0f", i, g_Patches[i].parent, g_Patches[i].child1, g_Patches[i].child2, g_Patches[i].samples, g_Patches[i].area );
 		Msg(" [%.0f %.0f %.0f]", total[0], total[1], total[2] );
-		if (patches[i].child1 != patches.InvalidIndex() )
+		if (g_Patches[i].child1 != g_Patches.InvalidIndex() )
 		{
 			Vector tmp;
-			VectorScale( patches[i].totallight.light[0], patches[i].area, tmp );
+			VectorScale( g_Patches[i].totallight.light[0], g_Patches[i].area, tmp );
 
-			VectorMA( tmp, -patches[patches[i].child1].area, patches[patches[i].child1].totallight.light[0], tmp );
-			VectorMA( tmp, -patches[patches[i].child2].area, patches[patches[i].child2].totallight.light[0], tmp );
+			VectorMA( tmp, -g_Patches[g_Patches[i].child1].area, g_Patches[g_Patches[i].child1].totallight.light[0], tmp );
+			VectorMA( tmp, -g_Patches[g_Patches[i].child2].area, g_Patches[g_Patches[i].child2].totallight.light[0], tmp );
 			// Msg("%.0f ", VectorLength( tmp ) );
-			// Msg("%d ", patches[i].samples - patches[patches[i].child1].samples - patches[patches[i].child2].samples );
-			// Msg("%d ", patches[i].samples );
+			// Msg("%d ", g_Patches[i].samples - g_Patches[g_Patches[i].child1].samples - g_Patches[g_Patches[i].child2].samples );
+			// Msg("%d ", g_Patches[i].samples );
 		}
 		Msg("\n");
 	}
@@ -1400,7 +1705,7 @@ void BounceLight (void)
 	{
 		// transfer light from to the leaf patches from other patches via transfers
 		// this moves shooter->emitlight to receiver->addlight
-		unsigned int uiPatchCount = patches.Size();
+		unsigned int uiPatchCount = g_Patches.Size();
 		RunThreadsOn (uiPatchCount, true, GatherLight);
 		// move newly received light (addlight) to light to be sent out (emitlight)
 		// start at children and pull light up to parents
@@ -1413,10 +1718,10 @@ void BounceLight (void)
 			bouncing = false;
 
 		i++;
-		if ( dumppatches && !bouncing && i != 1)
+		if ( g_bDumpPatches && !bouncing && i != 1)
 		{
 			sprintf (name, "bounce%i.txt", i);
-			WriteWorld (name);
+			WriteWorld (name, 0);
 		}
 	}
 }
@@ -1499,7 +1804,6 @@ void RadWorld_Start()
 	}
 
 	MakeParents (0, -1);
-	MakeTnodes (&dmodels[0]);
 
 	BuildClusterTable();
 
@@ -1526,7 +1830,7 @@ void RadWorld_Start()
 }
 
 
-// This function should fill in the indices into dfaces[] for the faces
+// This function should fill in the indices into g_pFaces[] for the faces
 // with displacements that touch the specified leaf.
 void STUB_GetDisplacementsTouchingLeaf( int iLeaf, CUtlVector<int> &dispFaces )
 {
@@ -1571,52 +1875,37 @@ void BuildFacesVisibleToLights( bool bAllVisible )
 	}
 
 
-	// Setup a map from clusters to leafs.
-	int i;
-	CUtlVector<int> clusterToLeaf;
-	clusterToLeaf.SetSize( numclusters );
-	for( i=0; i < numclusters; i++ )
-	{
-		clusterToLeaf[i] = -1;
-	}
-
-	for( i=1; i < numleafs; i++ )
-	{
-		if( dleafs[i].cluster >= 0 && dleafs[i].cluster < numclusters )
-		{
-			clusterToLeaf[ dleafs[i].cluster ] = i;
-		}
-	}
-
-
 	// Now tag any faces that are visible to this monster PVS.
-	for( int iCluster=0; iCluster < numclusters; iCluster++ )
+	for( int iCluster=0; iCluster < dvis->numclusters; iCluster++ )
 	{
-		if( clusterToLeaf[iCluster] > 0 && clusterToLeaf[iCluster] < numleafs )
+		if( g_ClusterLeaves[iCluster].leafCount )
 		{
 			if( aggregate[iCluster>>3] & (1 << (iCluster & 7)) )
 			{
-				int iLeaf = clusterToLeaf[iCluster];
-
-				// Tag all the faces.
-				int iFace;
-				for( iFace=0; iFace < dleafs[iLeaf].numleaffaces; iFace++ )
+				for ( int i = 0; i < g_ClusterLeaves[iCluster].leafCount; i++ )
 				{
-					int index = dleafs[iLeaf].firstleafface + iFace;
-					index = dleaffaces[index];
-					
-					assert( index < numfaces );
-					g_FacesVisibleToLights[index >> 3] |= (1 << (index & 7));
-				}
+					int iLeaf = g_ClusterLeaves[iCluster].leafs[i];
 
-				// Fill in STUB_GetDisplacementsTouchingLeaf when it's available
-				// so displacements get relit.
-				CUtlVector<int> dispFaces;
-				STUB_GetDisplacementsTouchingLeaf( iLeaf, dispFaces );
-				for( iFace=0; iFace < dispFaces.Count(); iFace++ )
-				{
-					int index = dispFaces[iFace];
-					g_FacesVisibleToLights[index >> 3] |= (1 << (index & 7));
+					// Tag all the faces.
+					int iFace;
+					for( iFace=0; iFace < dleafs[iLeaf].numleaffaces; iFace++ )
+					{
+						int index = dleafs[iLeaf].firstleafface + iFace;
+						index = dleaffaces[index];
+						
+						assert( index < numfaces );
+						g_FacesVisibleToLights[index >> 3] |= (1 << (index & 7));
+					}
+
+					// Fill in STUB_GetDisplacementsTouchingLeaf when it's available
+					// so displacements get relit.
+					CUtlVector<int> dispFaces;
+					STUB_GetDisplacementsTouchingLeaf( iLeaf, dispFaces );
+					for( iFace=0; iFace < dispFaces.Count(); iFace++ )
+					{
+						int index = dispFaces[iFace];
+						g_FacesVisibleToLights[index >> 3] |= (1 << (index & 7));
+					}
 				}
 			}
 		}
@@ -1624,7 +1913,7 @@ void BuildFacesVisibleToLights( bool bAllVisible )
 
 	// For stats.. figure out how many faces it's going to touch.
 	int nFacesToProcess = 0;
-	for( i=0; i < numfaces; i++ )
+	for( int i=0; i < numfaces; i++ )
 	{
 		if( g_FacesVisibleToLights[i>>3] & (1 << (i & 7)) )
 			++nFacesToProcess;
@@ -1659,7 +1948,7 @@ void MakeAllScales (void)
 
 		for ( int i=0; i < numfaces; i++ )
 		{
-			dface_t *f = &dfaces[i];
+			dface_t *f = &g_pFaces[i];
 
 			// Draw the face's outline, then put text for its face index on it too.
 			CUtlVector<Vector> points;
@@ -1758,29 +2047,28 @@ bool RadWorld_Go()
 		// free up the direct lights now that we have facelights
 		ExportDirectLightsToWorldLights();
 
-		if ( dumppatches )
-			WriteWorld( "bounce0.txt" );
+		if ( g_bDumpPatches )
+		{
+			for( int iBump = 0; iBump < 4; ++iBump )
+			{
+				char szName[64];
+				sprintf ( szName, "bounce0_%d.txt", iBump );
+				WriteWorld( szName, iBump );
+			}
+		}
 
 		if (numbounce > 0)
 		{
 			// allocate memory for emitlight/addlight
-			emitlight.SetSize( patches.Size() );
-			memset( emitlight.Base(), 0, patches.Size() * sizeof( Vector ) );
-			addlight.SetSize( patches.Size() );
-			memset( addlight.Base(), 0, patches.Size() * sizeof( bumplights_t ) );
+			emitlight.SetSize( g_Patches.Size() );
+			memset( emitlight.Base(), 0, g_Patches.Size() * sizeof( Vector ) );
+			addlight.SetSize( g_Patches.Size() );
+			memset( addlight.Base(), 0, g_Patches.Size() * sizeof( bumplights_t ) );
 
 			MakeAllScales ();
 
 			// spread light around
 			BounceLight ();
-		}
-
-		if ( g_bUseMPI && !g_bMPIMaster )
-		{
-			//
-			// This is the last use of the MPI slaves
-			//
-			CmdLib_Exit( 0 );
 		}
 
 		//
@@ -1793,7 +2081,12 @@ bool RadWorld_Go()
 
 		// blend bounced light into direct light and save
 		VMPI_SetCurrentStage( "FinalLightFace" );
-		RunThreadsOnIndividual (numfaces, true, FinalLightFace);
+		if ( !g_bUseMPI || g_bMPIMaster )
+			RunThreadsOnIndividual (numfaces, true, FinalLightFace);
+		
+		// Distribute the lighting data to workers.
+		VMPI_DistributeLightData();
+			
 		Msg("FinalLightFace Done\n"); fflush(stdout);
 	}
 
@@ -1801,8 +2094,8 @@ bool RadWorld_Go()
 }
 
 // declare the sample file pointer -- the whole debug print system should
-// be reworked at some point!! (cab)
-FileHandle_t pFileSamples[4];
+// be reworked at some point!!
+FileHandle_t pFileSamples[4][4];
 
 void LoadPhysicsDLL( void )
 {
@@ -1812,16 +2105,22 @@ void LoadPhysicsDLL( void )
 
 void InitDumpPatchesFiles()
 {
-	for( int ndx = 0; ndx < 4; ndx++ )
+	for( int iStyle = 0; iStyle < 4; ++iStyle )
 	{
-		char filename[MAX_PATH];
-		sprintf( filename, "samples%i.txt", ndx );
-		pFileSamples[ndx] = g_pFileSystem->Open( filename, "w" );
-		if( !pFileSamples[ndx] )
-			Error( "Can't open %s for -dump.\n", filename );
+		for ( int iBump = 0; iBump < 4; ++iBump )
+		{
+			char szFilename[MAX_PATH];
+			sprintf( szFilename, "samples_style%d_bump%d.txt", iStyle, iBump );
+			pFileSamples[iStyle][iBump] = g_pFileSystem->Open( szFilename, "w" );
+			if( !pFileSamples[iStyle][iBump] )
+			{
+				Error( "Can't open %s for -dump.\n", szFilename );
+			}
+		}
 	}
 }
 
+extern IFileSystem *g_pOriginalPassThruFileSystem;
 
 void VRAD_LoadBSP( char const *pFilename )
 {
@@ -1834,16 +2133,14 @@ void VRAD_LoadBSP( char const *pFilename )
 		SetLowPriority();
 	}
 
-	Q_StripExtension( pFilename, source, sizeof( source ) );
-	CmdLib_InitFileSystem( source );
+	strcpy( level_name, source );
 
 	// This must come after InitFileSystem because the file system pointer might change.
-	if ( dumppatches )
+	if ( g_bDumpPatches )
 		InitDumpPatchesFiles();
 
 	// This part is just for VMPI. VMPI's file system needs the basedir in front of all filenames,
-	// so we strip off the filename and prepend qdir here.
-	Q_FileBase( source, source, sizeof( source ) );
+	// so we prepend qdir here.
 	strcpy( source, ExpandPath( source ) );
 
 	if ( !g_bUseMPI )
@@ -1883,13 +2180,50 @@ void VRAD_LoadBSP( char const *pFilename )
 	Q_DefaultExtension(incrementfile, ".r0", sizeof(incrementfile));
 	Q_DefaultExtension(source, ".bsp", sizeof( source ));
 
-	GetPlatformMapPath( source, platformPath, 0, MAX_PATH );
-
-	Msg( "Loading %s\n", platformPath );
+	Msg( "Loading %s\n", source );
 	VMPI_SetCurrentStage( "LoadBSPFile" );
-	LoadBSPFile (platformPath);
+	LoadBSPFile (source);
+
+	// Add this bsp to our search path so embedded resources can be found
+	if ( g_bUseMPI && g_bMPIMaster )
+	{
+		// MPI Master, MPI workers don't need to do anything
+		g_pOriginalPassThruFileSystem->AddSearchPath(source, "GAME", PATH_ADD_TO_HEAD);
+		g_pOriginalPassThruFileSystem->AddSearchPath(source, "MOD", PATH_ADD_TO_HEAD);
+	}
+	else if ( !g_bUseMPI )
+	{
+		// Non-MPI
+		g_pFullFileSystem->AddSearchPath(source, "GAME", PATH_ADD_TO_HEAD);
+		g_pFullFileSystem->AddSearchPath(source, "MOD", PATH_ADD_TO_HEAD);
+	}
+
+	// now, set whether or not static prop lighting is present
+	if (g_bStaticPropLighting)
+		g_LevelFlags |= g_bHDR? LVLFLAGS_BAKED_STATIC_PROP_LIGHTING_HDR : LVLFLAGS_BAKED_STATIC_PROP_LIGHTING_NONHDR;
+	else
+	{
+		g_LevelFlags &= ~( LVLFLAGS_BAKED_STATIC_PROP_LIGHTING_HDR | LVLFLAGS_BAKED_STATIC_PROP_LIGHTING_NONHDR );
+	}
+
+	// now, we need to set our face ptr depending upon hdr, and if hdr, init it
+	if (g_bHDR)
+	{
+		g_pFaces = dfaces_hdr;
+		if (numfaces_hdr==0)
+		{
+			numfaces_hdr = numfaces;
+			memcpy( dfaces_hdr, dfaces, numfaces*sizeof(dfaces[0]) );
+		}
+	}
+	else
+	{
+		g_pFaces = dfaces;
+	}
+
 
 	ParseEntities ();
+	ExtractBrushEntityShadowCasters();
 
 	StaticPropMgr()->Init();
 	StaticDispMgr()->Init();
@@ -1907,23 +2241,43 @@ void VRAD_LoadBSP( char const *pFilename )
 	//
 	// TODO: change the maxes to the amount from the bsp!!
 	//
-//	patches.EnsureCapacity( MAX_PATCHES );
+//	g_Patches.EnsureCapacity( MAX_PATCHES );
 
-	facePatches.SetSize( MAX_MAP_FACES );
+	g_FacePatches.SetSize( MAX_MAP_FACES );
 	faceParents.SetSize( MAX_MAP_FACES );
 	clusterChildren.SetSize( MAX_MAP_CLUSTERS );
 
 	int ndx;
-	for( ndx = 0; ndx < MAX_MAP_FACES; ndx++ )
+	for ( ndx = 0; ndx < MAX_MAP_FACES; ndx++ )
 	{
-		facePatches[ndx] = facePatches.InvalidIndex();
+		g_FacePatches[ndx] = g_FacePatches.InvalidIndex();
 		faceParents[ndx] = faceParents.InvalidIndex();
 	}
 
-	for( ndx = 0; ndx < MAX_MAP_CLUSTERS; ndx++ )
+	for ( ndx = 0; ndx < MAX_MAP_CLUSTERS; ndx++ )
 	{
 		clusterChildren[ndx] = clusterChildren.InvalidIndex();
 	}
+
+	// Setup ray tracer
+	AddBrushesForRayTrace();
+	StaticDispMgr()->AddPolysForRayTrace();
+	StaticPropMgr()->AddPolysForRayTrace();
+
+	// Dump raytracer for glview
+	if ( g_bDumpRtEnv )
+		WriteRTEnv("trace.txt");
+
+	// Build acceleration structure
+	printf ( "Setting up ray-trace acceleration structure... ");
+	float start = Plat_FloatTime();
+	g_RtEnv.SetupAccelerationStructure();
+	float end = Plat_FloatTime();
+	printf ( "Done (%.2f seconds)\n", end-start );
+
+#if 0  // To test only k-d build
+	exit(0);
+#endif
 
 	RadWorld_Start();
 
@@ -1939,35 +2293,61 @@ void VRAD_LoadBSP( char const *pFilename )
 }
 
 
-void VRAD_Finish()
+void VRAD_ComputeOtherLighting()
 {
 	// Compute lighting for the bsp file
 	if ( !g_bNoDetailLighting )
 	{
 		ComputeDetailPropLighting( THREADINDEX_MAIN );
 	}
+
 	ComputePerLeafAmbientLighting();
 
-	if (verbose)
-		PrintBSPFileSizes ();
-
-	Msg( "Writing %s\n", platformPath );
-	VMPI_SetCurrentStage( "WriteBSPFile" );
-	WriteBSPFile (platformPath);
-
-	if( dumppatches )
+	// bake the static props high quality vertex lighting into the bsp
+	if ( !do_fast && g_bStaticPropLighting )
 	{
-		for( int ndx = 0; ndx < 4; ndx++ )
+		StaticPropMgr()->ComputeLighting( THREADINDEX_MAIN );
+	}
+}
+
+extern void CloseDispLuxels();
+
+void VRAD_Finish()
+{
+	Msg( "Ready to Finish\n" ); 
+	fflush( stdout );
+
+	if ( verbose )
+	{
+		PrintBSPFileSizes();
+	}
+
+	Msg( "Writing %s\n", source );
+	VMPI_SetCurrentStage( "WriteBSPFile" );
+	WriteBSPFile(source);
+
+	if ( g_bDumpPatches )
+	{
+		for ( int iStyle = 0; iStyle < 4; ++iStyle )
 		{
-			g_pFileSystem->Close( pFileSamples[ndx] );
+			for ( int iBump = 0; iBump < 4; ++iBump )
+			{
+				g_pFileSystem->Close( pFileSamples[iStyle][iBump] );
+			}
 		}
 	}
+
+	CloseDispLuxels();
+
+	StaticPropMgr()->Shutdown();
 
 	double end = Plat_FloatTime();
 	
 	char str[512];
 	GetHourMinuteSecondsString( (int)( end - g_flStartTime ), str, sizeof( str ) );
 	Msg( "%s elapsed\n", str );
+
+	ReleasePakFileLumps();
 }
 
 
@@ -1985,47 +2365,88 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 {
 	*onlydetail = false;
 
+	int mapArg = -1;
+
+	// default to LDR
+	SetHDRMode( false );
 	int i;
 	for( i=1 ; i<argc ; i++ )
 	{
-		if (!strcmp(argv[i],"-dump"))
+		if ( !Q_stricmp( argv[i], "-StaticPropLighting" ) )
 		{
-			dumppatches = true;
+			g_bStaticPropLighting = true;
 		}
-		else if ( !stricmp( argv[i], "-nodetaillight" ) )
+		else if ( !stricmp( argv[i], "-StaticPropNormals" ) )
+		{
+			g_bShowStaticPropNormals = true;
+		}
+		else if ( !stricmp( argv[i], "-OnlyStaticProps" ) )
+		{
+			g_bOnlyStaticProps = true;
+		}
+		else if ( !Q_stricmp( argv[i], "-StaticPropPolys" ) )
+		{
+			g_bStaticPropPolys = true;
+		}
+		else if ( !Q_stricmp( argv[i], "-nossprops" ) )
+		{
+			g_bDisablePropSelfShadowing = true;
+		}
+		else if ( !Q_stricmp( argv[i], "-textureshadows" ) )
+		{
+			g_bTextureShadows = true;
+		}
+		else if ( !strcmp(argv[i], "-dump") )
+		{
+			g_bDumpPatches = true;
+		}
+		else if ( !Q_stricmp( argv[i], "-nodetaillight" ) )
 		{
 			g_bNoDetailLighting = true;
 		}
-		else if( !stricmp( argv[i], "-rederrors" ) )
+		else if ( !Q_stricmp( argv[i], "-rederrors" ) )
 		{
 			bRed2Black = false;
 		}
-		else if( !stricmp( argv[i], "-dumpnormals" ) )
+		else if ( !Q_stricmp( argv[i], "-dumpnormals" ) )
 		{
 			bDumpNormals = true;
 		}
-		else if (!stricmp(argv[i],"-bounce"))
+		else if ( !Q_stricmp( argv[i], "-dumptrace" ) )
+		{
+			g_bDumpRtEnv = true;
+		}
+		else if ( !Q_stricmp( argv[i], "-LargeDispSampleRadius" ) )
+		{
+			g_bLargeDispSampleRadius = true;
+		}
+		else if (!Q_stricmp( argv[i], "-dumppropmaps"))
+		{
+			g_bDumpPropLightmaps = true;
+		}
+		else if (!Q_stricmp(argv[i],"-bounce"))
 		{
 			if ( ++i < argc )
 			{
-				numbounce = atoi (argv[i]);
-				if ( numbounce < 0 )
+				int bounceParam = atoi (argv[i]);
+				if ( bounceParam < 0 )
 				{
 					Warning("Error: expected non-negative value after '-bounce'\n" );
-					return 1;
+					return -1;
 				}
+				numbounce = (unsigned)bounceParam;
 			}
 			else
 			{
 				Warning("Error: expected a value after '-bounce'\n" );
-				return 1;
+				return -1;
 			}
 		}
-		else if (!stricmp(argv[i],"-verbose") || !stricmp(argv[i],"-v"))
+		else if (!Q_stricmp(argv[i],"-verbose") || !Q_stricmp(argv[i],"-v"))
 		{
 			verbose = true;
 		}
-		else if (!stricmp(argv[i],"-threads"))
+		else if (!Q_stricmp(argv[i],"-threads"))
 		{
 			if ( ++i < argc )
 			{
@@ -2033,16 +2454,16 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 				if ( numthreads <= 0 )
 				{
 					Warning("Error: expected positive value after '-threads'\n" );
-					return 1;
+					return -1;
 				}
 			}
 			else
 			{
 				Warning("Error: expected a value after '-threads'\n" );
-				return 1;
+				return -1;
 			}
 		}
-		else if ( !stricmp(argv[i], "-lights" ) )
+		else if ( !Q_stricmp(argv[i], "-lights" ) )
 		{
 			if ( ++i < argc && *argv[i] )
 			{
@@ -2051,26 +2472,50 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 			else
 			{
 				Warning("Error: expected a filepath after '-lights'\n" );
-				return 1;
+				return -1;
 			}
 		}
-		else if (!stricmp(argv[i],"-noextra"))
+		else if (!Q_stricmp(argv[i],"-noextra"))
 		{
 			do_extra = false;
 		}
-		else if (!stricmp(argv[i],"-debugextra"))
+		else if (!Q_stricmp(argv[i],"-debugextra"))
 		{
 			debug_extra = true;
 		}
-		else if (!stricmp(argv[i],"-fast"))
+		else if ( !Q_stricmp(argv[i], "-fastambient") )
+		{
+			g_bFastAmbient = true;
+		}
+		else if (!Q_stricmp(argv[i],"-fast"))
 		{
 			do_fast = true;
 		}
-		else if (!stricmp(argv[i],"-centersamples"))
+		else if (!Q_stricmp(argv[i],"-noskyboxrecurse"))
+		{
+			g_bNoSkyRecurse = true;
+		}
+		else if (!Q_stricmp(argv[i],"-final"))
+		{
+			g_flSkySampleScale = 16.0;
+		}
+		else if (!Q_stricmp(argv[i],"-extrasky"))
+		{
+			if ( ++i < argc && *argv[i] )
+			{
+				g_flSkySampleScale = atof( argv[i] );
+			}
+			else
+			{
+				Warning("Error: expected a scale factor after '-extrasky'\n" );
+				return -1;
+			}
+		}
+		else if (!Q_stricmp(argv[i],"-centersamples"))
 		{
 			do_centersamples = true;
 		}
-		else if (!stricmp(argv[i],"-smooth"))
+		else if (!Q_stricmp(argv[i],"-smooth"))
 		{
 			if ( ++i < argc )
 			{
@@ -2079,14 +2524,14 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 			else
 			{
 				Warning("Error: expected an angle after '-smooth'\n" );
-				return 1;
+				return -1;
 			}
 		}
-		else if (!stricmp(argv[i],"-dlightmap"))
+		else if (!Q_stricmp(argv[i],"-dlightmap"))
 		{
 			dlight_map = 1;
 		}
-		else if (!stricmp(argv[i],"-luxeldensity"))
+		else if (!Q_stricmp(argv[i],"-luxeldensity"))
 		{
 			if ( ++i < argc )
 			{
@@ -2097,22 +2542,36 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 			else
 			{
 				Warning("Error: expected a value after '-luxeldensity'\n" );
-				return 1;
+				return -1;
 			}
 		}
-		else if( !stricmp( argv[i], "-low" ) )
+		else if( !Q_stricmp( argv[i], "-low" ) )
 		{
 			g_bLowPriority = true;
 		}
-		else if( !stricmp( argv[i], "-loghash" ) )
+		else if( !Q_stricmp( argv[i], "-loghash" ) )
 		{
 			g_bLogHashData = true;
 		}
-		else if( !stricmp( argv[i], "-onlydetail" ) )
+		else if( !Q_stricmp( argv[i], "-onlydetail" ) )
 		{
 			*onlydetail = true;
 		}
-		else if ( !stricmp( argv[i], "-maxdispsamplesize" ) )
+		else if (!Q_stricmp(argv[i],"-softsun"))
+		{
+			if ( ++i < argc )
+			{
+				g_SunAngularExtent=atof(argv[i]);
+				g_SunAngularExtent=sin((M_PI/180.0)*g_SunAngularExtent);
+				printf("sun extent=%f\n",g_SunAngularExtent);
+			}
+			else
+			{
+				Warning("Error: expected an angular extent value (0..180) '-softsun'\n" );
+				return -1;
+			}
+		}
+		else if ( !Q_stricmp( argv[i], "-maxdispsamplesize" ) )
 		{
 			if ( ++i < argc )
 			{
@@ -2121,7 +2580,7 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 			else
 			{
 				Warning( "Error: expected a sample size after '-maxdispsamplesize'\n" );
-				return 1;
+				return -1;
 			}
 		}
 		else if ( stricmp( argv[i], "-StopOnExit" ) == 0 )
@@ -2131,42 +2590,47 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 		else if ( stricmp( argv[i], "-steam" ) == 0 )
 		{
 		}
-		else if ( !Q_strncasecmp( argv[i], "-mpi", 4 ) || !Q_strncasecmp( argv[i-1], "-mpi", 4 ) )
-		{
-			if ( stricmp( argv[i], "-mpi" ) == 0 )
-				g_bUseMPI = true;
-		
-			// Any other args that start with -mpi are ok too.
-			if ( i == argc - 1 )
-				break;
-		}
 		else if ( stricmp( argv[i], "-allowdebug" ) == 0 )
 		{
 			// Don't need to do anything, just don't error out.
 		}
-		else if ( !stricmp( argv[i], "-vproject" ) || !stricmp( argv[i], "-game" ) )
+		else if ( !Q_stricmp( argv[i], CMDLINEOPTION_NOVCONFIG ) )
+		{
+		}
+		else if ( !Q_stricmp( argv[i], "-vproject" ) || !Q_stricmp( argv[i], "-game" ) || !Q_stricmp( argv[i], "-insert_search_path" ) )
 		{
 			++i;
 		}
-#if ALLOWOPTIONS
-		else if (!stricmp(argv[i],"-maxchop"))
+		else if ( !Q_stricmp( argv[i], "-FullMinidumps" ) )
+		{
+			EnableFullMinidumps( true );
+		}
+		else if ( !Q_stricmp( argv[i], "-hdr" ) )
+		{
+			SetHDRMode( true );
+		}
+		else if ( !Q_stricmp( argv[i], "-ldr" ) )
+		{
+			SetHDRMode( false );
+		}
+		else if (!Q_stricmp(argv[i],"-maxchop"))
 		{
 			if ( ++i < argc )
 			{
 				maxchop = (float)atof (argv[i]);
-				if ( maxchop < 2 )
+				if ( maxchop < 1 )
 				{
 					Warning("Error: expected positive value after '-maxchop'\n" );
-					return 1;
+					return -1;
 				}
 			}
 			else
 			{
 				Warning("Error: expected a value after '-maxchop'\n" );
-				return 1;
+				return -1;
 			}
 		}
-		else if (!stricmp(argv[i],"-chop"))
+		else if (!Q_stricmp(argv[i],"-chop"))
 		{
 			if ( ++i < argc )
 			{
@@ -2174,20 +2638,53 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 				if ( minchop < 1 )
 				{
 					Warning("Error: expected positive value after '-chop'\n" );
-					return 1;
+					return -1;
 				}
-				if ( minchop < 32 )
-				{
-					Warning("WARNING: Chop values below 32 are not recommended.  Use -extra instead.\n");
-				}
+				minchop = min( minchop, maxchop );
 			}
 			else
 			{
 				Warning("Error: expected a value after '-chop'\n" );
-				return 1;
+				return -1;
 			}
 		}
-		else if (!stricmp(argv[i],"-scale"))
+		else if ( !Q_stricmp( argv[i], "-dispchop" ) )
+		{
+			if ( ++i < argc )
+			{
+				dispchop = ( float )atof( argv[i] );
+				if ( dispchop < 1.0f )
+				{
+					Warning( "Error: expected positive value after '-dipschop'\n" );
+					return -1;
+				}
+			}
+			else
+			{
+				Warning( "Error: expected a value after '-dispchop'\n" );
+				return -1;
+			}
+		}
+		else if ( !Q_stricmp( argv[i], "-disppatchradius" ) )
+		{
+			if ( ++i < argc )
+			{
+				g_MaxDispPatchRadius = ( float )atof( argv[i] );
+				if ( g_MaxDispPatchRadius < 10.0f )
+				{
+					Warning( "Error: g_MaxDispPatchRadius < 10.0\n" );
+					return -1;
+				}
+			}
+			else
+			{
+				Warning( "Error: expected a value after '-disppatchradius'\n" );
+				return -1;
+			}
+		}
+
+#if ALLOWDEBUGOPTIONS
+		else if (!Q_stricmp(argv[i],"-scale"))
 		{
 			if ( ++i < argc )
 			{
@@ -2196,10 +2693,10 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 			else
 			{
 				Warning("Error: expected a value after '-scale'\n" );
-				return 1;
+				return -1;
 			}
 		}
-		else if (!stricmp(argv[i],"-ambient"))
+		else if (!Q_stricmp(argv[i],"-ambient"))
 		{
 			if ( i+3 < argc )
 			{
@@ -2210,10 +2707,10 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 			else
 			{
 				Warning("Error: expected three color values after '-ambient'\n" );
-				return 1;
+				return -1;
 			}
 		}
-		else if (!stricmp(argv[i],"-dlight"))
+		else if (!Q_stricmp(argv[i],"-dlight"))
 		{
 			if ( ++i < argc )
 			{
@@ -2222,10 +2719,10 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 			else
 			{
 				Warning("Error: expected a value after '-dlight'\n" );
-				return 1;
+				return -1;
 			}
 		}
-		else if (!stricmp(argv[i],"-sky"))
+		else if (!Q_stricmp(argv[i],"-sky"))
 		{
 			if ( ++i < argc )
 			{
@@ -2234,14 +2731,14 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 			else
 			{
 				Warning("Error: expected a value after '-sky'\n" );
-				return 1;
+				return -1;
 			}
 		}
-		else if (!stricmp(argv[i],"-notexscale"))
+		else if (!Q_stricmp(argv[i],"-notexscale"))
 		{
 			texscale = false;
 		}
-		else if (!stricmp(argv[i],"-coring"))
+		else if (!Q_stricmp(argv[i],"-coring"))
 		{
 			if ( ++i < argc )
 			{
@@ -2250,17 +2747,33 @@ int ParseCommandLine( int argc, char **argv, bool *onlydetail )
 			else
 			{
 				Warning("Error: expected a light threshold after '-coring'\n" );
-				return 1;
+				return -1;
 			}
 		}
 #endif
+		// NOTE: the -mpi checks must come last here because they allow the previous argument 
+		// to be -mpi as well. If it game before something else like -game, then if the previous
+		// argument was -mpi and the current argument was something valid like -game, it would skip it.
+		else if ( !Q_strncasecmp( argv[i], "-mpi", 4 ) || !Q_strncasecmp( argv[i-1], "-mpi", 4 ) )
+		{
+			if ( stricmp( argv[i], "-mpi" ) == 0 )
+				g_bUseMPI = true;
+		
+			// Any other args that start with -mpi are ok too.
+			if ( i == argc - 1 && V_stricmp( argv[i], "-mpi_ListParams" ) != 0 )
+				break;
+		}
+		else if ( mapArg == -1 )
+		{
+			mapArg = i;
+		}
 		else
 		{
-			break;
+			return -1;
 		}
 	}
 
-	return i;
+	return mapArg;
 }
 
 
@@ -2288,6 +2801,9 @@ void PrintUsage( int argc, char **argv )
 		"  -v (or -verbose): Turn on verbose output (also shows more command\n"
 		"  -bounce #       : Set max number of bounces (default: 100).\n"
 		"  -fast           : Quick and dirty lighting.\n"
+		"  -fastambient    : Per-leaf ambient sampling is lower quality to save compute time.\n"
+		"  -final          : High quality processing. equivalent to -extrasky 16.\n"
+		"  -extrasky n     : trace N times as many rays for indirect light and sky ambient.\n"
 		"  -low            : Run as an idle-priority process.\n"
 		"  -mpi            : Use VMPI to distribute computations.\n"
 		"  -rederror       : Show errors in red.\n"
@@ -2296,8 +2812,10 @@ void PrintUsage( int argc, char **argv )
 		"  -game <directory>     : Same as -vproject.\n"
 		"\n"
 		"Other options:\n"
+		"  -novconfig      : Don't bring up graphical UI on vproject errors.\n"
 		"  -dump           : Write debugging .txt files.\n"
 		"  -dumpnormals    : Write normals to debug files.\n"
+		"  -dumptrace      : Write ray-tracing environment to debug files.\n"
 		"  -threads        : Control the number of threads vbsp uses (defaults to the #\n"
 		"                    or processors on your machine).\n"
 		"  -lights <file>  : Load a lights file in addition to lights.rad and the\n"
@@ -2319,9 +2837,53 @@ void PrintUsage( int argc, char **argv )
 		"  -loghash        : Log the sample hash table to samplehash.txt.\n"
 		"  -onlydetail     : Only light detail props and per-leaf lighting.\n"
 		"  -maxdispsamplesize #: Set max displacement sample size (default: 512).\n"
+		"  -softsun <n>    : Treat the sun as an area light source of size <n> degrees."
+		"                    Produces soft shadows.\n"
+		"                    Recommended values are between 0 and 5. Default is 0.\n"
+		"  -FullMinidumps  : Write large minidumps on crash.\n"
+		"  -chop           : Smallest number of luxel widths for a bounce patch, used on edges\n"
+		"  -maxchop		   : Coarsest allowed number of luxel widths for a patch, used in face interiors\n"
+		"\n"
+		"  -LargeDispSampleRadius: This can be used if there are splotches of bounced light\n"
+		"                          on terrain. The compile will take longer, but it will gather\n"
+		"                          light across a wider area.\n"
+        "  -StaticPropLighting   : generate backed static prop vertex lighting\n"
+        "  -StaticPropPolys   : Perform shadow tests of static props at polygon precision\n"
+        "  -OnlyStaticProps   : Only perform direct static prop lighting (vrad debug option)\n"
+		"  -StaticPropNormals : when lighting static props, just show their normal vector\n"
+		"  -textureshadows : Allows texture alpha channels to block light - rays intersecting alpha surfaces will sample the texture\n"
+		"  -noskyboxrecurse : Turn off recursion into 3d skybox (skybox shadows on world)\n"
+		"  -nossprops      : Globally disable self-shadowing on static props\n"
+		"\n"
+#if 1 // Disabled for the initial SDK release with VMPI so we can get feedback from selected users.
 		);
-}
+#else
+		"  -mpi_ListParams : Show a list of VMPI parameters.\n"
+		"\n"
+		);
 
+	// Show VMPI parameters?
+	for ( int i=1; i < argc; i++ )
+	{
+		if ( V_stricmp( argv[i], "-mpi_ListParams" ) == 0 )
+		{
+			Warning( "VMPI-specific options:\n\n" );
+
+			bool bIsSDKMode = VMPI_IsSDKMode();
+			for ( int i=k_eVMPICmdLineParam_FirstParam+1; i < k_eVMPICmdLineParam_LastParam; i++ )
+			{
+				if ( (VMPI_GetParamFlags( (EVMPICmdLineParam)i ) & VMPI_PARAM_SDK_HIDDEN) && bIsSDKMode )
+					continue;
+					
+				Warning( "[%s]\n", VMPI_GetParamString( (EVMPICmdLineParam)i ) );
+				Warning( VMPI_GetParamHelpString( (EVMPICmdLineParam)i ) );
+				Warning( "\n\n" );
+			}
+			break;
+		}
+	}
+#endif
+}
 
 int RunVRAD( int argc, char **argv )
 {
@@ -2331,38 +2893,40 @@ int RunVRAD( int argc, char **argv )
 	Msg("Valve Software - vrad.exe (" __DATE__ ")\n" );
 #endif
 
-	Msg("----- Radiosity Simulator ----\n");
+	Msg("\n      Valve Radiosity Simulator     \n");
 
 	verbose = true;  // Originally FALSE
 
 	bool onlydetail;
 	int i = ParseCommandLine( argc, argv, &onlydetail );
-
-	if (i != argc - 1)
+	if (i == -1)
 	{
 		PrintUsage( argc, argv );
+		DeleteCmdLine( argc, argv );
 		CmdLib_Exit( 1 );
 	}
 
+	// Initialize the filesystem, so additional commandline options can be loaded
+	Q_StripExtension( argv[ i ], source, sizeof( source ) );
+	CmdLib_InitFileSystem( argv[ i ] );
+	Q_FileBase( source, source, sizeof( source ) );
+
 	VRAD_LoadBSP( argv[i] );
 
-	if (!onlydetail)
+	if ( (! onlydetail) && (! g_bOnlyStaticProps ) )
+	{
 		RadWorld_Go();
+	}
 
-	Msg("Ready to Finish\n"); fflush(stdout);
+	VRAD_ComputeOtherLighting();
+
 	VRAD_Finish();
 
 	VMPI_SetCurrentStage( "master done" );
 
+	DeleteCmdLine( argc, argv );
 	CmdLib_Cleanup();
 	return 0;
-}
-
-
-LONG __stdcall VExceptionFilter( struct _EXCEPTION_POINTERS *ExceptionInfo )
-{
-	VMPI_ExceptionFilter( ExceptionInfo->ExceptionRecord->ExceptionCode );
-	return EXCEPTION_EXECUTE_HANDLER; // (never gets here anyway)
 }
 
 
@@ -2375,21 +2939,19 @@ int VRAD_Main(int argc, char **argv)
 	// This must come first.
 	VRAD_SetupMPI( argc, argv );
 
-
+#if !defined( _DEBUG )
 	if ( g_bUseMPI && !g_bMPIMaster )
 	{
-		// VMPI workers should catch crashes and asserts and suchlike and fail gracefully instead 
-		// of pestering the person with dialogs.
-		LPTOP_LEVEL_EXCEPTION_FILTER pOldFilter = SetUnhandledExceptionFilter( VExceptionFilter );
-		int ret = RunVRAD( argc, argv );
-		SetUnhandledExceptionFilter( pOldFilter );
-
-		return ret;
+		SetupToolsMinidumpHandler( VMPI_ExceptionFilter );
 	}
 	else
+#endif
 	{
-		return RunVRAD( argc, argv );
+		LoadCmdLineFromFile( argc, argv, source, "vrad" ); // Don't do this if we're a VMPI worker..
+		SetupDefaultToolsMinidumpHandler();
 	}
+	
+	return RunVRAD( argc, argv );
 }
 
 

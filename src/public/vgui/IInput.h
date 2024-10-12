@@ -1,9 +1,9 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 // $NoKeywords: $
-//=============================================================================//
+//===========================================================================//
 
 #ifndef VGUI_IINPUT_H
 #define VGUI_IINPUT_H
@@ -13,13 +13,13 @@
 #endif
 
 #include <vgui/VGUI.h>
-#include "interface.h"
+#include "tier1/interface.h"
+#include "vgui/MouseCode.h"
+#include "vgui/KeyCode.h"
 
 namespace vgui
 {
 
-enum MouseCode;
-enum KeyCode;
 class Cursor;
 typedef unsigned long HCursor;
 
@@ -39,6 +39,10 @@ typedef unsigned long HCursor;
 #define VGUI_CS_INSERTCHAR                   0x2000
 #define VGUI_CS_NOMOVECARET                  0x4000
 
+#define MESSAGE_CURSOR_POS -1
+#define MESSAGE_CURRENT_KEYFOCUS -2
+
+
 class IInput : public IBaseInterface
 {
 public:
@@ -46,10 +50,11 @@ public:
 	virtual void SetMouseCapture(VPANEL panel) = 0;
 
 	// returns the string name of a scan code
-	virtual void GetKeyCodeText(KeyCode code, char *buf, int buflen) = 0;
+	virtual void GetKeyCodeText(KeyCode code, OUT_Z_BYTECAP(buflen) char *buf, int buflen) = 0;
 
 	// focus
 	virtual VPANEL GetFocus() = 0;
+	virtual VPANEL GetCalculatedFocus() = 0;// to handle cases where the focus changes inside a frame.
 	virtual VPANEL GetMouseOver() = 0;		// returns the panel the mouse is currently over, ignoring mouse capture
 
 	// mouse state
@@ -88,9 +93,9 @@ public:
 	virtual int  GetEnglishIMEHandle() = 0;
 
 	// Returns the Language Bar label (Chinese, Korean, Japanese, Russion, Thai, etc.)
-	virtual void GetIMELanguageName( wchar_t *buf, int unicodeBufferSizeInBytes ) = 0;
+	virtual void GetIMELanguageName( OUT_Z_BYTECAP(unicodeBufferSizeInBytes) wchar_t *buf, int unicodeBufferSizeInBytes ) = 0;
 	// Returns the short code for the language (EN, CH, KO, JP, RU, TH, etc. ).
-	virtual void GetIMELanguageShortCode( wchar_t *buf, int unicodeBufferSizeInBytes ) = 0;
+	virtual void GetIMELanguageShortCode( OUT_Z_BYTECAP(unicodeBufferSizeInBytes) wchar_t *buf, int unicodeBufferSizeInBytes ) = 0;
 
 	struct LanguageItem
 	{
@@ -134,7 +139,7 @@ public:
 	virtual void OnIMERecomputeModes() = 0;
 
 	virtual int  GetCandidateListCount() = 0;
-	virtual void GetCandidate( int num, wchar_t *dest, int destSizeBytes ) = 0;
+	virtual void GetCandidate( int num, OUT_Z_BYTECAP(destSizeBytes) wchar_t *dest, int destSizeBytes ) = 0;
 	virtual int  GetCandidateListSelectedItem() = 0;
 	virtual int  GetCandidateListPageSize() = 0;
 	virtual int  GetCandidateListPageStart() = 0;
@@ -146,6 +151,38 @@ public:
 	virtual bool CandidateListStartsAtOne() = 0;
 
 	virtual void SetCandidateListPageStart( int start ) = 0;
+
+	// Passes in a keycode which allows hitting other mouse buttons w/o cancelling capture mode
+	virtual void SetMouseCaptureEx(VPANEL panel, MouseCode captureStartMouseCode ) = 0;
+
+	// Because OnKeyCodeTyped uses CallParentFunction and is therefore message based, there's no way
+	//  to know if handler actually swallowed the specified keycode.  To get around this, I set a global before calling the
+	//  kb focus OnKeyCodeTyped function and if we ever get to a Panel::OnKeyCodeTypes we know that nobody handled the message
+	//  and in that case we can post a message to any "unhandled keycode" listeners
+	// This will generate an MESSAGE_FUNC_INT( "KeyCodeUnhandled" "code" code ) message to each such listener
+	virtual void RegisterKeyCodeUnhandledListener( VPANEL panel ) = 0;
+	virtual void UnregisterKeyCodeUnhandledListener( VPANEL panel ) = 0;
+
+	// Posts unhandled message to all interested panels
+	virtual void OnKeyCodeUnhandled( int keyCode ) = 0;
+
+	// Assumes subTree is a child panel of the root panel for the vgui contect
+	//  if restrictMessagesToSubTree is true, then mouse and kb messages are only routed to the subTree and it's children and mouse/kb focus
+	//   can only be on one of the subTree children, if a mouse click occurs outside of the subtree, and "UnhandledMouseClick" message is sent to unhandledMouseClickListener panel
+	//   if it's set
+	//  if restrictMessagesToSubTree is false, then mouse and kb messages are routed as normal except that they are not routed down into the subtree
+	//   however, if a mouse click occurs outside of the subtree, and "UnhandleMouseClick" message is sent to unhandledMouseClickListener panel
+	//   if it's set
+	virtual void	SetModalSubTree( VPANEL subTree, VPANEL unhandledMouseClickListener, bool restrictMessagesToSubTree = true ) = 0;
+	virtual void	ReleaseModalSubTree() = 0;
+	virtual VPANEL	GetModalSubTree() = 0;
+
+	// These toggle whether the modal subtree is exclusively receiving messages or conversely whether it's being excluded from receiving messages
+	// Sends a "ModalSubTree", state message
+	virtual void	SetModalSubTreeReceiveMessages( bool state ) = 0;
+	virtual bool	ShouldModalSubTreeReceiveMessages() const = 0;
+
+	virtual VPANEL 	GetMouseCapture() = 0;
 };
 
 #define VGUI_INPUT_INTERFACE_VERSION "VGUI_Input005"

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -10,20 +10,36 @@
 #pragma once
 #endif
 
+// X360 optimizes out the extra memory needed by the editors in these types
+#ifndef _X360
+#define PHONEME_EDITOR 1
+#endif
+
 #include "utlvector.h"
 
 class CUtlBuffer;
 
+#define CACHED_SENTENCE_VERSION			1
+#define CACHED_SENTENCE_VERSION_ALIGNED	4
+
 //-----------------------------------------------------------------------------
 // Purpose: A sample point
 //-----------------------------------------------------------------------------
+// Can't do this due to backward compat issues
+//#ifdef _WIN32
+//#pragma pack (1)
+//#endif
+
 struct CEmphasisSample
 {
 	float		time;
 	float		value;
 
+	void SetSelected( bool isSelected );
+#if PHONEME_EDITOR
 	// Used by editors only
 	bool		selected;
+#endif
 };
 
 class CBasePhonemeTag
@@ -32,6 +48,20 @@ public:
 	CBasePhonemeTag();
 	CBasePhonemeTag( const CBasePhonemeTag& from );
 
+	CBasePhonemeTag &operator=( const CBasePhonemeTag &from )	{ memcpy( this, &from, sizeof(*this) ); return *this; }
+
+	float GetStartTime() const				{ return m_flStartTime; }
+	void SetStartTime( float startTime )	{ m_flStartTime = startTime; }
+	void AddStartTime( float startTime )	{ m_flStartTime += startTime; }
+
+	float GetEndTime() const				{ return m_flEndTime; }
+	void SetEndTime( float endTime )		{ m_flEndTime = endTime; }
+	void AddEndTime( float startTime )		{ m_flEndTime += startTime; }
+
+	int GetPhonemeCode() const				{ return m_nPhonemeCode; }
+	void SetPhonemeCode( int phonemeCode )	{ m_nPhonemeCode = phonemeCode; }
+
+private:
 	float			m_flStartTime;
 	float			m_flEndTime;
 	unsigned short	m_nPhonemeCode;
@@ -54,12 +84,16 @@ public:
 	char const		*GetTag() const;
 
 	unsigned int	ComputeDataCheckSum();
-
+#if PHONEME_EDITOR
 	bool			m_bSelected;
-
-	// Used by UI code
 	unsigned int	m_uiStartByte;
 	unsigned int	m_uiEndByte;
+#endif
+	void SetSelected( bool isSelected );
+	bool GetSelected() const;
+	void SetStartAndEndBytes( unsigned int start, unsigned int end );
+	unsigned int GetStartByte() const;
+	unsigned int GetEndByte() const;
 
 private:
 	char			*m_szPhoneme;
@@ -88,10 +122,17 @@ public:
 	float			m_flEndTime;
 
 	CUtlVector	< CPhonemeTag *> m_Phonemes;
-
+#if PHONEME_EDITOR
 	bool			m_bSelected;
 	unsigned int	m_uiStartByte;
 	unsigned int	m_uiEndByte;
+#endif
+	void SetSelected( bool isSelected );
+	bool GetSelected() const;
+	void SetStartAndEndBytes( unsigned int start, unsigned int end );
+	unsigned int GetStartByte() const;
+	unsigned int GetEndByte() const;
+
 private:
 	char			*m_pszWord;
 };
@@ -132,6 +173,7 @@ enum
 	CC_JAPANESE,
 	CC_RUSSIAN,
 	CC_THAI,
+	CC_PORTUGUESE,
 	// etc etc
 
 	CC_NUM_LANGUAGES
@@ -145,7 +187,7 @@ class CSentence
 public:
 	static char const	*NameForLanguage( int language );
 	static int			LanguageForName( char const *name );
-	static void 	ColorForLanguage( int language, unsigned char& r, unsigned char& g, unsigned char& b );
+	static void 		ColorForLanguage( int language, unsigned char& r, unsigned char& g, unsigned char& b );
 
 	// Construction
 					CSentence( void );
@@ -168,7 +210,7 @@ public:
 	void			MakeRuntimeOnly();
 
 	// This is a compressed save of just the data needed to drive phonemes in the engine (no word / sentence text, etc )
-	void			CacheSaveToBuffer( CUtlBuffer& buf );
+	void			CacheSaveToBuffer( CUtlBuffer& buf, int version );
 	void			CacheRestoreFromBuffer( CUtlBuffer& buf );
 
 	// Add word/phoneme to sentence
@@ -214,18 +256,27 @@ public:
 	void			ClearRuntimePhonemes();
 	void			AddRuntimePhoneme( const CPhonemeTag *src );
 
+	void			CreateEventWordDistribution( char const *pszText, float flSentenceDuration );
+	static int		CountWords( char const *pszText );
+	static bool		ShouldSplitWord( char in );
+
 public:
+#if PHONEME_EDITOR
 	char			*m_szText;
 
 	CUtlVector< CWordTag * >	m_Words;
+#endif
 	CUtlVector	< CBasePhonemeTag *> m_RunTimePhonemes;
 
+#if PHONEME_EDITOR
 	int				m_nResetWordBase;
-	
+#endif
 	// Phoneme emphasis data
 	CUtlVector< CEmphasisSample > m_EmphasisSamples;
 
+#if PHONEME_EDITOR
 	unsigned int	m_uCheckSum;
+#endif
 	bool			m_bIsValid : 8;
 	bool			m_bStoreCheckSum : 8;
 	bool			m_bShouldVoiceDuck : 8;
@@ -243,5 +294,9 @@ private:
 
 	friend class PhonemeEditor;
 };
+
+//#ifdef _WIN32
+//#pragma pack ()
+//#endif
 
 #endif // SENTENCE_H

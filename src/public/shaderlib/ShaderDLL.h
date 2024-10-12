@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -41,6 +41,9 @@ IShaderDLL *GetShaderDLL();
 // Singleton interface for CVars
 //-----------------------------------------------------------------------------
 ICvar *GetCVar();
+
+
+
 
 
 #endif // SHADERDLL_H

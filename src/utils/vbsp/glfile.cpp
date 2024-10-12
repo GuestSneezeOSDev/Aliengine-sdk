@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -50,6 +50,27 @@ void OutputWinding (winding_t *w, FileHandle_t glview)
 			light,
 			light,
 			light);
+	}
+	//CmdLib_FPrintf(glview, "\n");
+}
+
+void OutputWindingColor (winding_t *w, FileHandle_t glview, int r, int g, int b)
+{
+	int			i;
+
+	CmdLib_FPrintf( glview, "%i\n", w->numpoints);
+	float lr = r * (1.0f/255.0f);
+	float lg = g * (1.0f/255.0f);
+	float lb = b * (1.0f/255.0f);
+	for (i=0 ; i<w->numpoints ; i++)
+	{
+		CmdLib_FPrintf(glview, "%6.3f %6.3f %6.3f %6.3f %6.3f %6.3f\n",
+			w->p[i][0],
+			w->p[i][1],
+			w->p[i][2],
+			lr,
+			lg,
+			lb);
 	}
 	//CmdLib_FPrintf(glview, "\n");
 }
@@ -165,7 +186,7 @@ void WriteGLViewFaces( tree_t *tree, const char *pName )
 	FileHandle_t glview;
 
 	c_glfaces = 0;
-	sprintf (name, "%s%s.gl",outbase, pName);
+	sprintf (name, "%s%s.gl", outbase, pName);
 	Msg("Writing %s\n", name);
 
 	glview = g_pFileSystem->Open( name, "w" );
@@ -175,4 +196,24 @@ void WriteGLViewFaces( tree_t *tree, const char *pName )
 	g_pFileSystem->Close( glview );
 
 	Msg("%5i c_glfaces\n", c_glfaces);
+}
+
+
+void WriteGLViewBrushList( bspbrush_t *pList, const char *pName )
+{
+	char	name[1024];
+	FileHandle_t glview;
+
+	sprintf (name, "%s%s.gl", outbase, pName );
+	Msg("Writing %s\n", name);
+
+	glview = g_pFileSystem->Open( name, "w" );
+	if (!glview)
+	Error ("Couldn't open %s", name);
+	for ( bspbrush_t *pBrush = pList; pBrush; pBrush = pBrush->next )
+	{
+		for (int i =  0; i < pBrush->numsides; i++ )
+			OutputWinding( pBrush->sides[i].winding, glview );
+	}
+	g_pFileSystem->Close( glview );
 }

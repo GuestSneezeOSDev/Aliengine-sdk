@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -10,6 +10,9 @@
 #ifdef _WIN32
 #pragma once
 #endif
+
+
+#define VCRFILE_VERSION		2
 
 
 // Identifiers for the things we record. When playing back, these things should
@@ -38,6 +41,12 @@ typedef enum
 	VCREvent_recv,
 	VCREvent_send,
 	VCREvent_Generic,
+	VCREvent_CreateThread,
+	VCREvent_WaitForSingleObject,
+	VCREvent_EnterCriticalSection,
+	VCREvent_Time,
+	VCREvent_LocalTime,
+	VCREvent_GenericString,
 	VCREvent_NUMEVENTS
 } VCREvent;
 

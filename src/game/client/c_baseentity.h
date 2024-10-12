@@ -572,11 +572,11 @@ public:
 	virtual bool					GetAttachmentVelocity( int number, Vector &originVel, Quaternion &angleVel );
 
 	// Team handling
-	virtual C_Team					*GetTeam( void );
+	virtual C_Team					*GetTeam( void ) const;
 	virtual int						GetTeamNumber( void ) const;
 	virtual void					ChangeTeam( int iTeamNum );			// Assign this entity to a team.
 	virtual int						GetRenderTeamNumber( void );
-	virtual bool					InSameTeam( C_BaseEntity *pEntity );	// Returns true if the specified entity is on the same team as this one
+	virtual bool					InSameTeam( const C_BaseEntity *pEntity ) const;	// Returns true if the specified entity is on the same team as this one
 	virtual bool					InLocalTeam( void );
 
 	// ID Target handling
@@ -1704,6 +1704,9 @@ protected:
 	RenderMode_t m_PreviousRenderMode;
 	color32 m_PreviousRenderColor;
 #endif
+
+private:
+	bool	m_bOldShouldDraw;
 };
 
 EXTERN_RECV_TABLE(DT_BaseEntity);

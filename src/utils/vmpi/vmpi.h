@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,6 +14,7 @@
 
 #include "vmpi_defs.h"
 #include "messbuf.h"
+#include "iphelpers.h"
 
 
 // These are called to handle incoming messages. 
@@ -45,11 +46,27 @@ public:
 };
 
 
+// Enums for all the command line parameters.
+#define VMPI_PARAM_SDK_HIDDEN	0x0001		// Hidden in SDK mode.
+
+#define VMPI_PARAM( paramName, paramFlags, helpText ) paramName,
+enum EVMPICmdLineParam
+{
+	k_eVMPICmdLineParam_FirstParam=0,
+	k_eVMPICmdLineParam_VMPIParam,
+	#include "vmpi_parameters.h"
+	k_eVMPICmdLineParam_LastParam
+};
+#undef VMPI_PARAM
+
+
 // Shared by all the tools.
 extern bool	g_bUseMPI;
 extern bool g_bMPIMaster;	// Set to true if we're the master in a VMPI session.
 extern int g_iVMPIVerboseLevel; // Higher numbers make it spit out more data.
-extern bool g_bMPI_NoStats;
+
+extern bool g_bMPI_Stats;			// Send stats to the MySQL database?
+extern bool g_bMPI_StatsTextOutput;	// Send text output in the stats?
 
 // These can be watched or modified to check bandwidth statistics.
 extern int g_nBytesSent;
@@ -60,12 +77,26 @@ extern int g_nMessagesReceived;
 extern int g_nMulticastBytesSent;
 extern int g_nMulticastBytesReceived;
 
+extern int g_nMaxWorkerCount;
+
 
 enum VMPIRunMode
 {
-	VMPI_RUN_NETWORKED,	// Broadcast out, find workers, have them do work.
-	VMPI_RUN_LOCAL		// Just make a local process and have it do the work.
+	VMPI_RUN_NETWORKED,
+	VMPI_RUN_LOCAL						// Just make a local process and have it do the work.
 };
+
+
+enum VMPIFileSystemMode
+{
+	VMPI_FILESYSTEM_MULTICAST,		// Multicast out, find workers, have them do work.
+	VMPI_FILESYSTEM_BROADCAST,		// Broadcast out, find workers, have them do work.
+	VMPI_FILESYSTEM_TCP				// TCP filesystem.
+};
+
+
+// If this precedes the dependency filename, then it will transfer all the files in the specified directory.
+#define VMPI_DEPENDENCY_DIRECTORY_TOKEN	'*'
 
 
 // It's good to specify a disconnect handler here immediately. If you don't have a handler
@@ -75,15 +106,21 @@ enum VMPIRunMode
 // Note: runMode is only relevant for the VMPI master. The worker always connects to the master
 // the same way.
 bool VMPI_Init( 
-	int argc, 
-	char **argv, 
+	int &argc, 
+	char **&argv, 
 	const char *pDependencyFilename, 
-	VMPI_Disconnect_Handler handler, 
-	VMPIRunMode runMode // Networked or local?
+	VMPI_Disconnect_Handler handler = NULL, 
+	VMPIRunMode runMode = VMPI_RUN_NETWORKED, // Networked or local?,
+	bool bConnectingAsService = false
 	);
+
+// Used when hosting a patch.
+void VMPI_Init_PatchMaster( int argc, char **argv );
+
 void VMPI_Finalize();
 
 VMPIRunMode VMPI_GetRunMode();
+VMPIFileSystemMode VMPI_GetFileSystemMode();
 
 // Note: this number can change on the master.
 int VMPI_GetCurrentNumberOfConnections();
@@ -111,12 +148,22 @@ void VMPI_HandleSocketErrors( unsigned long timeout=0 );
 
 
 
+enum VMPISendFlags
+{
+	k_eVMPISendFlags_GroupPackets = 0x0001
+};
+	
 // Use these to send data to one of the machines.
 // If iDest is VMPI_SEND_TO_ALL, then the message goes to all the machines.
-bool VMPI_SendData( void *pData, int nBytes, int iDest );
-bool VMPI_SendChunks( void const * const *pChunks, const int *pChunkLengths, int nChunks, int iDest );
-bool VMPI_Send2Chunks( const void *pChunk1, int chunk1Len, const void *pChunk2, int chunk2Len, int iDest );	// for convenience..
-bool VMPI_Send3Chunks( const void *pChunk1, int chunk1Len, const void *pChunk2, int chunk2Len, const void *pChunk3, int chunk3Len, int iDest );
+// Flags is a combination of the VMPISendFlags enums.
+bool VMPI_SendData( void *pData, int nBytes, int iDest, int fVMPISendFlags=0 );
+bool VMPI_SendChunks( void const * const *pChunks, const int *pChunkLengths, int nChunks, int iDest, int fVMPISendFlags=0 );
+bool VMPI_Send2Chunks( const void *pChunk1, int chunk1Len, const void *pChunk2, int chunk2Len, int iDest, int fVMPISendFlags=0 );	// for convenience..
+bool VMPI_Send3Chunks( const void *pChunk1, int chunk1Len, const void *pChunk2, int chunk2Len, const void *pChunk3, int chunk3Len, int iDest, int fVMPISendFlags=0 );
+
+// Flush any groups that were queued with k_eVMPISendFlags_GroupPackets.
+// If msInterval is > 0, then it will check a timer and only flush that often (so you can call this a lot, and have it check).
+void VMPI_FlushGroupedPackets( unsigned long msInterval=0 ); 
 
 // This registers a function that gets called when a connection is terminated ungracefully.
 void VMPI_AddDisconnectHandler( VMPI_Disconnect_Handler handler );
@@ -124,6 +171,9 @@ void VMPI_AddDisconnectHandler( VMPI_Disconnect_Handler handler );
 // Returns false if the process has disconnected ungracefully (disconnect handlers
 // would have been called for it too).
 bool VMPI_IsProcConnected( int procID );
+
+// Returns true if the process is just a service (in which case it should only get file IO traffic).
+bool VMPI_IsProcAService( int procID );
 
 // Simple wrapper for Sleep() so people can avoid including windows.h
 void VMPI_Sleep( unsigned long ms );
@@ -145,5 +195,23 @@ const char* VMPI_FindArg( int argc, char **argv, const char *pName, const char *
 // (Threadsafe) get and set the current stage. This info winds up in the VMPI database.
 void VMPI_GetCurrentStage( char *pOut, int strLen );
 void VMPI_SetCurrentStage( const char *pCurStage );
+
+// VMPI is always broadcasting this job in the background.
+// This changes the password to 'debugworker' and allows more workers in.
+// This can be used if workers are dying on certain work units. Then a programmer
+// can run vmpi_service with -superdebug and debug the whole thing.
+void VMPI_InviteDebugWorkers();
+
+bool VMPI_IsSDKMode();
+
+// Lookup a command line parameter string.
+const char* VMPI_GetParamString( EVMPICmdLineParam eParam );
+int VMPI_GetParamFlags( EVMPICmdLineParam eParam );
+const char* VMPI_GetParamHelpString( EVMPICmdLineParam eParam );
+bool VMPI_IsParamUsed( EVMPICmdLineParam eParam ); // Returns true if the specified parameter is on the command line.
+
+// Can be called from error handlers and if -mpi_Restart is used, it'll automatically restart the process.
+bool VMPI_HandleAutoRestart();
+
 
 #endif // VMPI_H

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -14,7 +14,7 @@
 
 #include <stdio.h>
 #include "iscratchpad3d.h"
-#include "vmatrix.h"
+#include "mathlib/vmatrix.h"
 #include "filesystem.h"
 
 class CFileRead;
@@ -170,6 +170,7 @@ public:
 		Vector const &vInputMax,
 		Vector const &vOutputMin,
 		Vector const &vOutputMax );
+	virtual bool		GetAutoFlush();
 	virtual void		SetAutoFlush( bool bAutoFlush );
 	virtual void		DrawPoint( CSPVert const &v, float flPointSize );
 	virtual void		DrawLine( CSPVert const &v1, CSPVert const &v2 );

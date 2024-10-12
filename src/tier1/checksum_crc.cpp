@@ -1,8 +1,9 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Generic CRC functions
 //
 //=============================================================================//
+
 #include "basetypes.h"
 #include "commonmacros.h"
 #include "checksum_crc.h"
@@ -118,7 +119,7 @@ JustAfew:
         ulCrc  = pulCRCTable[*pb++ ^ (unsigned char)ulCrc] ^ (ulCrc >> 8);
 
     case 4:
-        ulCrc ^= *(CRC32_t *)pb; // Warning, this only works on little-endian.
+        ulCrc ^= LittleLong( *(CRC32_t *)pb );
         ulCrc  = pulCRCTable[(unsigned char)ulCrc] ^ (ulCrc >> 8);
         ulCrc  = pulCRCTable[(unsigned char)ulCrc] ^ (ulCrc >> 8);
         ulCrc  = pulCRCTable[(unsigned char)ulCrc] ^ (ulCrc >> 8);
@@ -161,12 +162,12 @@ JustAfew:
     nMain = nBuffer >> 3;
     while (nMain--)
     {
-        ulCrc ^= *(CRC32_t *)pb; // Warning, this only works on little-endian.
+        ulCrc ^= LittleLong( *(CRC32_t *)pb );
         ulCrc  = pulCRCTable[(unsigned char)ulCrc] ^ (ulCrc >> 8);
         ulCrc  = pulCRCTable[(unsigned char)ulCrc] ^ (ulCrc >> 8);
         ulCrc  = pulCRCTable[(unsigned char)ulCrc] ^ (ulCrc >> 8);
         ulCrc  = pulCRCTable[(unsigned char)ulCrc] ^ (ulCrc >> 8);
-        ulCrc ^= *(CRC32_t *)(pb + 4); // Warning, this only works on little-endian.
+        ulCrc ^= LittleLong( *(CRC32_t *)(pb + 4) );
         ulCrc  = pulCRCTable[(unsigned char)ulCrc] ^ (ulCrc >> 8);
         ulCrc  = pulCRCTable[(unsigned char)ulCrc] ^ (ulCrc >> 8);
         ulCrc  = pulCRCTable[(unsigned char)ulCrc] ^ (ulCrc >> 8);

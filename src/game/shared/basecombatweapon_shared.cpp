@@ -90,6 +90,7 @@ CBaseCombatWeapon::CBaseCombatWeapon()
 
 #if !defined( CLIENT_DLL )
 	m_pConstraint = NULL;
+	m_bSoundsEnabled = true;
 	OnBaseCombatWeaponCreated( this );
 #endif
 
@@ -1093,10 +1094,10 @@ int CBaseCombatWeapon::UpdateClientData( CBasePlayer *pPlayer )
 // Purpose: 
 // Input  : index - 
 //-----------------------------------------------------------------------------
-void CBaseCombatWeapon::SetViewModelIndex( int index )
+void CBaseCombatWeapon::SetViewModelIndex( int index_ )
 {
-	Assert( index >= 0 && index < MAX_VIEWMODELS );
-	m_nViewModelIndex = index;
+	Assert( index_ >= 0 && index_ < MAX_VIEWMODELS );
+	m_nViewModelIndex = index_;
 }
 
 //-----------------------------------------------------------------------------
@@ -1885,6 +1886,11 @@ float CBaseCombatWeapon::GetFireRate( void )
 //-----------------------------------------------------------------------------
 void CBaseCombatWeapon::WeaponSound( WeaponSound_t sound_type, float soundtime /* = 0.0f */ )
 {
+#if !defined( CLIENT_DLL )
+	if ( !m_bSoundsEnabled )
+		return;
+#endif
+
 	// If we have some sounds from the weapon classname.txt file, play a random one of them
 	const char *shootsound = GetShootSound( sound_type );
 	if ( !shootsound || !shootsound[0] )

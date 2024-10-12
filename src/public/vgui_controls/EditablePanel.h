@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -27,14 +27,15 @@ class EditablePanel : public Panel
 
 public:
 	EditablePanel(Panel *parent, const char *panelName);
-	EditablePanel::EditablePanel(Panel *parent, const char *panelName, HScheme hScheme);
+	EditablePanel(Panel *parent, const char *panelName, HScheme hScheme);
 
-	~EditablePanel();
+	virtual ~EditablePanel();
 
 	// Load the control settings - should be done after all the children are added
 	// If you pass in pPreloadedKeyValues, it won't actually load the file. That way, you can cache
 	// the keyvalues outside of here if you want to prevent file accesses in the middle of the game.
-	virtual void LoadControlSettings(const char *dialogResourceName, const char *pathID = NULL, KeyValues *pPreloadedKeyValues = NULL);
+	virtual void LoadControlSettings(const char *dialogResourceName, const char *pathID = NULL, KeyValues *pPreloadedKeyValues = NULL, KeyValues *pConditions = NULL);
+	virtual void ApplySettings(KeyValues *inResourceData);
 
 	// sets the name of this dialog so it can be saved in the user config area
 	// use dialogID to differentiate multiple instances of the same dialog
@@ -57,6 +58,8 @@ public:
 	// Shortcut function to set data in child controls
 	virtual void SetControlString(const char *controlName, const char *string);
 	// Shortcut function to set data in child controls
+	virtual void SetControlString(const char *controlName, const wchar_t *string);
+	// Shortcut function to set data in child controls
 	virtual void SetControlInt(const char *controlName, int state);
 	// Shortcut function to get data in child controls
 	virtual int GetControlInt(const char *controlName, int defaultState);
@@ -67,6 +70,7 @@ public:
 	virtual void GetControlString(const char *controlName, char *buf, int bufSize, const char *defaultString = "");
 	// sets the enabled state of a control
 	virtual void SetControlEnabled(const char *controlName, bool enabled);
+	virtual void SetControlVisible(const char *controlName, bool visible, bool bRecurseDown = false );
 
 	// localization variables (used in constructing UI strings)
 	// after the variable is set, causes all the necessary sub-panels to update
@@ -89,7 +93,7 @@ public:
 	// Get the panel with the specified hotkey
 	virtual Panel *HasHotkey(wchar_t key);
 
-	virtual void OnKeyCodeTyped(enum KeyCode code);
+	virtual void OnKeyCodePressed( KeyCode code );
 
 	// Handle information requests
 	virtual bool RequestInfo(KeyValues *data);
@@ -112,6 +116,7 @@ public:
 	// localization variables - only use this if you need to iterate the variables, use the SetLoc*() to set them
 	KeyValues *GetDialogVariables();
 
+	bool ShouldSkipAutoResize() const { return m_bShouldSkipAutoResize; }
 protected:
 	virtual void PaintBackground();
 
@@ -119,15 +124,14 @@ protected:
 	virtual FocusNavGroup &GetFocusNavGroup();
 
 	// called when default button has been set
-	MESSAGE_FUNC_PTR( OnDefaultButtonSet, "DefaultButtonSet", button );
+	MESSAGE_FUNC_HANDLE( OnDefaultButtonSet, "DefaultButtonSet", button );
 	// called when the current default button has been set
-	MESSAGE_FUNC_PTR( OnCurrentDefaultButtonSet, "CurrentDefaultButtonSet", button );
+	MESSAGE_FUNC_HANDLE( OnCurrentDefaultButtonSet, "CurrentDefaultButtonSet", button );
     MESSAGE_FUNC( OnFindDefaultButton, "FindDefaultButton" );
 
 	// overrides
 	virtual void OnChildAdded(VPANEL child);
 	virtual void OnSizeChanged(int wide, int tall);
-	virtual void ApplySettings(KeyValues *inResourceData);
 	virtual void OnClose();
 
 	// user configuration settings
@@ -150,9 +154,9 @@ private:
 	KeyValues *m_pDialogVariables;
 
 	// the wide and tall to which all controls are locked - used for autolayout deltas
-	int _baseWide, _baseTall;
 	char *m_pszConfigName;
 	int m_iConfigID;
+	bool m_bShouldSkipAutoResize;
 };
 
 } // namespace vgui

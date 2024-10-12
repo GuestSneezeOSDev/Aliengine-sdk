@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -22,27 +22,41 @@
 //-----------------------------------------------------------------------------
 // Render groups
 //-----------------------------------------------------------------------------
+enum RenderGroup_Config_t
+{
+	// Number of buckets that are used to hold opaque entities
+	// and opaque static props by size. The bucketing should be used to reduce overdraw.
+	RENDER_GROUP_CFG_NUM_OPAQUE_ENT_BUCKETS	= 4,
+};
+
 enum RenderGroup_t
 {
-	RENDER_GROUP_OPAQUE_ENTITY = 0,
+	RENDER_GROUP_OPAQUE_STATIC_HUGE			= 0,		// Huge static prop
+	RENDER_GROUP_OPAQUE_ENTITY_HUGE			= 1,		// Huge opaque entity
+	RENDER_GROUP_OPAQUE_STATIC = RENDER_GROUP_OPAQUE_STATIC_HUGE + ( RENDER_GROUP_CFG_NUM_OPAQUE_ENT_BUCKETS - 1 ) * 2,
+	RENDER_GROUP_OPAQUE_ENTITY,					// Opaque entity (smallest size, or default)
+
 	RENDER_GROUP_TRANSLUCENT_ENTITY,
-	RENDER_GROUP_TWOPASS, // Implied opaque and translucent in two passes
-	RENDER_GROUP_VIEW_MODEL_OPAQUE, // solid weapon view models
-	RENDER_GROUP_VIEW_MODEL_TRANSLUCENT, // transparent overlays etc
-	RENDER_GROUP_OTHER,	// Unclassfied. Won't get drawn.
+	RENDER_GROUP_TWOPASS,						// Implied opaque and translucent in two passes
+	RENDER_GROUP_VIEW_MODEL_OPAQUE,				// Solid weapon view models
+	RENDER_GROUP_VIEW_MODEL_TRANSLUCENT,		// Transparent overlays etc
+
+	RENDER_GROUP_OPAQUE_BRUSH,					// Brushes
+
+	RENDER_GROUP_OTHER,							// Unclassfied. Won't get drawn.
 
 	// This one's always gotta be last
 	RENDER_GROUP_COUNT
 };
 
-
-#define CLIENTLEAFSYSTEM_INTERFACE_VERSION	"ClientLeafSystem001"
+#define CLIENTLEAFSYSTEM_INTERFACE_VERSION_1 "ClientLeafSystem001"
+#define CLIENTLEAFSYSTEM_INTERFACE_VERSION	"ClientLeafSystem002"
 
 
 //-----------------------------------------------------------------------------
 // The client leaf system
 //-----------------------------------------------------------------------------
-class IClientLeafSystemEngine
+abstract_class IClientLeafSystemEngine
 {
 public:
 	// Adds and removes renderables from the leaf lists

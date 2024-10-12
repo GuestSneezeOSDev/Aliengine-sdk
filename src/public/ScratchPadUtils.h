@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: This module contains helper functions for use with scratch pads.
 //
@@ -144,6 +144,20 @@ void ScratchPad_DrawArrowSimple(
 	const Vector &vDirection,
 	const Vector &vColor, 
 	float flLength );
+
+void ScratchPad_DrawSphere(
+	IScratchPad3D *pPad,
+	const Vector &vCenter,
+	float flRadius,
+	const Vector &vColor,
+	int nSubDivs=7 );
+
+
+void ScratchPad_DrawAABB(
+	IScratchPad3D *pPad,
+	const Vector &vMins,
+	const Vector &vMaxs,
+	const Vector &vColor = Vector( 1,1,1 ) );
 
 
 #endif // SCRATCHPADUTILS_H
