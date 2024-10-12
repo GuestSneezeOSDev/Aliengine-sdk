@@ -34,7 +34,6 @@ This projects aims to recreate Xengine / Black Mesa Engine Branch
 - [X] Optimized shaders for faster compilation and better runtime performance
 - [X] Models now take advantage of increased polycount limits and normal mapping technology making deadly opponents and friendly coworkers appear more real
 - [ ] An all-new face creation system that allows each character to have a unique, artist-created face
-- [ ]  
 
 - [X] In-game new lights and xog editors
 - [X] Multiple VRAD upgrades, such as support for Alpha-Tested textures, 4-way blends, baked Ambient Occlusion, Real Sky Ambient Light, and more
