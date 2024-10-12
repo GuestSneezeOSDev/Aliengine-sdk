@@ -7,8 +7,8 @@ This projects aims to recreate Xengine / Black Mesa Engine Branch
 - [ ] Improved AI, whose behavior depends on the current difficulty level (some NPCs also support Main and Assault Behavior Trees from the ai folder)
 - [X] Temp lights were swapped with new deferred lights
 - [ ] Gbuffer that allows the addition of some modern, difficult-to-make effects
-- [X] Made from scratch Qt UI with the ability to be customized and add new stuff without limitations (VGUI can be reenabled with `-oldgameui` launch parameter)
-- [X] Using Fast Approximate Anti-Aliasing (FXAA) instead of MultiSample Anti-Aliasing (MSAA) for anti-aliasing
+- [ ] Made from scratch Qt UI with the ability to be customized and add new stuff without limitations (VGUI can be reenabled with `-oldgameui` launch parameter)
+- [ ] Using Fast Approximate Anti-Aliasing (FXAA) instead of MultiSample Anti-Aliasing (MSAA) for anti-aliasing
 - [ ] New and extended Post Processor
 - [X] Native  Linux support
 - [X] Improved DirectX 9.0c shaders
